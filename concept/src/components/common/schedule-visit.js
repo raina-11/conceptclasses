@@ -37,7 +37,7 @@ const ScheduleForm = () => {
       return (
         <>
     
-       <Section style={{background:'transparent'}}>
+       <SSection style={{background:'transparent'}}>
         <Container style={{position:'relative'}}>
 
        <Text>
@@ -79,11 +79,16 @@ const ScheduleForm = () => {
   
           {/* </Form> */}
         </Container>
-       </Section>
+       </SSection>
        </>
       );
 }
 export default ScheduleForm
+const SSection = styled(Section)`
+@media (max-width: ${(props) => props.theme.screen.xs}) {
+padding:20px;
+}
+`
 const StyledForm = styled.form`
 display:flex;
 flex-direction:column;

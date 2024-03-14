@@ -76,7 +76,10 @@ export default class Navigation extends Component {
   closePopup = () => {
     this.setState({show: false});
   }
-
+  closeAndShowPopup = () => {
+    this.closeMobileMenu();
+    this.showPopup();
+  };
   toggleMobileMenu = () => {
     this.setState((prevState) => ({
       mobileMenuOpen: !prevState.mobileMenuOpen,
@@ -150,10 +153,10 @@ export default class Navigation extends Component {
           </Mobile>
           <Buttons>
              <StyledLink >
-              <a style={{display:'flex', alignItems:'center', textDecoration:'none', color:'#222',position:'relative', fontWeight:'500'}} href="tel:9352169717">
+              <a style={{display:'flex', alignItems:'center', textDecoration:'none', color:'#222',position:'relative', fontWeight:'500'}} href="tel:9928111865">
                     {/* <SecondaryButton style={{padding:'16px', minWidth:'93px',background:'transparent'}}> */}
                    <img style={{height:'35px'}} src={call}/>
-                  +91-9352169717
+                  +91-9928111865
                     {/* </SecondaryButton> */}
                     </a>
                   </StyledLink>
@@ -426,12 +429,22 @@ export default class Navigation extends Component {
                 {/* </Link> */}
               </ActionsContainerMobile>
               <ActionsContainerMobile>
-              <StyledButton onClick={this.closeMobileMenu}>
+              <StyledButton onClick={this.closeAndShowPopup}>
                     Schedule a visit
                   </StyledButton>
-                  <Popup>
-                    
-                  </Popup>
+                  <Popup
+            open={this.state.show}
+            position="center"
+            modal
+            overlayStyle={{ background: "transparent", backdropFilter:"blur(5px)" }}
+            contentStyle={{ width:'90%',borderRadius:'20px', maxHeight:"700px", background: 'darkseagreen', padding:"0", zIndex:"-2"}}
+            style={{ borderRadius: "22px" }}
+            closeOnDocumentClick
+            onClose={this.closePopup}
+          >
+        
+<ScheduleForm/>
+</Popup>
               </ActionsContainerMobile>
             </MobileMenu>
           )}
