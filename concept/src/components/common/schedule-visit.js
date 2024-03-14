@@ -2,8 +2,6 @@ import React,{useRef, useState} from "react"
 import styled from "styled-components"
 import { Container, Section } from "../style"
 import emailjs from '@emailjs/browser';
-import logo from "../../images/concept-logo.png"
-import rocket from "../../images/rocket.svg"
 import "./form.css"
 const ScheduleForm = () => {
     const form = useRef();
@@ -16,7 +14,7 @@ const ScheduleForm = () => {
       const phoneNumber = phoneInput.value.trim();
       if (!/^\d{10}$/.test(phoneNumber)) {
         alert('Please enter a 10-digit numeric phone number.');
-        return; // Exit the function without submitting the form
+        return; 
       }
       emailjs.sendForm('service_0g4tl74', 'template_5vxhrwn', form.current, 'dqwWONHaCR01qcthz')
         .then((result) => {
@@ -31,9 +29,7 @@ const ScheduleForm = () => {
       // setFormSubmitted(true);
     };
   
-    const handleClick = () => {
-      window.open('https://api.whatsapp.com/send?phone=9352169717&text=Hello, more information!','_blank');
-    };
+    
       return (
         <>
     
@@ -77,7 +73,6 @@ const ScheduleForm = () => {
       <div class="edge"></div>
     </div></Animation>}
   
-          {/* </Form> */}
         </Container>
        </SSection>
        </>

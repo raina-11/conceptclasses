@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import styled from "styled-components"
-import { Dropdown, DropdownButton, DropdownItem } from "./style"
+import { Dropdown, DropdownButton } from "./style"
 import { Container, PrimaryButton } from "../../style"
 import i1 from "../../../images/icon-results-engineering.svg"
 import i2 from  "../../../images/icon-results-medical.svg"
@@ -54,7 +54,7 @@ const Platform = () => {
                         >
                           <Tab>
                             <div>
-                              <img src={i1}/>
+                              <img src={i1} alt="concept"/>
                             </div>
                             <div>
                               <h5>IIT JEE Mains & Advanced</h5>
@@ -72,7 +72,7 @@ const Platform = () => {
                         >
                           <Tab>
                             <div>
-                            <img src={i2}/>
+                            <img src={i2} alt="concept"/>
                             </div>
                             <div>
                               <h5>NEET/AIIMS </h5>
@@ -90,7 +90,7 @@ const Platform = () => {
                         >
                           <Tab>
                             <div>
-                            <img src={i3} />
+                            <img src={i3} alt="concept" />
                             </div>
                             <div>
                               <h5>Pre Foundation</h5>
@@ -220,9 +220,7 @@ const InnerContainer = styled.div`
     margin-bottom: 20px;
   }
 `
-const Image = styled.img`
-  width: 100%;
-`
+
 const RightContainer = styled.div`
   text-align: center;
   align-self: center;
@@ -296,60 +294,7 @@ const DropdownRowSolutions = styled.div`
   padding-bottom: 15px;
   width: -webkit-fill-available;
 `
-const DropdownItemImg = styled.div`
-  display: block;
-  width: 25px;
-  height: 25px;
-  margin-right: 4px;
-  text-align: center;
-  line-height: 48px;
-  align-self: center;
-  svg {
-    width: 25px;
-    height: 25px;
-    vertical-align: super;
-  }
-  @media (max-width: ${(props) => props.theme.screen.md}) {
-  }
-`
-const DropdownItemImgHover = styled.div`
-  display: none;
-  width: 25px;
-  height: 25px;
-  margin-right: 4px;
-  border-radius: 50%;
-  text-align: center;
-  line-height: 48px;
-  align-self: center;
-  svg {
-    width: 25px;
-    height: 25px;
-    vertical-align: super;
-  }
-`
-const DropdownItemText = styled.div`
-  display: flex;
-  align-self: center;
-  flex-direction: column;
-  margin: 0 10px;
-  h4 {
-    color: #2b303c;
-    font-family: Lexend Medium;
-    font-size: 18px;
-    font-style: normal;
-    font-weight: 500;
-    line-height: 160%; /* 28.8px */
-  }
 
-  span {
-    font-family: "Lexend Regular";
-    font-style: normal;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 15px;
-    color: #bbbbbb;
-  }
-`
 const DropdownContainer = styled.div`
   float: left;
   // margin: 0 -2px;

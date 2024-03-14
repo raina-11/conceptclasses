@@ -1,11 +1,9 @@
 import React, { useState } from "react"
 import styled from "styled-components"
 import { Container } from "../style"
-// import { AnchorLink } from "gatsby-plugin-anchor-links"
 import logo from "../../images/logo-concept.png"
 import Popup from "reactjs-popup"
 import 'reactjs-popup/dist/index.css';
-import ScheduleForm from "./schedule-visit"
 import HiringForm from "./hiring"
 const Footer = () => {
   const [show, setShow] = useState(false);
@@ -21,7 +19,7 @@ const Footer = () => {
         <FooterColumn className="concept">
           <Address>
             <div>
-             <img style={{height:'60px'}} src={logo}/>
+             <img style={{height:'60px'}} src={logo} alt="concept"/>
             </div>
             <AddressSubtitle>
               Patel nagar, near polytechnique college, Bikaner Rajasthan
@@ -30,8 +28,7 @@ const Footer = () => {
           <Social>
             <a
               href="https://www.linkedin.com/company/conceptinstitute/"
-              target="_blank"
-              rel="noreferer, ,noopener"
+              target="_blank" rel="noreferrer"
             >
               <svg
                 width="36"
@@ -49,8 +46,7 @@ const Footer = () => {
           
             <a
               href="https://www.facebook.com/ConceptInstitute"
-              target="_blank"
-              rel="noreferer, ,noopener"
+              target="_blank" rel="noreferrer"
             >
               <svg
                 width="36"
@@ -136,109 +132,12 @@ const Footer = () => {
 
       
       </FooterColumnContainer>
-      {/* <MobileDiv>
-        <FooterColumnContainerMobile>
-          <FooterColumn>
-          <HeadingFooter1>Products</HeadingFooter1>
-          <ul>
-            <li>
-              <Anchor href="/saas-management/">SaaS Management</Anchor>
-            </li>
-            <li>
-              <Anchor href="/access-management/">Access Management</Anchor>
-            </li>
-            <li>
-              <Anchor href="/access-reviews">Access Reviews</Anchor>
-            </li>
-          </ul>
-          <HeadingFooter>Platform</HeadingFooter>
-          <ul>
-            <li>
-              <Anchor href="/features/api/">Open APIs</Anchor>
-            </li>
-            <li>
-              <Anchor href="/integrations/">Integrations</Anchor>
-            </li>
-            <li>
-              <Anchor href="/desktop-agent/">Desktop Agents</Anchor>
-            </li>
-            <li>
-              <Anchor href="/browser-extension/">Browser Extensions</Anchor>
-            </li>
-          </ul>
-         
-            
-         
-          </FooterColumn>
-          <FooterColumn>
-          <HeadingFooter1>Company</HeadingFooter1>
-          <ul>
-            <li>
-              <Anchor href="/our-story/">Our Story</Anchor>
-            </li>
-            <li>
-              <Anchor href="/careers/">
-                Careers<span>We're Hiring</span>
-              </Anchor>
-            </li>
-            <li>
-              <Anchor href="/events/">Events</Anchor>
-            </li>
-            <li>
-              <Anchor href="/pricing/">Pricing</Anchor>
-            </li>
-            <li>
-              <Anchor href="/contact/">Contact Us</Anchor>
-            </li>
-            <li>
-              <Anchor href="/partners/">Partner with Zluri</Anchor>
-            </li>
-            <li>
-              <Anchor href="/security/">Security & Compliance</Anchor>
-            </li>
-            <li>
-              <a
-                href="https://trust.zluri.com/"
-                target="_blank"
-                rel="noreferer, ,noopener"
-                style={{ fontSize: "14px" }}
-              >
-                Trust Center
-              </a>
-            </li>
-          </ul>
-          <HeadingFooter>Compare</HeadingFooter>
-          <HeadingFooterMini>SaaS Management</HeadingFooterMini>
-          <ul>
-            <li>
-              <Anchor href="/zluri-vs-torii/">Zluri vs Torii</Anchor>
-            </li>
-            <li>
-              <Anchor href="/zluri-vs-torii/">
-                Zluri vs Zylo
-              </Anchor>
-            </li>
-           
-            <li>
-              <Anchor href="https://get.zluri.com/lp-zluri-vs-productiv">
-                Zluri vs Productiv
-              </Anchor>
-            </li>
-           
-          </ul>
-         
-          </FooterColumn>
-        </FooterColumnContainerMobile>
-        <FooterColumnContainerMobileOne>
-          
-          
-        </FooterColumnContainerMobileOne>
-      </MobileDiv> */}
+     
       <BottomBG>
         <MobileShow>
           <BrandContainerMobile>
             <Logo>
-              <img src={logo}/>
+              <img src={logo} alt="concept" />
             </Logo>
           </BrandContainerMobile>
           <Address>
@@ -254,8 +153,7 @@ const Footer = () => {
           <SocialMobile>
             <a
               href="https://www.linkedin.com/company/conceptinstitute/"
-              target="_blank"
-              rel="noreferer, ,noopener"
+              target="_blank" rel="noreferrer"
             >
               <svg
                 width="21"
@@ -273,8 +171,7 @@ const Footer = () => {
            
             <a
               href="https://www.facebook.com/ConceptInstitute"
-              target="_blank"
-              rel="noreferer, ,noopener"
+              target="_blank" rel="noreferrer"
             >
               <svg
                 width="21"
@@ -295,7 +192,7 @@ const Footer = () => {
           <ZluriLogo>
             <BrandContainer>
               <Logo>
-                <img style={{height:'40px'}} src={logo}/>
+                <img style={{height:'40px'}} src={logo} alt="concept" />
               </Logo>
             </BrandContainer>
             <Copyright>
@@ -570,37 +467,5 @@ const Copyright = styled.p`
   @media (max-width: ${(props) => props.theme.screen.md}) {
     margin: auto;
     text-align: center;
-  }
-`
-
-const LegalPages = styled.ul`
-  margin: 0;
-  justify-content: flex-end;
-  list-style: none;
-  text-align: center;
-  align-self: center;
-  li {
-    display: inline-block;
-    padding-left: 16px;
-    font-family: "Lexend Regular";
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 15px;
-    color: #4a4a4a;
-    align-self: center;
-  }
-  a:hover {
-    color: white;
-    transition:
-      0.5s ease-out,
-      transform 0.5s ease;
-  }
-  @media (max-width: ${(props) => props.theme.screen.md}) {
-    padding-left: 0;
-    padding-right: 16px;
-    text-align: center;
-    color: #4a4a4a;
-    align-self: center;
   }
 `

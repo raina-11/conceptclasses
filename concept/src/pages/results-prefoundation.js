@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from "styled-components"
 import { Container, Section } from '../components/style';
 import r3 from "../images/r3.webp"
@@ -20,13 +20,13 @@ const ResultsPreFoundation= () =>  {
         </Stick>
        
         <ImgDiv>
-        <img src={r3}/>
+        <img src={r3} alt="concept"/>
         </ImgDiv>
         <ImgDiv>
-        <img src={r14}/>
+        <img src={r14} alt="concept"/>
         </ImgDiv>
         <ImgDiv>
-        <img src={r15}/>
+        <img src={r15} alt="concept"/>
         </ImgDiv>
         
       </Container>

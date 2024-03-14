@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import styled from "styled-components"
+import React from 'react';
 import { Container, Section } from '../components/style';
 import Layout from '../components/common/layout/layout';
 import "./gallery.css"
@@ -28,21 +27,21 @@ const Images= () =>  {
     <Container>
  <h2>सफ़लता के तीन सूत्र होते हैं, महेनत, कड़ी महेनत, और जादा कड़ी महेनत</h2>
 <div id="gallery" class="container-fluid">  
-  <img src={i1} class="img-responsive" />
-  <img src={i2} class="img-responsive" />
-  <img src={i4} class="img-responsive"/>
+  <img src={i1} class="img-responsive"  alt="concept" />
+  <img src={i2} class="img-responsive"  alt="concept" />
+  <img src={i4} class="img-responsive" alt="concept" />
 
-   <img src={i3} class="img-responsive"/> 
+   <img src={i3} class="img-responsive" alt="concept" /> 
  
-  <img src={i5} class="img-responsive"/>
-<img src={i6} class="img-responsive"/>
-  <img src={i7} class="card img-responsive"/>
-  <img src={i8} class="img-responsive"/>
-  <img src={i9} class="img-responsive"/>
-  <img src={i10} class="img-responsive"/>
-  <img src={i11} class="img-responsive"/>
-  <img src={i13} class="img-responsive"/>
-  <img src={i12} class="img-responsive"/>
+  <img src={i5} class="img-responsive" alt="concept" />
+<img src={i6} class="img-responsive" alt="concept" />
+  <img src={i7} class="card img-responsive" alt="concept" />
+  <img src={i8} class="img-responsive" alt="concept" />
+  <img src={i9} class="img-responsive" alt="concept" />
+  <img src={i10} class="img-responsive" alt="concept" />
+  <img src={i11} class="img-responsive" alt="concept" />
+  <img src={i13} class="img-responsive" alt="concept" />
+  <img src={i12} class="img-responsive" alt="concept" />
 
   
 
