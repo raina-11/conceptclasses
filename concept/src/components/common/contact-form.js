@@ -2,7 +2,6 @@ import React,{useRef, useState} from "react"
 import styled from "styled-components"
 import { Container, Section } from "../style"
 import emailjs from '@emailjs/browser';
-import logo from "../../images/concept-logo.png"
 import rocket from "../../images/rocket.svg"
 import "./form.css"
 const Form = () => {
@@ -31,9 +30,7 @@ const Form = () => {
       // setFormSubmitted(true);
     };
   
-    const handleClick = () => {
-      window.open('https://api.whatsapp.com/send?phone=9352169717&text=Hello, more information!','_blank');
-    };
+   
       return (
         <>
     
@@ -41,7 +38,7 @@ const Form = () => {
         <Container style={{position:'relative'}}>
 
        <Text>
-<h2 >Get in touch <img src={rocket} /> </h2>
+<h2 >Get in touch <img src={rocket} alt="grow"/> </h2>
        </Text>
         <StyledForm isHidden={formSubmitted} ref={form} onSubmit={sendEmail}>
         <label>Student's Name</label>

@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from "styled-components"
 import Layout from '../components/common/layout/layout';
-import { Container, PrimaryButton, Section } from '../components/style';
+import { Container, Section } from '../components/style';
 import Navigation from '../components/common/navigation/navigation';
-import ReactPlayer from 'react-player'
 import bg from "../images/bg-courses.webp"
 import courses from "../images/courses.svg"
 import cm1 from "../images/cm1.svg"
@@ -23,12 +22,12 @@ const Courses= () =>  {
         <Container>
            
 <div style={{textAlign:'center', width:'100%'}}>
-<img src={courses} style={{width:'100%'}} />
+<img src={courses} style={{width:'100%'}} alt="concept" />
 </div>
 <Section style={{background:'transparent'}}>
 <Card>
   <ImgDiv>
-  <img src={cm1} style={{width:'100%'}} />
+  <img src={cm1} style={{width:'100%'}} alt="concept" />
 
   </ImgDiv>
   <div>
@@ -79,7 +78,7 @@ const Courses= () =>  {
     </h4>
     </div>
     <ImgDiv>
-  <img src={cm2} style={{width:'100%'}} />
+  <img src={cm2} style={{width:'100%'}} alt="concept" />
 
   </ImgDiv>
 </AlternateCard>
@@ -87,7 +86,7 @@ const Courses= () =>  {
 <Section style={{background:'transparent'}}>
 <Card>
   <ImgDiv>
-  <img src={cm3} style={{width:'100%'}} />
+  <img src={cm3} style={{width:'100%'}} alt="concept" />
 
   </ImgDiv>
   <div>
@@ -138,7 +137,7 @@ const Courses= () =>  {
     </h4>
     </div>
     <ImgDiv>
-  <img src={cm4} style={{width:'100%'}} />
+  <img src={cm4} style={{width:'100%'}} alt="concept" />
 
   </ImgDiv>
 </AlternateCard>
@@ -146,7 +145,7 @@ const Courses= () =>  {
 <Section style={{background:'transparent'}}>
 <Card>
   <ImgDiv>
-  <img src={cm5} style={{width:'100%'}} />
+  <img src={cm5} style={{width:'100%'}} alt="concept" />
 
   </ImgDiv>
   <div>
@@ -184,20 +183,6 @@ const Courses= () =>  {
 }
 
 export default Courses;
-const Button = styled.div`
-cursor:pointer;
-`
-const Video = styled.div`
-.react-player__preview{
-    background-size: contain !important;
-    background-repeat:no-repeat !important;
-}
-
-video{
-    width:100%;
-    object-fill:fit-content;
-  }
-`
 const Card = styled.div`
 border-radius:20px;
 padding:40px;

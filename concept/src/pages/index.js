@@ -1,10 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from "styled-components"
-import Navbar from '../components/Navbar';
-// import { Carousel } from 'antd';
-import { Container, Section } from '../components/style';
-import logo from "../images/concept-logo.png"
-import bg from "../images/home-temp.png"
 import b1 from "../images/b1.webp"
 import b2 from "../images/b2.webp"
 import b3 from "../images/b3.webp"
@@ -19,15 +14,7 @@ import Footer from '../components/common/footer';
 import Form from '../components/common/contact-form';
 import Carousel from "react-caroussel";
 import "react-caroussel/dist/index.css";
-const contentStyle = {
-  height: '100vh',
-  width:'100vw',
-  color: '#fff',
-  lineHeight: '160px',
-  textAlign: 'center',
-  background:'pink',
-  // backgroundImage: logo,
-};
+
 const Home= () =>  {
  
   return (
@@ -35,8 +22,7 @@ const Home= () =>  {
     <Navigation bgwhite={true}/>
 
   
-   {/* <Section> */}
-    {/* <Container> */}
+  
     <StyledDiv>
     <Carousel 
     infinite={true}
@@ -81,8 +67,7 @@ const Home= () =>  {
     </div> */}
   </Carousel>
   </StyledDiv>
-    {/* </Container> */}
-   {/* </Section> */}
+
    <StackCards/>
    <ScrollSmooth/>
  
@@ -101,12 +86,7 @@ export default Home;
 
 const StyledImage = styled.img`
 width: 100%;
-    // height: 100vh;
-    // object-fit: cover;
-// @media(max-width:990px){
-//   min-height:100vh;
-  
-// }
+
 `
 const StyledDiv = styled.div`
 padding-bottom: 60px;
@@ -125,10 +105,6 @@ padding-top:70px;
 `
 const SDiv = styled.div`
 width:100vw;
-// height:65vh;
-// background-image:url(${b1});
-// background-repeat:no-repeat;
-// background-size:contain;
-// background-position
+
 `
 

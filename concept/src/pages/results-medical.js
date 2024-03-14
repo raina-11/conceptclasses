@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from "styled-components"
 import { Container, Section } from '../components/style';
-import r3 from "../images/r3.webp"
 import r6 from "../images/r6.webp"
 import r7 from "../images/r7.webp"
 import r9 from "../images/r9.webp"
 import r10 from "../images/r10.webp"
-import r12 from "../images/r12.webp"
-import r13 from "../images/r13.webp"
 import Layout from '../components/common/layout/layout';
 import Navigation from '../components/common/navigation/navigation';
 import Form from '../components/common/contact-form';
@@ -24,16 +21,16 @@ const ResultsMedical= () =>  {
         </Stick>
        
         <ImgDiv>
-        <img src={r6}/>
+        <img src={r6} alt="concept" />
         </ImgDiv>
         <ImgDiv>
-        <img src={r7}/>
+        <img src={r7} alt="concept" />
         </ImgDiv>
         <ImgDiv>
-        <img src={r9}/>
+        <img src={r9} alt="concept" />
         </ImgDiv>
         <ImgDiv>
-        <img src={r10}/>
+        <img src={r10} alt="concept" />
         </ImgDiv>
        
       </Container>

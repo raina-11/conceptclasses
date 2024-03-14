@@ -15,11 +15,6 @@ const StackCards = ({ cardsData, title }) => {
     const cardsContainerRef = useRef(null);
     const [containerRef, containerInView] = useInView({ triggerOnce: false });
 
-    const bg=['#FF9A9B','#E5FF9A','#9AEDFF','#A4A7F8','#EBFFB3','#FF9A9B','#E5FF9A']
-
-{/* <script src="https://unpkg.com/aatjs/dist/aat.min.js"></script>
-   const ScrollObserver = aat.ScrollObserver;
-   const ScrollObserver = aat.ScrollObserver; */}
    useEffect(() => {
     if (containerInView){
         const cardsContainer = cardsContainerRef.current;
@@ -67,7 +62,6 @@ const StackCards = ({ cardsData, title }) => {
       }
       },[containerInView]);
 
-      let total = cardsData.length
 
   return (
 
@@ -78,18 +72,9 @@ const StackCards = ({ cardsData, title }) => {
                 <h2>
                 20+ years of Legacy
                 </h2>
- {/* <div style={{textAlign: 'center', paddingBottom:'32px', position:'relative'}}>
-                  <PrimaryButton>
-                  Get a Demo
-                  </PrimaryButton>
-                  </div> */}
+
                 </Text>
-                {/* <div style={{textAlign: 'center', paddingBottom:'32px', position:'relative'}}>
-                  <PrimaryButton>
-                  Get a Demo
-                  </PrimaryButton>
-                  </div> */}
-    {/* <div class="space space--small"></div> */}
+             
     <div ref={containerRef} >
       <div  className="cards" ref={cardsContainerRef}>
   
@@ -98,21 +83,17 @@ const StackCards = ({ cardsData, title }) => {
     <div  style={{justifyContent:'space-between'}} class="card__inner">
       <div style={{padding:'0px', position:'relative', background:'darkseagreen'}} class="card__image-container">
          <FullImage className='a' style={{margin:'0px auto'}} >
-                  <img  src={i1}/>
+                  <img  src={i1} alt="concept"/>
         </FullImage>
       </div>
       <div style={{justifyContent:'space-between'}} class="card__content">
         <div>
         <h4 class="card__title">Biggest Infrastructure</h4>
-        {/* <p class="card__description">
-       Infrastructure
-        </p> */}
+       
         </div>
         <div>
         <h4 class="card__title">Highest No. of facilities</h4>
-        {/* <p class="card__description">
-       No. of facilities
-        </p> */}
+       
         </div>
         <div>
         <h4 class="card__title">Largest pool of faculties</h4>
@@ -126,7 +107,7 @@ const StackCards = ({ cardsData, title }) => {
     <div class="card__inner">
       <div style={{backgroundColor:'darkseagreen'}} class="card__image-container">
          <FullImage style={{margin:'0px auto'}} >
-          <img src={i2}/>
+          <img src={i2} alt="concept"/>
         </FullImage>
       </div>
       <div class="card__content">
@@ -141,7 +122,7 @@ const StackCards = ({ cardsData, title }) => {
     <div class="card__inner">
       <div style={{backgroundColor:'darkseagreen'}} class="card__image-container">
          <FullImage style={{margin:'0px auto'}} >
-          <img src={i3}/>
+          <img src={i3} alt="concept"/>
         </FullImage>
       </div>
       <div class="card__content">
@@ -156,7 +137,7 @@ const StackCards = ({ cardsData, title }) => {
     <div class="card__inner">
       <div style={{backgroundColor:'darkseagreen'}} class="card__image-container">
          <FullImage style={{margin:'0px auto'}} >
-          <img src={i4}/>
+          <img src={i4} alt="concept"/>
         </FullImage>
       </div>
       <div class="card__content">
@@ -172,7 +153,7 @@ const StackCards = ({ cardsData, title }) => {
     <div class="card__inner">
       <div style={{backgroundColor:'darkseagreen'}} class="card__image-container">
          <FullImage style={{margin:'0px auto'}} >
-          <img src={i5}/>
+          <img src={i5} alt="concept"/>
         </FullImage>
       </div>
       <div class="card__content">
@@ -266,9 +247,4 @@ button{
 @media (max-width: ${props => props.theme.screen.xs}){
     order:1;
 }
-`
-const FeatureDiv = styled.div`
-position: sticky;
- top: 27vh;
-    z-index:5;
 `

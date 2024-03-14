@@ -79,7 +79,6 @@ const Timeline = ({ setObserver, callback }) => {
 };
 
 export default function About() {
-  const [message, setMessage] = useState("");
 
   const onCallback = () => {
     console.log("awesome");
@@ -102,7 +101,7 @@ export default function About() {
           />
         )}
       />
-      <div className="stub2">{message}</div>
+      <div className="stub2"></div>
       </SContainer>
 
     </StyledSection>
@@ -112,7 +111,7 @@ export default function About() {
         <Grid>
 <Director>
   <div style={{textAlign:'center'}}>
-  <img src={bm}> 
+  <img src={bm} alt="concept"> 
   </img>
   </div>
 
@@ -141,7 +140,7 @@ Over the years, Concept continued scaling heights, enabling more and more studen
 
 </div>
 <ImgDiv>
-<img src={building}/>
+<img src={building} alt="concept"/>
 </ImgDiv>
       </Company>
 </Container>

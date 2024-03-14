@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from "react"
-import styled, { keyframes } from "styled-components"
+import React, { useState } from "react"
+import styled from "styled-components"
 import { Container, SecondaryButton, Section } from "../style";
 import ModalVideo from 'react-modal-video'
 import bm from "../../images/thumbnail.webp"
@@ -9,12 +9,11 @@ import AnchorLink from 'react-anchor-link-smooth-scroll'
 
 const DirectorQuote = (props) => {
     const [isOpenSMP, setOpenSMP] = useState(false);
-  const [isOpenLCM, setOpenLCM] = useState(false);
 return(
     <SSection>
         <ModalVideo channel='custom' autoplay isOpen={isOpenSMP} url={v1} width="100%" style={{ width: "100%" }} onClose={() => setOpenSMP(false)} />
 
-               {/* <ModalVideo channel='custom' autoplay isOpen={isOpenSMP} url={v1} width="100%" style={{ width: "100%" }} onClose={() => setOpenSMP(false)} /> */}
+          
         <Container style={{position:'relative'}}>
         <Grid>
 <Quote>
@@ -32,9 +31,7 @@ return(
 </Quote>
 
 <FullImage>
-{/* <video autoPlay loop muted>
-                                    <source src={tipaltiThumb} type="video/mp4" />
-                                </video> */}
+
                                 <img src={bm} alt="Monday Lior"  />
                                 <PlayButton onClick={() => setOpenSMP(true)}>
         <svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 152 152" fill="none">
@@ -81,15 +78,12 @@ Bhupendra Middha<br/>
 Managing Director, Concept Classes
 </p>
 <LogoDiv className="monday">
-{/* <img src={monday} alt="monday"/> */}
 </LogoDiv>
 </div>
-{/* <a href="#contactus" style={{ textDecoration: "none" }} > */}
 <AnchorLink offset='80' href='#contactus'>
 <SecondaryButton>
 Contact us
 </SecondaryButton>
-{/* </a> */}
 </AnchorLink>
 </Text>
 
@@ -240,33 +234,7 @@ width:60px;
 }
 }
 `
-const ArrowButton = styled.img`
-width:50px;
-cursor:pointer;
-  @media (max-width: ${(props) => props.theme.screen.sm}) {
-    width: 50px;
-  }
-  @media (max-width: ${(props) => props.theme.screen.xs}) {
-    width: 45px;
-  }
-`
-const Logo = styled.div`
-position: absolute;
-bottom:0;
-left:0%;
-border-radius: 0px 20px;
-background: #FFF;
-padding:0 20px;
-max-width:300px;
 
-@media (max-width: ${(props) => props.theme.screen.xs}) {
-  max-width:150px;
-}
-img{
-  width:90%;
-  margin:auto;
-}
-`
 const LogoDiv = styled.div`
 width:100%;
 img{

@@ -1,10 +1,7 @@
-import React, { Component, useState, useEffect } from "react"
-// import { a } from "gatsby"
+import React, { Component } from "react"
 import { Menu, X } from "react-feather"
 import styled from "styled-components"
 import Platform from "../new-navigation/platform-nav"
-import Company from "../new-navigation/company-nav"
-import { Link } from 'react-scroll';
 import Solutions from "../new-navigation/solutions-nav"
 import {
   DropdownItemZluri,
@@ -18,12 +15,10 @@ import {
   NavListWrapper,
   MobileMenu,
   Mobile,
-  ActionsContainer,
   ActionsContainerMobile,
-  ActionsContainerLogin,
   NavItemMobile,
   NavListWrapperMobile,
-  Banner,
+
 } from "./style"
 import {
   Accordion,
@@ -38,13 +33,10 @@ import call from "../../../images/call.png"
 import i1 from "../../../images/icon-results-engineering.svg"
 import i2 from  "../../../images/icon-results-medical.svg"
 import i3 from  "../../../images/icon-results-pref.svg"
-import { PrimaryButton, SecondaryButton } from "../../style"
-import { PhoneFilled } from "@ant-design/icons"
-import { Modal } from "react-bootstrap";
+import { PrimaryButton } from "../../style"
 import Popup from "reactjs-popup"
 import 'reactjs-popup/dist/index.css';
 import AnchorLink from 'react-anchor-link-smooth-scroll'
-import Form from "../contact-form"
 import ScheduleForm from "../schedule-visit"
 export default class Navigation extends Component {
   
@@ -94,24 +86,19 @@ export default class Navigation extends Component {
 
   render() {
     const { mobileMenuOpen } = this.state;
-    const { banner } = this.props;
+
     const { bgwhite } = this.props;
   
     return (
      
      <div style={{width:'100vw'}}>
       <Nav {...this.props} scrolled={this.state.hasScrolled}>
-      <Banner {...this.props} scrolled={this.state.hasScrolled} banner={banner}>
-          {" "}
-          [Webinar] Using Zluri + Slack to automate access requests & cut support costs -
-          <a href="https://www.zluri.com/events/zero-touch-access-requests/" rel="dofollow, ,noopener" target="_blank">Register Now</a>
-
-        </Banner>
+     
         <StyledContainer {...this.props} scrolled={this.state.hasScrolled} bgwhite={bgwhite}>
           {/* <NavBar> */}
          <a href="/">
           <Brand>
-          <img src={logo}/>
+          <img src={logo} alt="concept"/>
 
           </Brand>
           </a>
@@ -155,13 +142,13 @@ export default class Navigation extends Component {
              <StyledLink >
               <a style={{display:'flex', alignItems:'center', textDecoration:'none', color:'#222',position:'relative', fontWeight:'500'}} href="tel:9928111865">
                     {/* <SecondaryButton style={{padding:'16px', minWidth:'93px',background:'transparent'}}> */}
-                   <img style={{height:'35px'}} src={call}/>
+                   <img style={{height:'35px'}} src={call} alt="concept"/>
                   +91-9928111865
                     {/* </SecondaryButton> */}
                     </a>
                   </StyledLink>
                   <StyledLink>
-                  {/* <a href="/get-demo/" style={{ textDecoration: "none" }} rel="noopener" target="_blank"> */}
+               
                     <PrimaryButton style={{padding:'16px', minWidth:'100px', background:'#005B38',border: '2px solid #005B38'}} onClick={this.showPopup}>
                         Schedule a visit
                     </PrimaryButton>
@@ -371,7 +358,7 @@ export default class Navigation extends Component {
                               <DropdownItemZluri>
                                 <DropdownItemImg>
                                   {/* <StyledImage src={smp} /> */}
-                                  <img src={i1}/>
+                                  <img src={i1} alt="concept"/>
                                 </DropdownItemImg>
                                 <DropdownItemTextMobile>
                                   <h4>Engineering (IIT JEE)</h4>
@@ -384,7 +371,7 @@ export default class Navigation extends Component {
                             >
                               <DropdownItemZluri>
                                 <DropdownItemImg>
-                                <img src={i2}/>
+                                <img src={i2} alt="concept"/>
 
                                 </DropdownItemImg>
                                 <DropdownItemTextMobile>
@@ -485,34 +472,6 @@ text-transform: uppercase;
 }
 `
 
-const GartnerDiv = styled.div`
-border-radius: 40px;
-background: rgb(247, 247, 247);
-padding: 10px 16px;
-display: grid;
-grid-template-columns: 1fr 1fr;
-/* gap: 10px; */
-max-width: 360px;
-margin: 0px auto;
-
-h4{
-  color: #000;
-font-family: Lexend Regular;
-font-size: 16px;
-font-style: normal;
-font-weight: 400;
-line-height: 137.5%;
-align-self: center;
-}
-button{
-  padding:0px;
-}
-a{
-  text-decoration:none;
-  align-self: center;
-}
-
-`
 const Buttons = styled.div`
 display: flex;
 flex-direction: row;

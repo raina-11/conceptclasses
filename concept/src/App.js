@@ -1,7 +1,6 @@
 
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Contact from "./pages/contact";
 import About from "./pages/about";
 import Images from "./pages/images";
 import Home from "./pages";
@@ -11,13 +10,11 @@ import CoursesP from "./pages/pre-foundation";
 import ResultsEngineering from "./pages/results-engineering";
 import ResultsMedical from "./pages/results-medical";
 import ResultsPreFoundation from "./pages/results-prefoundation";
-// import Courses from "./pages/courses";
 export default function App() {
   return (
     <BrowserRouter>
     <Routes>
       <Route path="/" element={<Home/>} />
-      <Route path="contact" element={<Contact />} />
       <Route path="about" element={<About />} />
       <Route path="images" element={<Images />} />
       <Route path="engineering" element={<Courses />} />

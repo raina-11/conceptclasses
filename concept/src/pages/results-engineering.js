@@ -1,16 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from "styled-components"
 import { Container, Section } from '../components/style';
 import r1 from "../images/r1.webp"
-import r2 from "../images/r2.webp"
-import r3 from "../images/r3.webp"
 import r4 from "../images/r4.webp"
 import r5 from "../images/r5.webp"
-import r6 from "../images/r6.webp"
-import r7 from "../images/r7.webp"
 import r8 from "../images/r8.webp"
-import r9 from "../images/r9.webp"
-import r10 from "../images/r10.webp"
 import r11 from "../images/r11.webp"
 import r12 from "../images/r12.webp"
 import r13 from "../images/r13.webp"
@@ -29,25 +23,25 @@ const ResultsEngineering= () =>  {
         <h2 style={{textAlign:'center'}}>Concept Roars, and rule like a King!</h2>
         </Stick>
         <ImgDiv>
-        <img src={r1}/>
+        <img src={r1} alt="concept" />
         </ImgDiv>
         <ImgDiv>
-        <img src={r4}/>
+        <img src={r4} alt="concept" />
         </ImgDiv>
         <ImgDiv>
-        <img src={r5}/>
+        <img src={r5} alt="concept" />
         </ImgDiv>
         <ImgDiv>
-        <img src={r8}/>
+        <img src={r8} alt="concept" />
         </ImgDiv>
         <ImgDiv>
-        <img src={r11}/>
+        <img src={r11} alt="concept" />
         </ImgDiv>
         <ImgDiv>
-        <img src={r12}/>
+        <img src={r12} alt="concept" />
         </ImgDiv>
         <ImgDiv>
-        <img src={r13}/>
+        <img src={r13} alt="concept" />
         </ImgDiv>
         
       </Container>

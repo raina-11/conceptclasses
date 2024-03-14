@@ -1,8 +1,6 @@
 import styled from "styled-components"
 import Popup from 'reactjs-popup';
-// import line from "../../../images/product/designs/new-underline.png"
 import { Container } from "../../style";
-// import { Container } from "../../global-v2";
 
 
 export const StyledPopup = styled(Popup)`
