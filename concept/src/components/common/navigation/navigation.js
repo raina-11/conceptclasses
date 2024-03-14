@@ -411,7 +411,7 @@ export default class Navigation extends Component {
                 {/* </ul> */}
               </NavListWrapperMobile>
              
-              <ActionsContainerMobile>
+              <ActionsContainerMobile style={{marginBottom:'20px'}}>
                 {/* <a href="#contactus" style={{ textDecoration: "none" }} > */}
                 <AnchorLink offset={() => 80} href='#contactus'>
 
@@ -419,9 +419,19 @@ export default class Navigation extends Component {
                   <StyledButton onClick={this.closeMobileMenu}>
                     Contact us
                   </StyledButton>
+                  
                   </AnchorLink>
+                
                 {/* </a> */}
                 {/* </Link> */}
+              </ActionsContainerMobile>
+              <ActionsContainerMobile>
+              <StyledButton onClick={this.closeMobileMenu}>
+                    Schedule a visit
+                  </StyledButton>
+                  <Popup>
+                    
+                  </Popup>
               </ActionsContainerMobile>
             </MobileMenu>
           )}
