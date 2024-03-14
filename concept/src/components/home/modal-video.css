@@ -1,0 +1,26 @@
+.modal-video{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 6vh 12vw;
+    z-index: 1000;
+    height: 100vh;
+    width: 100vw;
+}
+.modal-video-movie-wrap{
+    text-align: center;
+    padding:0 !important;
+    
+}
+.modal-video-movie-wrap iframe{
+    width: 64vw;
+    height: 36vw;
+}
+
+.modal-video-inner{
+    width:100% !important;
+}
