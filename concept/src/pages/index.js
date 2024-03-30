@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import styled from "styled-components"
 import b1 from "../images/b1.webp"
 import b2 from "../images/b2.webp"
@@ -16,6 +16,7 @@ import Carousel from "react-caroussel";
 import "react-caroussel/dist/index.css";
 
 const Home= () =>  {
+
  
   return (
     <Layout>
@@ -33,38 +34,27 @@ const Home= () =>  {
       arrows: false
     }}
     >
-    {/* <div >
-    <div style={contentStyle}></div>
-    </div> */}
+
     
     <SDiv>
-    <StyledImage src={b3} ></StyledImage> 
+    <link rel="preload" href={b3} as="image"/>
+    <StyledImage src={b3} alt="concept institute bikaner"></StyledImage> 
+
     </SDiv>
 
     <SDiv>
-    <StyledImage src={b4} ></StyledImage> 
+    <StyledImage src={b4} alt="concept institute bikaner"></StyledImage> 
     </SDiv>
     <SDiv>
-    <StyledImage src={b1} ></StyledImage> 
+    <StyledImage src={b1} alt="concept institute bikaner" ></StyledImage> 
     </SDiv>
     <SDiv>
-    <StyledImage src={b2} ></StyledImage> 
+    <StyledImage src={b2} alt="IIT JEE institute bikaner"></StyledImage> 
     </SDiv>
     <SDiv>
-    <StyledImage src={b5} ></StyledImage> 
+    <StyledImage src={b5} alt="Best IIT JEE institute bikaner"></StyledImage> 
     </SDiv>
-    {/* <div>
-    <StyledImage src={bg} ></StyledImage>
-     
-    </div>
-    <div>
-    <StyledImage src={b1} ></StyledImage>
-     
-    </div>
-    <div>
-    <StyledImage src={bg} ></StyledImage>
-     
-    </div> */}
+   
   </Carousel>
   </StyledDiv>
 
