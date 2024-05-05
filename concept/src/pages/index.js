@@ -5,6 +5,7 @@ import b2 from "../images/b2.webp"
 import b3 from "../images/b3.webp"
 import b4 from "../images/b4.webp"
 import b5 from "../images/b5.webp"
+import soon from "../images/soon.jpg"
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import ScrollSmooth from '../components/home/smooth-scroll';
@@ -14,6 +15,7 @@ import Footer from '../components/common/footer';
 import Form from '../components/common/contact-form';
 import Carousel from "react-caroussel";
 import "react-caroussel/dist/index.css";
+import Popup from 'reactjs-popup';
 
 const Home= () =>  {
 
@@ -23,6 +25,21 @@ const Home= () =>  {
     <Navigation bgwhite={true}/>
 
   
+    <Popup
+            open={true}
+            position="center"
+            modal
+            overlayStyle={{ background: "transparent", backdropFilter:"blur(5px)" }}
+            contentStyle={{ width:'90%',borderRadius:'20px', maxHeight:"700px", background: 'darkseagreen', padding:"0", zIndex:"-2"}}
+            style={{ borderRadius: "22px" }}
+            closeOnDocumentClick
+            // onClose={this.closePopup}
+          >
+            <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
+              {/* <img src={soon}/> */}
+            Key of NEET 2024 will be released soon.... Stay Tuned
+            </KeyPopup>
+            </Popup>
   
     <StyledDiv>
     <Carousel 
@@ -98,3 +115,17 @@ width:100vw;
 
 `
 
+const KeyPopup = styled.div`
+font-family:Lexend Medium;
+padding:0px 10px;
+font-size: 40px;
+text-align:center;
+flex-direction:column;
+gap:16px;
+img{
+  width: 80px;
+}
+@media (max-width: 500px) {
+font-size:19px;
+}
+`
