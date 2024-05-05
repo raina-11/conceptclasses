@@ -1,12 +1,10 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import styled from "styled-components"
 import b1 from "../images/b1.webp"
 import b2 from "../images/b2.webp"
 import b3 from "../images/b3.webp"
 import b4 from "../images/b4.webp"
 import b5 from "../images/b5.webp"
-import key from "../images/answer-key.pdf"
-import bg from "../images/bg-about.png"
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import ScrollSmooth from '../components/home/smooth-scroll';
@@ -22,7 +20,7 @@ import { PrimaryButton } from '../components/style';
 const Home= () =>  {
 
   const onButtonClick = () => {
-    const pdfUrl = key;
+    const pdfUrl = 'https://drive.google.com/file/d/1igxyp7bg5phDfLid3EzytPj5TGp6Ef1W/view?usp=sharing';
     const link = document.createElement("a");
     link.href = pdfUrl;
     link.download = "answerkey.pdf"; // specify the filename
