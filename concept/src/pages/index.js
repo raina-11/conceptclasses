@@ -5,6 +5,7 @@ import b2 from "../images/b2.webp"
 import b3 from "../images/b3.webp"
 import b4 from "../images/b4.webp"
 import b5 from "../images/b5.webp"
+import key from "../images/answer-key.pdf"
 import soon from "../images/soon.jpg"
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
@@ -16,10 +17,19 @@ import Form from '../components/common/contact-form';
 import Carousel from "react-caroussel";
 import "react-caroussel/dist/index.css";
 import Popup from 'reactjs-popup';
+import { PrimaryButton } from '../components/style';
 
 const Home= () =>  {
 
- 
+  const onButtonClick = () => {
+    const pdfUrl = key;
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = "answerkey.pdf"; // specify the filename
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
   return (
     <Layout>
     <Navigation bgwhite={true}/>
@@ -37,7 +47,11 @@ const Home= () =>  {
           >
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
               {/* <img src={soon}/> */}
-            Key of NEET 2024 will be released soon.... Stay Tuned
+              The NEET 2024 answer key is out now! Download below!
+            <PrimaryButton onClick={onButtonClick}>
+            Download Answer Key Now
+
+            </PrimaryButton>
             </KeyPopup>
             </Popup>
   
