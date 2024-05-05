@@ -6,7 +6,7 @@ import b3 from "../images/b3.webp"
 import b4 from "../images/b4.webp"
 import b5 from "../images/b5.webp"
 import key from "../images/answer-key.pdf"
-import soon from "../images/soon.jpg"
+import bg from "../images/bg-about.png"
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import ScrollSmooth from '../components/home/smooth-scroll';
@@ -40,15 +40,15 @@ const Home= () =>  {
             position="center"
             modal
             overlayStyle={{ background: "transparent", backdropFilter:"blur(5px)" }}
-            contentStyle={{ width:'90%',borderRadius:'20px', maxHeight:"700px", background: 'darkseagreen', padding:"0", zIndex:"-2"}}
+            contentStyle={{ width:'90%',borderRadius:'20px', maxHeight:"700px", background:'#076B37',padding:"0", zIndex:"-2"}}
             style={{ borderRadius: "22px" }}
             closeOnDocumentClick
             // onClose={this.closePopup}
           >
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
               {/* <img src={soon}/> */}
-              The NEET 2024 answer key is out now! Download below!
-            <PrimaryButton onClick={onButtonClick}>
+              The NEET 2024 answer key is <span>Out Now!</span>
+            <PrimaryButton onClick={onButtonClick} >
             Download Answer Key Now
 
             </PrimaryButton>
@@ -135,11 +135,16 @@ padding:0px 10px;
 font-size: 40px;
 text-align:center;
 flex-direction:column;
+color:#fff;
 gap:16px;
 img{
   width: 80px;
 }
 @media (max-width: 500px) {
 font-size:19px;
+}
+span{
+  color:#EFC800;
+  font-family:Lexend Bold;
 }
 `
