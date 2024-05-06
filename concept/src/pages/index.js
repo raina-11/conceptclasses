@@ -20,7 +20,7 @@ import { PrimaryButton } from '../components/style';
 const Home= () =>  {
 
   const onButtonClick = () => {
-    const pdfUrl = 'https://drive.google.com/file/d/1igxyp7bg5phDfLid3EzytPj5TGp6Ef1W/view?usp=sharing';
+    const pdfUrl = 'https://drive.google.com/file/d/1hnS_ln7eGO0LABL0SuZGGvNZSn7VMhYu/view?usp=sharing';
     const link = document.createElement("a");
     link.href = pdfUrl;
     link.download = "answerkey.pdf"; // specify the filename
