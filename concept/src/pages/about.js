@@ -27,12 +27,12 @@ const Timeline = ({ setObserver, callback }) => {
   const circle3 = useRef(null);
 
   const someCallback = () => {
-    setMessage1("जिद हो अगर IITian / Doctor बन्ने की");
+    setMessage1("जिद हो अगर IITian / Doctor बनने की");
     callback();
   };
 
   const someCallback2 = () => {
-    setMessage2("जुनून हो अगर मंजिल पाने की");
+    setMessage2("जुनून हो अगर मंजिल पाने का");
   };
 
   const someCallback3 = () => {

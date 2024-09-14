@@ -134,6 +134,10 @@ export default class Navigation extends Component {
                   </a> */}
                   <AnchorLink offset='100' href='#contactus'>Contact us</AnchorLink>
                 </NavItem>
+                <NavItem>
+                <a href="/about/">Science Champ</a>
+                </NavItem>
+
                 {/* <Company /> */}
                
             </NavListWrapper>

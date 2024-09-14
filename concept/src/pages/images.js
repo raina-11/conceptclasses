@@ -9,7 +9,7 @@ import i4 from "../images/i4.webp"
 import i5 from "../images/i5.webp"
 import i6 from "../images/i6.webp"
 import i7 from "../images/i7.webp"
-import i8 from "../images/i8.webp"
+// import i8 from "../images/i8.webp"
 import i9 from "../images/i9.webp"
 import i10 from "../images/i10.webp"
 import i11 from "../images/i11.webp"
@@ -36,7 +36,7 @@ const Images= () =>  {
   <img src={i5} class="img-responsive" alt="concept" />
 <img src={i6} class="img-responsive" alt="concept" />
   <img src={i7} class="card img-responsive" alt="concept" />
-  <img src={i8} class="img-responsive" alt="concept" />
+  {/* <img src={i8} class="img-responsive" alt="concept" /> */}
   <img src={i9} class="img-responsive" alt="concept" />
   <img src={i10} class="img-responsive" alt="concept" />
   <img src={i11} class="img-responsive" alt="concept" />
