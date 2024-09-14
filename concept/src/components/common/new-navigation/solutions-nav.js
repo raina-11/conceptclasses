@@ -174,7 +174,7 @@ const Solutions = () => {
                   </div>
                   </a>
              
-                  <HashLink smooth to="/pre-foundation#ninth">
+                  <HashLink smooth to="/pre-foundation">
                     
                     <DropdownItem>
                   
@@ -185,7 +185,7 @@ const Solutions = () => {
                   {/* </Link> */}
                   </HashLink>
                   {/* </a> */}
-                  <a href="/pre-foundation#tenth">
+                  <a href="/pre-foundation">
 
                     <DropdownItem>
                   

@@ -8,6 +8,7 @@ import r8 from "../images/r8.webp"
 import r11 from "../images/r11.webp"
 import r12 from "../images/r12.webp"
 import r13 from "../images/r13.webp"
+import r16 from "../images/r16.jpg"
 import Layout from '../components/common/layout/layout';
 import Navigation from '../components/common/navigation/navigation';
 import Form from '../components/common/contact-form';
@@ -22,6 +23,9 @@ const ResultsEngineering= () =>  {
         <Stick>
         <h2 style={{textAlign:'center'}}>Concept Roars, and rule like a King!</h2>
         </Stick>
+        <ImgDiv>
+        <img src={r16} alt="concept" />
+        </ImgDiv>
         <ImgDiv>
         <img src={r1} alt="concept" />
         </ImgDiv>

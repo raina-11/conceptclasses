@@ -3,7 +3,7 @@ import styled from "styled-components"
 import "./stack-cards.css"
 import { ScrollObserver, valueAtPercentage } from "./aat.js";
 import { useInView } from 'react-intersection-observer';
-import { Container } from '../style.js';
+import { Container, PrimaryButton } from '../style.js';
 import i1 from "../../images/building-cover.png"
 import i2 from "../../images/sc-2.png"
 import i3 from "../../images/sc-3.svg"
@@ -14,7 +14,9 @@ const StackCards = ({ cardsData, title }) => {
   console.log('useEffect triggered');
     const cardsContainerRef = useRef(null);
     const [containerRef, containerInView] = useInView({ triggerOnce: false });
-
+    const onButtonClick = () => {
+      window.open('https://forms.gle/qrA57xAZgHyaJyxz8', '_blank');
+  };
    useEffect(() => {
     if (containerInView){
         const cardsContainer = cardsContainerRef.current;
@@ -68,6 +70,14 @@ const StackCards = ({ cardsData, title }) => {
     // <Section>
     <Wrap>
     <Container>
+      <div style={{backgroundColor:'#076B37', padding:'20px', borderRadius:'20px'}}>
+      <KeyPopup style={{width:'100%', display:'flex', justifyContent:'center', alignItems:'center'}}>
+             Concept Science Champ 2024 is hereeeee <span>Seats filling fast!</span> 
+            <PrimaryButton onClick={onButtonClick} >
+            Enroll Now
+            </PrimaryButton>
+            </KeyPopup>
+      </div>
     <Text>
                 <h2>
                 20+ years of Legacy
@@ -246,5 +256,24 @@ button{
 
 @media (max-width: ${props => props.theme.screen.xs}){
     order:1;
+}
+`
+const KeyPopup = styled.div`
+font-family:Lexend Medium;
+padding:0px 10px;
+font-size: 40px;
+text-align:center;
+flex-direction:column;
+color:#fff;
+gap:16px;
+img{
+  width: 80px;
+}
+@media (max-width: 500px) {
+font-size:19px;
+}
+span{
+  color:#EFC800;
+  font-family:Lexend Bold;
 }
 `

@@ -55,7 +55,7 @@ const Courses= () =>  {
         <h4>
         <span>Syllabus Covered</span> : Complete 10th Board syllabus of Maths, Physics, Biology, Chemistry & English.
     </h4>
-    <h4 id="ninth">
+    <h4 >
       batch starting soon 
       {/* <PrimaryButton>Contact us</PrimaryButton> */}
     </h4>

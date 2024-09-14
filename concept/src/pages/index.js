@@ -2,9 +2,13 @@ import React from 'react';
 import styled from "styled-components"
 import b1 from "../images/b1.webp"
 import b2 from "../images/b2.webp"
-import b3 from "../images/b3.webp"
-import b4 from "../images/b4.webp"
+import b3 from "../images/b3n.webp"
+import b6 from "../images/bn.webp"
+import b7 from "../images/bn1.webp"
+import b8 from "../images/bn2.webp"
+import b9 from "../images/bn3.webp"
 import b5 from "../images/b5.webp"
+import b4 from "../images/b4.webp"
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import ScrollSmooth from '../components/home/smooth-scroll';
@@ -20,13 +24,14 @@ import { PrimaryButton } from '../components/style';
 const Home= () =>  {
 
   const onButtonClick = () => {
-    const pdfUrl = 'https://drive.google.com/file/d/1hnS_ln7eGO0LABL0SuZGGvNZSn7VMhYu/view?usp=sharing';
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    link.download = "answerkey.pdf"; // specify the filename
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // const pdfUrl = 'https://drive.google.com/file/d/1hnS_ln7eGO0LABL0SuZGGvNZSn7VMhYu/view?usp=sharing';
+    // const link = document.createElement("a");
+    // link.href = pdfUrl;
+    // link.download = "answerkey.pdf"; // specify the filename
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
+    window.open('https://forms.gle/qrA57xAZgHyaJyxz8', '_blank');
 };
   return (
     <Layout>
@@ -41,14 +46,11 @@ const Home= () =>  {
             contentStyle={{ width:'90%',borderRadius:'20px', maxHeight:"700px", background:'#076B37',padding:"0", zIndex:"-2"}}
             style={{ borderRadius: "22px" }}
             closeOnDocumentClick
-            // onClose={this.closePopup}
           >
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
-              {/* <img src={soon}/> */}
-              The NEET 2024 answer key is <span>Out Now!</span>
+             Concept Science Champ 2024 is hereeeee <span>Seats filling fast!</span> 
             <PrimaryButton onClick={onButtonClick} >
-            Download Answer Key Now
-
+            Enroll Now
             </PrimaryButton>
             </KeyPopup>
             </Popup>
@@ -70,20 +72,31 @@ const Home= () =>  {
     <StyledImage src={b3} alt="concept institute bikaner"></StyledImage> 
 
     </SDiv>
-
     <SDiv>
-    <StyledImage src={b4} alt="concept institute bikaner"></StyledImage> 
+    <StyledImage src={b6} alt="concept institute bikaner"></StyledImage> 
     </SDiv>
+    <SDiv>
+    <StyledImage src={b7} alt="concept institute bikaner"></StyledImage> 
+    </SDiv>
+    <SDiv>
+    <StyledImage src={b8} alt="concept institute bikaner"></StyledImage> 
+    </SDiv>
+    <SDiv>
+    <StyledImage src={b9} alt="concept institute bikaner"></StyledImage> 
+    </SDiv>
+    {/* <SDiv>
+    <StyledImage src={b4} alt="concept institute bikaner"></StyledImage> 
+    </SDiv> */}
     <SDiv>
     <StyledImage src={b1} alt="concept institute bikaner" ></StyledImage> 
     </SDiv>
-    <SDiv>
+    {/* <SDiv>
     <StyledImage src={b2} alt="IIT JEE institute bikaner"></StyledImage> 
-    </SDiv>
-    <SDiv>
+    </SDiv> */}
+    {/* <SDiv>
     <StyledImage src={b5} alt="Best IIT JEE institute bikaner"></StyledImage> 
     </SDiv>
-   
+    */}
   </Carousel>
   </StyledDiv>
 
