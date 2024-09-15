@@ -1,14 +1,11 @@
 import React from 'react';
 import styled from "styled-components"
 import b1 from "../images/b1.webp"
-import b2 from "../images/b2.webp"
 import b3 from "../images/b3n.webp"
 import b6 from "../images/bn.webp"
 import b7 from "../images/bn1.webp"
 import b8 from "../images/bn2.webp"
 import b9 from "../images/bn3.webp"
-import b5 from "../images/b5.webp"
-import b4 from "../images/b4.webp"
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import ScrollSmooth from '../components/home/smooth-scroll';
@@ -20,9 +17,9 @@ import Carousel from "react-caroussel";
 import "react-caroussel/dist/index.css";
 import Popup from 'reactjs-popup';
 import { PrimaryButton } from '../components/style';
+import { useNavigate } from 'react-router-dom';
 
 const Home= () =>  {
-
   const onButtonClick = () => {
     // const pdfUrl = 'https://drive.google.com/file/d/1hnS_ln7eGO0LABL0SuZGGvNZSn7VMhYu/view?usp=sharing';
     // const link = document.createElement("a");
@@ -31,8 +28,15 @@ const Home= () =>  {
     // document.body.appendChild(link);
     // link.click();
     // document.body.removeChild(link);
+    // https://drive.google.com/file/d/1vssU-SrVBkE9B2l9bvuLnmpoV9QI3Hez/view?usp=sharing
     window.open('https://forms.gle/qrA57xAZgHyaJyxz8', '_blank');
 };
+const navigate = useNavigate();
+
+  const handleButtonClick = () => {
+    navigate('/science-champ');
+  };
+
   return (
     <Layout>
     <Navigation bgwhite={true}/>
@@ -48,8 +52,8 @@ const Home= () =>  {
             closeOnDocumentClick
           >
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
-             Concept Science Champ 2024 is hereeeee <span>Seats filling fast!</span> 
-            <PrimaryButton onClick={onButtonClick} >
+             Concept Science Champ 2025 is hereeeee <span>Seats filling fast!</span> 
+            <PrimaryButton onClick={handleButtonClick} >
             Enroll Now
             </PrimaryButton>
             </KeyPopup>
