@@ -9,13 +9,19 @@ import i2 from "../../images/sc-2.png"
 import i3 from "../../images/sc-3.svg"
 import i4 from "../../images/sc-4.svg"
 import i5 from "../../images/sc-5.svg"
+import { useNavigate } from 'react-router-dom';
+
 const StackCards = ({ cardsData, title }) => {
     cardsData=["","","",""]
   console.log('useEffect triggered');
     const cardsContainerRef = useRef(null);
     const [containerRef, containerInView] = useInView({ triggerOnce: false });
+const navigate = useNavigate();
+
     const onButtonClick = () => {
-      window.open('https://forms.gle/qrA57xAZgHyaJyxz8', '_blank');
+      // window.open('https://forms.gle/qrA57xAZgHyaJyxz8', '_blank');
+    navigate('/science-champ');
+
   };
    useEffect(() => {
     if (containerInView){
@@ -72,7 +78,7 @@ const StackCards = ({ cardsData, title }) => {
     <Container>
       <div style={{backgroundColor:'#076B37', padding:'20px', borderRadius:'20px'}}>
       <KeyPopup style={{width:'100%', display:'flex', justifyContent:'center', alignItems:'center'}}>
-             Concept Science Champ 2024 is hereeeee <span>Seats filling fast!</span> 
+             Concept Science Champ 2025 is hereeeee <span>Seats filling fast!</span> 
             <PrimaryButton onClick={onButtonClick} >
             Enroll Now
             </PrimaryButton>
