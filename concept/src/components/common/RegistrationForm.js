@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import "./reg.css"
 import Navigation from './navigation/navigation';
 import Layout from './layout/layout';
-import { Container, PrimaryButton, Section } from '../style';
+import { PrimaryButton, Section } from '../style';
 import styled from 'styled-components';
+import Footer from './footer';
 
 const App = () => {
   const [formData, setFormData] = useState({
@@ -239,6 +240,7 @@ const App = () => {
           </div>
         )}
       </Section>
+    <Footer/>
     </Layout>
   );
 };
