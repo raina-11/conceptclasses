@@ -240,7 +240,9 @@ const App = () => {
           </div>
         )}
       </Section>
-    <Footer/>
+      {!formSubmitted &&
+      <Footer/>
+      }
     </Layout>
   );
 };
