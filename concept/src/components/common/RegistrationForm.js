@@ -207,7 +207,7 @@ const App = () => {
               required
             />
 
-            <PrimaryButton>
+            <PrimaryButton disabled={isLoading}>
               {isLoading ? "Sending...." : "Submit"}
             </PrimaryButton>
           </form>
