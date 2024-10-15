@@ -109,6 +109,7 @@ const navigate = useNavigate();
             Class 10th / 11th / 12th Set O1
             </PrimaryButton>
             </styledDiv1>
+            Results will be out on 25th October 2024!
             </KeyPopup>
       </div>
     <Text>
