@@ -34,7 +34,22 @@ const Home= () =>  {
 const navigate = useNavigate();
 
   const handleButtonClick = () => {
-    navigate('/science-champ');
+    const pdfUrl = 'https://drive.google.com/file/d/1_2M7oCD8awnrzMYfzFIrNd3DUbf0wkiX/view?usp=drive_link';
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    window.open(pdfUrl, '_blank');
+  };
+  const handleButtonClick1 = () => {
+    const pdfUrl = 'https://drive.google.com/file/d/1VBOEGkESBvcuHfd2lzQvStTe3vtv6NsS/view?usp=drive_link';
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    window.open(pdfUrl, '_blank');
+  };
+  const handleButtonClick2 = () => {
+    const pdfUrl = 'https://drive.google.com/file/d/18S6cp_uwnx-kdkzj3daWA7hy2_7PQH8Z/view?usp=drive_link';
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    window.open(pdfUrl, '_blank');
   };
 
   return (
@@ -52,10 +67,18 @@ const navigate = useNavigate();
             closeOnDocumentClick
           >
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
-             Concept Science Champ 2025 is hereeeee <span>Seats filling fast!</span> 
+             Concept Science Champ 2025 Answer Key is Out now <span>Download Now!</span> 
+            <TempStyledDiv>
             <PrimaryButton onClick={handleButtonClick} >
-            Enroll Now
+            Class 7th / 8th / 9th
             </PrimaryButton>
+            <PrimaryButton onClick={handleButtonClick1} >
+            Class 10th / 11th / 12th Set C1
+            </PrimaryButton>
+            <PrimaryButton onClick={handleButtonClick2} >
+            Class 10th / 11th / 12th Set O1
+            </PrimaryButton>
+            </TempStyledDiv>
             </KeyPopup>
             </Popup>
   
@@ -139,6 +162,7 @@ padding-top:70px;
 // z-index:-1;
 }
 `
+
 const SDiv = styled.div`
 width:100vw;
 
@@ -161,5 +185,15 @@ font-size:19px;
 span{
   color:#EFC800;
   font-family:Lexend Bold;
+}
+`
+
+const TempStyledDiv = styled.div`
+display: flex;
+gap:16px;
+
+@media (max-width: 600px) {
+flex-direction: column;
+gap:8px;
 }
 `
