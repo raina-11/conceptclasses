@@ -46,7 +46,7 @@ const navigate = useNavigate();
     window.open(pdfUrl, '_blank');
   };
   const handleButtonClick2 = () => {
-    const pdfUrl = 'https://drive.google.com/file/d/18S6cp_uwnx-kdkzj3daWA7hy2_7PQH8Z/view?usp=drive_link';
+    const pdfUrl = 'https://drive.google.com/file/d/1ufiBIDJGV9vbfcH8EkSUROi2ndw7wTZ4/view?usp=sharing';
     const link = document.createElement("a");
     link.href = pdfUrl;
     window.open(pdfUrl, '_blank');
@@ -67,9 +67,9 @@ const navigate = useNavigate();
             closeOnDocumentClick
           >
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
-             Concept Science Champ 2025 Answer Key is Out now <span>Download Now!</span> 
+             Concept NEET UG 2025 Answer Key is Out now <span>Download Now 👇</span> 
             <TempStyledDiv>
-            <PrimaryButton onClick={handleButtonClick} >
+            {/* <PrimaryButton onClick={handleButtonClick} >
             Class 7th / 8th / 9th
             </PrimaryButton>
             <PrimaryButton onClick={handleButtonClick1} >
@@ -77,9 +77,11 @@ const navigate = useNavigate();
             </PrimaryButton>
             <PrimaryButton onClick={handleButtonClick2} >
             Class 10th / 11th / 12th Set O1
+            </PrimaryButton> */}
+            <PrimaryButton onClick={handleButtonClick2} >
+              Answer Key
             </PrimaryButton>
             </TempStyledDiv>
-            Results will be out on 25th October 2024!
             </KeyPopup>
             </Popup>
   

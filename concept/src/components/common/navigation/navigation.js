@@ -135,7 +135,7 @@ export default class Navigation extends Component {
                   <AnchorLink offset='100' href='#contactus'>Contact us</AnchorLink>
                 </NavItem>
                 <NavItem>
-                <a href="/about/">Science Champ</a>
+                <a href="/science-champ-result/">Science Champ Result</a>
                 </NavItem>
 
                 {/* <Company /> */}
@@ -146,8 +146,8 @@ export default class Navigation extends Component {
              <StyledLink >
               <a style={{display:'flex', alignItems:'center', textDecoration:'none', color:'#222',position:'relative', fontWeight:'500'}} href="tel:9928111865">
                     {/* <SecondaryButton style={{padding:'16px', minWidth:'93px',background:'transparent'}}> */}
-                   <img style={{height:'35px'}} src={call} alt="concept"/>
-                  +91-9928111865
+                   <img style={{height:'30px'}} src={call} alt="concept"/>
+                  9928111865
                     {/* </SecondaryButton> */}
                     </a>
                   </StyledLink>
@@ -401,7 +401,11 @@ export default class Navigation extends Component {
                       </AccordionItem>
                     </Accordion>
                   </NavItemMobile>
-                 
+                  <NavItemMobile>
+                    <a href="/science-champ-result/" onClick={this.closeMobileMenu}>
+                      Science Champ Result
+                    </a>
+                  </NavItemMobile>
                 {/* </ul> */}
               </NavListWrapperMobile>
              

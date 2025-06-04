@@ -123,7 +123,7 @@ const ScrollSmooth = (props) => {
                   </h2>
                   <AnimateText className={isElementVisible ? "active" : ""}>
                         
-                        Concept Classes
+                        Concept Institute
                        
                       
                     </AnimateText>

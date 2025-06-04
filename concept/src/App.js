@@ -10,7 +10,8 @@ import CoursesP from "./pages/pre-foundation";
 import ResultsEngineering from "./pages/results-engineering";
 import ResultsMedical from "./pages/results-medical";
 import ResultsPreFoundation from "./pages/results-prefoundation";
-import RegistrationForm from "./components/common/RegistrationForm";
+import ResultLookup from "./pages/scienceChampResult";
+import SearchPage from "./pages/colleg-search";
 export default function App() {
   return (
     <BrowserRouter>
@@ -24,7 +25,8 @@ export default function App() {
       <Route path="results/engineering" element={< ResultsEngineering/>} />
       <Route path="results/medical" element={< ResultsMedical/>} />
       <Route path="results/pre-foundation" element={< ResultsPreFoundation/>} />
-      <Route path="science-champ" element={< RegistrationForm/>} />
+      <Route path="science-champ-result" element={< ResultLookup/>} />
+      <Route path="college-search" element={< SearchPage/>} />
       {/* <Route path="courses" element={<Courses />} /> */}
     </Routes>
   </BrowserRouter>

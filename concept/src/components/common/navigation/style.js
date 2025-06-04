@@ -117,7 +117,6 @@ export const StyledContainer = styled(Container)`
   border-radius: 100px;
   border:  1px solid #ABABB0 ;
 padding:12px;
-padding-left:32px;
 background: ${(props) =>props.bgwhite?'rgba(255, 255, 255, 0.80)': 'rgba(255, 255, 255, 0.80)'};
   transition: background 0.3s, border 0.3s;
 backdrop-filter: blur(20px);
@@ -135,9 +134,7 @@ export const NavListWrapper = styled.div`
   display: flex;
   gap:28px;
   align-items: center;
-  @media (max-width: ${props => props.theme.screen.lg})  {
-    // gap: 18px;
-  }
+ 
   ul {
     align-self: center;
     list-style: none;
@@ -170,6 +167,9 @@ font-weight: 500;
           margin-top: 0.75em;
         }
       `};
+  }
+   @media (max-width: ${props => props.theme.screen.lg})  {
+    gap: 16px;
   }
 `
 export const NavListWrapperMobile = styled.div`
@@ -303,7 +303,7 @@ export const Brand = styled.div`
   margin-top: -6px;
   padding-bottom: 0px;
   img{
-    height:65px;
+    height:50px;
   }
   @media (max-width: ${props => props.theme.screen.md}) {
     padding-bottom: 0;
