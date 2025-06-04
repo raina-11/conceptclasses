@@ -135,7 +135,7 @@ export default class Navigation extends Component {
                   <AnchorLink offset='100' href='#contactus'>Contact us</AnchorLink>
                 </NavItem>
                 <NavItem>
-                <a href="/science-champ-result/">Science Champ Result</a>
+                <a href="/college-search/">College Search</a>
                 </NavItem>
 
                 {/* <Company /> */}
@@ -402,8 +402,8 @@ export default class Navigation extends Component {
                     </Accordion>
                   </NavItemMobile>
                   <NavItemMobile>
-                    <a href="/science-champ-result/" onClick={this.closeMobileMenu}>
-                      Science Champ Result
+                    <a href="/college-search/" onClick={this.closeMobileMenu}>
+                      College Search
                     </a>
                   </NavItemMobile>
                 {/* </ul> */}
