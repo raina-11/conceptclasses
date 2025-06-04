@@ -31,6 +31,12 @@ const CollegeSearch = () => {
     collegeType: 'all'
   });
 
+  // Add sorting state
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: 'asc'
+  });
+
   // Separate state for input values to prevent lag
   const [inputValues, setInputValues] = useState({
     searchQuery: '',
@@ -196,11 +202,34 @@ const CollegeSearch = () => {
     setCurrentPage(1);
   }, [filteredData, pageSize]);
 
-  // Get current page data
+  // Add sorting function
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Modify getCurrentPageData to include sorting
   const getCurrentPageData = () => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    return filteredData.slice(startIndex, endIndex);
+    
+    let sortedData = [...filteredData];
+    if (sortConfig.key) {
+      sortedData.sort((a, b) => {
+        const aValue = parseInt(a[sortConfig.key]) || 0;
+        const bValue = parseInt(b[sortConfig.key]) || 0;
+        
+        if (sortConfig.direction === 'asc') {
+          return aValue - bValue;
+        }
+        return bValue - aValue;
+      });
+    }
+    
+    return sortedData.slice(startIndex, endIndex);
   };
 
   // Handle page change
@@ -299,7 +328,7 @@ const CollegeSearch = () => {
                 onChange={(e) => handleFilterChange('seatType', e.target.value)}
               >
                 <option value="all">All Seat Types</option>
-                <option value="OPEN">OPEN</option>
+                <option value="GEN">GEN</option>
                 <option value="EWS">EWS</option>
                 <option value="OBC-NCL">OBC-NCL</option>
                 <option value="SC">SC</option>
@@ -366,8 +395,22 @@ const CollegeSearch = () => {
                 <tr>
                   <th>Institute</th>
                   <th>Program</th>
-                  <th>Opening Rank</th>
-                  <th>Closing Rank</th>
+                  <th 
+                    onClick={() => handleSort('Opening Rank')}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    Opening Rank {sortConfig.key === 'Opening Rank' && (
+                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </th>
+                  <th 
+                    onClick={() => handleSort('Closing Rank')}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    Closing Rank {sortConfig.key === 'Closing Rank' && (
+                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </th>
                   <th>Seat Type</th>
                   <th>Gender</th>
                   <th>Placement Stats</th>

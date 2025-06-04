@@ -102,6 +102,17 @@
   border-bottom: 1px solid #e2e8f0;
 }
 
+/* Add styles for sortable headers */
+.results-table th[style*="cursor: pointer"]:hover {
+  background-color: #edf2f7;
+}
+
+.results-table th span {
+  margin-left: 4px;
+  display: inline-block;
+  font-size: 1rem;
+}
+
 .results-table td {
   padding: 1rem;
   border-bottom: 1px solid #e2e8f0;
