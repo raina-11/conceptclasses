@@ -57,7 +57,7 @@ const navigate = useNavigate();
     <Navigation bgwhite={true}/>
 
   
-    <Popup
+    {/* <Popup
             open={true}
             position="center"
             modal
@@ -69,21 +69,12 @@ const navigate = useNavigate();
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
              Concept NEET UG 2025 Answer Key is Out now <span>Download Now 👇</span> 
             <TempStyledDiv>
-            {/* <PrimaryButton onClick={handleButtonClick} >
-            Class 7th / 8th / 9th
-            </PrimaryButton>
-            <PrimaryButton onClick={handleButtonClick1} >
-            Class 10th / 11th / 12th Set C1
-            </PrimaryButton>
-            <PrimaryButton onClick={handleButtonClick2} >
-            Class 10th / 11th / 12th Set O1
-            </PrimaryButton> */}
             <PrimaryButton onClick={handleButtonClick2} >
               Answer Key
             </PrimaryButton>
             </TempStyledDiv>
             </KeyPopup>
-            </Popup>
+            </Popup> */}
   
     <StyledDiv>
     <Carousel 

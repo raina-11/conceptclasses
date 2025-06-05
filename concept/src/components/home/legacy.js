@@ -96,23 +96,14 @@ const navigate = useNavigate();
     // <Section>
     <Wrap>
     <Container>
-      <div style={{backgroundColor:'#076B37', padding:'20px', borderRadius:'20px'}}>
+      {/* <div style={{backgroundColor:'#076B37', padding:'20px', borderRadius:'20px'}}>
       <KeyPopup style={{width:'100%', display:'flex', justifyContent:'center', alignItems:'center'}}>
       Concept NEET UG 2025 Answer Key is Out now
-             {/* <TempStyledDiv> */}
             <PrimaryButton onClick={handleButtonClick1} style={{height:'48px', padding:'0px'}}> 
             Click Here
             </PrimaryButton>
-            {/* <PrimaryButton onClick={handleButtonClick1} >
-            Class 10th / 11th / 12th Set C1
-            </PrimaryButton>
-            <PrimaryButton onClick={handleButtonClick2} >
-            Class 10th / 11th / 12th Set O1
-            </PrimaryButton>
-            </TempStyledDiv>
-            Results will be out on 25th October 2024! */}
             </KeyPopup>
-      </div>
+      </div> */}
     <Text>
                 <h2>
                 25+ years of Legacy
