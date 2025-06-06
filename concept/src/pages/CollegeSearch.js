@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import placementData from '../data/All_Placement_Stats.json';
-import josaaData from '../data/josaa_opening_closing.json';
+import allData from '../data/all_data.json';
 import '../styles/CollegeSearch.css';
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
@@ -28,7 +27,8 @@ const CollegeSearch = () => {
     rankRange: { min: '', max: '' },
     gender: 'all',
     seatType: 'all',
-    collegeType: 'all'
+    collegeTypes: [],
+    quota: 'all'
   });
 
   // Add sorting state
@@ -88,41 +88,19 @@ const CollegeSearch = () => {
 
   // Memoize the initial data processing
   const processedData = useMemo(() => {
-    const data = josaaData.map(item => {
-      const normalizedInstitute = normalizeCollegeName(item.Institute);
-      
-      const placementInfo = placementData.find(p => {
-        const normalizedCollege = normalizeCollegeName(p.COLLEGE);
-        return normalizedCollege === normalizedInstitute;
-      }) || {};
-
-      const branchSpecificPlacement = placementData.find(p => {
-        const normalizedCollege = normalizeCollegeName(p.COLLEGE);
-        const normalizedBranch = p.Branch?.toLowerCase().trim();
-        const normalizedProgram = item['Academic Program Name']?.toLowerCase().trim();
-        
-        return normalizedCollege === normalizedInstitute && 
-               normalizedBranch && normalizedProgram &&
-               normalizedProgram.includes(normalizedBranch);
-      });
-
-      const finalPlacementInfo = branchSpecificPlacement || placementInfo;
-
-      return {
-        ...item,
-        placementStats: finalPlacementInfo ? {
-          registered: finalPlacementInfo.Registered,
-          placed: finalPlacementInfo.Placed,
-          placementPercentage: finalPlacementInfo['Placement %'],
-          lowestCTC: finalPlacementInfo['Lowest CTC (LPA)'],
-          highestCTC: finalPlacementInfo['Highest CTC (LPA)'],
-          medianCTC: finalPlacementInfo['Median CTC (LPA)'],
-          averageCTC: finalPlacementInfo['Average CTC (LPA)'],
-          year: finalPlacementInfo.Year
-        } : null
-      };
-    });
-    return data;
+    return allData.map(item => ({
+      ...item,
+      placementStats: {
+        registered: item.Registered,
+        placed: item.Placed,
+        placementPercentage: item['Placement %'],
+        lowestCTC: item['Lowest CTC (LPA)'],
+        highestCTC: item['Highest CTC (LPA)'],
+        medianCTC: item['Median CTC (LPA)'],
+        averageCTC: item['Average CTC (LPA)'],
+        year: item.Year
+      }
+    }));
   }, []);
 
   // Filter data with loading state
@@ -163,15 +141,21 @@ const CollegeSearch = () => {
         );
       }
 
-      if (filters.collegeType !== 'all') {
+      if (filters.quota !== 'all') {
         results = results.filter(item => 
-          item.TYPE === filters.collegeType
+          item.Quota === filters.quota
+        );
+      }
+
+      if (filters.collegeTypes.length > 0) {
+        results = results.filter(item => 
+          filters.collegeTypes.includes(item.TYPE)
         );
       }
 
       setFilteredData(results);
       setIsFiltering(false);
-    }, 300); // Add slight delay to show loading state
+    }, 300);
   }, [filters, processedData]);
 
   // Effect to run filtering when filters change
@@ -258,6 +242,104 @@ const CollegeSearch = () => {
     </div>
   );
 
+  // Add print function
+  const handlePrint = useCallback(() => {
+    const printWindow = window.open('', '_blank');
+    const selectedTypes = filters.collegeTypes.length > 0 ? filters.collegeTypes.join(', ') : 'All';
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>College Search Results</title>
+          <style>
+            body { font-family: Arial, sans-serif; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f8f9fa; }
+            .print-header { margin-bottom: 20px; }
+            .filters-summary { margin-bottom: 15px; color: #666; }
+            .placement-stats { margin-top: 5px; }
+            .year-stats { margin-bottom: 10px; }
+            .stats-year { font-weight: bold; }
+            .disclaimer { 
+              margin-bottom: 20px; 
+              padding: 10px; 
+              border-bottom: 1px solid #ddd;
+              color: #666;
+              font-style: italic;
+              font-size: 0.9em;
+            }
+            @media print {
+              .no-break { break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-header">
+            <h1>College Search Results</h1>
+            <div class="filters-summary">
+              <p>Filters Applied:</p>
+              <ul>
+                ${filters.searchQuery ? `<li>Search Query: ${filters.searchQuery}</li>` : ''}
+                ${filters.rankRange.min || filters.rankRange.max ? `<li>Rank Range: ${filters.rankRange.min || 'Any'} - ${filters.rankRange.max || 'Any'}</li>` : ''}
+                <li>College Types: ${selectedTypes}</li>
+                <li>Gender: ${filters.gender === 'all' ? 'All' : filters.gender}</li>
+                <li>Seat Type: ${filters.seatType === 'all' ? 'All' : filters.seatType}</li>
+                <li>Quota: ${filters.quota === 'all' ? 'All' : filters.quota}</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div class="disclaimer">
+            <p>Disclaimer: This data has been sourced from various institutions and public records. Concept does not guarantee the accuracy of this information and bears no responsibility for any decisions made based on this data.</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Institute</th>
+                <th>Program</th>
+                <th>Opening Rank</th>
+                <th>Closing Rank</th>
+                <th>Seat Type</th>
+                <th>Gender</th>
+                <th>Placement Stats</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredData.map(item => `
+                <tr class="no-break">
+                  <td>${item.Institute}</td>
+                  <td>${item['Academic Program Name']}</td>
+                  <td>${item['Opening Rank']}</td>
+                  <td>${item['Closing Rank']}</td>
+                  <td>${item['Seat Type']}</td>
+                  <td>${item.Gender}</td>
+                  <td>
+                    ${item.Years ? 
+                      item.Years.map(yearData => `
+                        <div class="year-stats">
+                          <div class="stats-year">Year: ${yearData.Year}</div>
+                          <div>Placement: ${yearData['Placement Statistics']['Placement %']}</div>
+                          <div>Average: ${formatCTC(yearData['Placement Statistics']['Average CTC (LPA)'])}</div>
+                          <div>Highest: ${formatCTC(yearData['Placement Statistics']['Highest CTC (LPA)'])}</div>
+                          <div>Median: ${formatCTC(yearData['Placement Statistics']['Median CTC (LPA)'])}</div>
+                        </div>
+                      `).join('') 
+                      : 'No placement data available'
+                    }
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  }, [filteredData, filters, formatCTC]);
+
   return (
     <Layout>
       <Navigation/>
@@ -315,7 +397,7 @@ const CollegeSearch = () => {
               >
                 <option value="all">All Genders</option>
                 <option value="Gender-Neutral">Gender-Neutral</option>
-                <option value="Female-only (including Supernumerary)">Female-only</option>
+                <option value="Female-only">Female-only</option>
               </select>
             </div>
 
@@ -336,44 +418,81 @@ const CollegeSearch = () => {
               </select>
             </div>
 
+            {/* Quota Filter */}
+            <div>
+              <label className="filter-label">Quota</label>
+              <select
+                className="filter-select"
+                value={filters.quota}
+                onChange={(e) => handleFilterChange('quota', e.target.value)}
+              >
+                <option value="all">All Quotas</option>
+                <option value="AI">All India (AI)</option>
+                <option value="OS">Other State (OS)</option>
+              </select>
+            </div>
+
             {/* College Type Filter */}
             <div>
               <label className="filter-label">College Type</label>
-              <select
-                className="filter-select"
-                value={filters.collegeType}
-                onChange={(e) => handleFilterChange('collegeType', e.target.value)}
-              >
-                <option value="all">All College Types</option>
-                <option value="IIT">IIT</option>
-                <option value="NIT">NIT</option>
-                <option value="IIITS">IIIT</option>
-              </select>
+              <div className="checkbox-group">
+                {['IIT', 'NIT', 'IIITS', 'GFTIS'].map((type) => (
+                  <label key={type} className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={filters.collegeTypes.includes(type)}
+                      onChange={(e) => {
+                        const updatedTypes = e.target.checked
+                          ? [...filters.collegeTypes, type]
+                          : filters.collegeTypes.filter(t => t !== type);
+                        handleFilterChange('collegeTypes', updatedTypes);
+                      }}
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Results Section */}
         <div className="table-container">
+          {/* Disclaimer */}
+          <div className="disclaimer-container" style={{ borderBottom: '1px solid #e2e8f0', borderTop: 'none', marginTop: 0 }}>
+            <p className="disclaimer-text">
+              Disclaimer: This data has been sourced from various institutions and public records. Concept does not guarantee the accuracy of this information and bears no responsibility for any decisions made based on this data.
+            </p>
+          </div>
+
           {/* Results Header */}
-          <div className="pagination-container" style={{ borderTop: 'none', borderBottom: '1px solid #e2e8f0' }}>
+          <div className="pagination-container" style={{ borderTop: 'none' }}>
             <div className="page-info">
               Total Results: {isLoading ? '...' : filteredData.length}
             </div>
-            <div className="rows-per-page">
-              <label htmlFor="pageSize" className="filter-label" style={{ margin: 0 }}>Rows per page:</label>
-              <select
-                id="pageSize"
-                className="rows-select"
-                value={pageSize}
-                onChange={handlePageSizeChange}
-                disabled={isLoading || isFiltering}
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <button
+                onClick={handlePrint}
+                className="print-button"
+                disabled={isLoading || isFiltering || filteredData.length === 0}
               >
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
+                <span className="print-icon">🖨️</span> Print Results
+              </button>
+              <div className="rows-per-page">
+                <label htmlFor="pageSize" className="filter-label" style={{ margin: 0 }}>Rows per page:</label>
+                <select
+                  id="pageSize"
+                  className="rows-select"
+                  value={pageSize}
+                  onChange={handlePageSizeChange}
+                  disabled={isLoading || isFiltering}
+                >
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -433,13 +552,18 @@ const CollegeSearch = () => {
                       <td>{item['Seat Type']}</td>
                       <td>{item.Gender}</td>
                       <td>
-                        {item.placementStats ? (
+                        {item.Years ? (
                           <div className="placement-stats">
-                            <div className="stats-year">Year: {item.placementStats.year}</div>
-                            <div className="stats-placement">Placement: {item.placementStats.placementPercentage}</div>
-                            <div>Average: {formatCTC(item.placementStats.averageCTC)}</div>
-                            <div className="stats-highlight">Highest: {formatCTC(item.placementStats.highestCTC)}</div>
-                            <div>Median: {formatCTC(item.placementStats.medianCTC)}</div>
+                            {item.Years.map((yearData, index) => (
+                              <div key={index} className="year-stats">
+                                <div className="stats-year">Year: {yearData.Year}</div>
+                                <div className="stats-placement">Placement: {yearData['Placement Statistics']['Placement %']}</div>
+                                <div>Average: {formatCTC(yearData['Placement Statistics']['Average CTC (LPA)'])}</div>
+                                <div className="stats-highlight">Highest: {formatCTC(yearData['Placement Statistics']['Highest CTC (LPA)'])}</div>
+                                <div>Median: {formatCTC(yearData['Placement Statistics']['Median CTC (LPA)'])}</div>
+                                {index < item.Years.length - 1 && <div className="year-divider"></div>}
+                              </div>
+                            ))}
                           </div>
                         ) : (
                           <span style={{ color: '#a0aec0', fontStyle: 'italic' }}>No placement data available</span>

@@ -9,7 +9,6 @@ import CoursesP from "./pages/pre-foundation";
 import ResultsEngineering from "./pages/results-engineering";
 import ResultsMedical from "./pages/results-medical";
 import ResultsPreFoundation from "./pages/results-prefoundation";
-import ResultLookup from "./pages/scienceChampResult";
 import CollegeSearch from "./pages/CollegeSearch";
 
 export default function App() {
@@ -27,7 +26,7 @@ export default function App() {
       <Route path="results/medical" element={< ResultsMedical/>} />
       <Route path="results/pre-foundation" element={< ResultsPreFoundation/>} />
       {/* <Route path="science-champ-result" element={< ResultLookup/>} /> */}
-      
+
 
       {/* <Route path="courses" element={<Courses />} /> */}
     </Routes>
