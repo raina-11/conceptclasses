@@ -4,16 +4,6 @@ import '../styles/CollegeSearch.css';
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 
-// Add styles for year header hover effect
-const yearHeaderStyles = {
-  hover: {
-    backgroundColor: '#f7fafc',
-    borderRadius: '4px',
-    padding: '8px',
-    transition: 'background-color 0.2s'
-  }
-};
-
 // Debounce helper function
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -79,17 +69,6 @@ const CollegeSearch = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [expandedYears, setExpandedYears] = useState({});
-
-  // Helper function to normalize college names for comparison
-  const normalizeCollegeName = (name) => {
-    return name.toLowerCase()
-      .replace(/\s+/g, ' ')
-      .replace('indian institute of technology', 'iit')
-      .replace('national institute of technology', 'nit')
-      .replace('indian institute of information technology', 'iiit')
-      .trim();
-  };
 
   // Initialize loading state
   useEffect(() => {
@@ -256,21 +235,7 @@ const CollegeSearch = () => {
     setPageSize(newPageSize);
     setCurrentPage(1); // Reset to first page when changing page size
   };
-
-  // Format CTC value for display
-  const formatCTC = (value) => {
-    return value ? `₹${value} LPA` : 'N/A';
-  };
-
-  // Loading Skeleton Component
-  const TableSkeleton = () => (
-    <div className="animate-pulse">
-      {[...Array(10)].map((_, index) => (
-        <div key={index} className="shimmer shimmer-line" />
-      ))}
-    </div>
-  );
-
+  
   // Add CSV export function
   const exportToCSV = useCallback(() => {
     // Define CSV headers
@@ -315,15 +280,6 @@ const CollegeSearch = () => {
     link.click();
     document.body.removeChild(link);
   }, [filteredData]);
-
-  // Helper function to toggle year expansion
-  const toggleYearExpansion = (collegeId, year, rowIndex) => {
-    const key = `${collegeId}-${year}-${rowIndex}`;
-    setExpandedYears(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
 
   // Add helper function to check if columns should be visible
   const shouldShowColumn = {

@@ -34,17 +34,7 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbyknt9LfEvqeacgf4OrWS-zaxWj1FPyk7wD8DiWVgPp6FYN1TpiHxN8Hb4uzNTPw2jlBg/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
       setIsLoading(false);
-
-      const result = await response.text();
       setFormSubmitted(true);
     } catch (error) {
       console.error('Error:', error);
