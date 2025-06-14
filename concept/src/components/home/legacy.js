@@ -70,14 +70,15 @@ const navigate = useNavigate();
       }
       },[containerInView]);
 
-      const handleButtonClick = () => {
-        const pdfUrl = 'https://drive.google.com/file/d/1_2M7oCD8awnrzMYfzFIrNd3DUbf0wkiX/view?usp=drive_link';
-        const link = document.createElement("a");
-        link.href = pdfUrl;
-        window.open(pdfUrl, '_blank');
+      const   handleButtonClick = () => {
+        // const pdfUrl = 'https://drive.google.com/file/d/1_2M7oCD8awnrzMYfzFIrNd3DUbf0wkiX/view?usp=drive_link';
+        // const link = document.createElement("a");
+        // link.href = pdfUrl;
+        // window.open(pdfUrl, '_blank');
+        navigate('/science-champ-result');
       };
       const handleButtonClick1 = () => {
-        const pdfUrl = 'https://drive.google.com/file/d/1VBOEGkESBvcuHfd2lzQvStTe3vtv6NsS/view?usp=drive_link';
+        const pdfUrl = 'https://drive.google.com/file/d/1ufiBIDJGV9vbfcH8EkSUROi2ndw7wTZ4/view?usp=sharing';
         const link = document.createElement("a");
         link.href = pdfUrl;
         window.open(pdfUrl, '_blank');
@@ -95,26 +96,17 @@ const navigate = useNavigate();
     // <Section>
     <Wrap>
     <Container>
-      <div style={{backgroundColor:'#076B37', padding:'20px', borderRadius:'20px'}}>
+      {/* <div style={{backgroundColor:'#076B37', padding:'20px', borderRadius:'20px'}}>
       <KeyPopup style={{width:'100%', display:'flex', justifyContent:'center', alignItems:'center'}}>
-             Concept Science Champ 2025 Answer Key is Out now <span>Seats filling fast!</span> 
-             <styledDiv1 style={{display: 'flex', gap:'16px'}}>
-            <PrimaryButton onClick={handleButtonClick} >
-            Class 7th / 8th / 9th
+      Concept NEET UG 2025 Answer Key is Out now
+            <PrimaryButton onClick={handleButtonClick1} style={{height:'48px', padding:'0px'}}> 
+            Click Here
             </PrimaryButton>
-            <PrimaryButton onClick={handleButtonClick1} >
-            Class 10th / 11th / 12th Set C1
-            </PrimaryButton>
-            <PrimaryButton onClick={handleButtonClick2} >
-            Class 10th / 11th / 12th Set O1
-            </PrimaryButton>
-            </styledDiv1>
-            Results will be out on 25th October 2024!
             </KeyPopup>
-      </div>
+      </div> */}
     <Text>
                 <h2>
-                20+ years of Legacy
+                25+ years of Legacy
                 </h2>
 
                 </Text>
@@ -154,7 +146,7 @@ const navigate = useNavigate();
           <img src={i2} alt="concept"/>
         </FullImage>
       </div>
-      <div class="card__content">
+      <div class="card__content"> 
         <h4 class="card__title">Greatest Selection Ratio</h4>
         <p class="card__description">
        in IIT JEE / NEET
@@ -309,5 +301,14 @@ font-size:19px;
 span{
   color:#EFC800;
   font-family:Lexend Bold;
+}
+`
+const TempStyledDiv = styled.div`
+display: flex;
+gap:16px;
+
+@media (max-width: 600px) {
+flex-direction: column;
+gap:8px;
 }
 `

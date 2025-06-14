@@ -135,7 +135,9 @@ export default class Navigation extends Component {
                   <AnchorLink offset='100' href='#contactus'>Contact us</AnchorLink>
                 </NavItem>
                 <NavItem>
-                <a href="/about/">Science Champ</a>
+                <a href="/college-search/">College Search </a><Anchor className="labels">
+                <span>New</span>
+              </Anchor>
                 </NavItem>
 
                 {/* <Company /> */}
@@ -146,8 +148,8 @@ export default class Navigation extends Component {
              <StyledLink >
               <a style={{display:'flex', alignItems:'center', textDecoration:'none', color:'#222',position:'relative', fontWeight:'500'}} href="tel:9928111865">
                     {/* <SecondaryButton style={{padding:'16px', minWidth:'93px',background:'transparent'}}> */}
-                   <img style={{height:'35px'}} src={call} alt="concept"/>
-                  +91-9928111865
+                   <img style={{height:'30px'}} src={call} alt="concept"/>
+                  9928111865
                     {/* </SecondaryButton> */}
                     </a>
                   </StyledLink>
@@ -401,7 +403,11 @@ export default class Navigation extends Component {
                       </AccordionItem>
                     </Accordion>
                   </NavItemMobile>
-                 
+                  <NavItemMobile>
+                    <a href="/college-search/" onClick={this.closeMobileMenu}>
+                      College Search
+                    </a>
+                  </NavItemMobile>
                 {/* </ul> */}
               </NavListWrapperMobile>
              
@@ -497,6 +503,13 @@ const StyledLink = styled.div`
     transform: rotate(12deg);
   }
 `
+const Anchor = styled.a`
+  text-decoration: none;
+  color: #b8b8b8;
+  align-self: center;
+  font-size: 14px;
+`
+
 const StyledButton = styled.button`
 background: #1C1C1F;
 border-radius: 100px;

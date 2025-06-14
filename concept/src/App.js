@@ -1,4 +1,3 @@
-
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import About from "./pages/about";
@@ -10,7 +9,8 @@ import CoursesP from "./pages/pre-foundation";
 import ResultsEngineering from "./pages/results-engineering";
 import ResultsMedical from "./pages/results-medical";
 import ResultsPreFoundation from "./pages/results-prefoundation";
-import RegistrationForm from "./components/common/RegistrationForm";
+import CollegeSearch from "./pages/CollegeSearch";
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -18,13 +18,16 @@ export default function App() {
       <Route path="/" element={<Home/>} />
       <Route path="about" element={<About />} />
       <Route path="images" element={<Images />} />
+      <Route path="college-search" element={<CollegeSearch />} />
       <Route path="engineering" element={<Courses />} />
       <Route path="medical" element={< CoursesM/>} />
       <Route path="pre-foundation" element={< CoursesP/>} />
       <Route path="results/engineering" element={< ResultsEngineering/>} />
       <Route path="results/medical" element={< ResultsMedical/>} />
       <Route path="results/pre-foundation" element={< ResultsPreFoundation/>} />
-      <Route path="science-champ" element={< RegistrationForm/>} />
+      {/* <Route path="science-champ-result" element={< ResultLookup/>} /> */}
+
+
       {/* <Route path="courses" element={<Courses />} /> */}
     </Routes>
   </BrowserRouter>
