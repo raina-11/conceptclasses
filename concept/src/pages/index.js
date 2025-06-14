@@ -21,37 +21,9 @@ import { PrimaryButton } from '../components/style';
 import { useNavigate } from 'react-router-dom';
 
 const Home= () =>  {
-  const onButtonClick = () => {
-    // const pdfUrl = 'https://drive.google.com/file/d/1hnS_ln7eGO0LABL0SuZGGvNZSn7VMhYu/view?usp=sharing';
-    // const link = document.createElement("a");
-    // link.href = pdfUrl;
-    // link.download = "answerkey.pdf"; // specify the filename
-    // document.body.appendChild(link);
-    // link.click();
-    // document.body.removeChild(link);
-    // https://drive.google.com/file/d/1vssU-SrVBkE9B2l9bvuLnmpoV9QI3Hez/view?usp=sharing
-    window.open('https://forms.gle/qrA57xAZgHyaJyxz8', '_blank');
-};
+
 const navigate = useNavigate();
 
-  const handleButtonClick = () => {
-    const pdfUrl = 'https://drive.google.com/file/d/1_2M7oCD8awnrzMYfzFIrNd3DUbf0wkiX/view?usp=drive_link';
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    window.open(pdfUrl, '_blank');
-  };
-  const handleButtonClick1 = () => {
-    const pdfUrl = 'https://drive.google.com/file/d/1VBOEGkESBvcuHfd2lzQvStTe3vtv6NsS/view?usp=drive_link';
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    window.open(pdfUrl, '_blank');
-  };
-  const handleButtonClick2 = () => {
-    const pdfUrl = 'https://drive.google.com/file/d/1ufiBIDJGV9vbfcH8EkSUROi2ndw7wTZ4/view?usp=sharing';
-    const link = document.createElement("a");
-    link.href = pdfUrl;
-    window.open(pdfUrl, '_blank');
-  };
   const handleButtonClick3 = () => {
     navigate('/college-search');
   };

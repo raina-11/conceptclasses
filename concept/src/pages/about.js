@@ -47,7 +47,7 @@ const Timeline = ({ setObserver, callback }) => {
     setObserver(circle1.current, someCallback);
     setObserver(circle2.current, someCallback2);
     setObserver(circle3.current, someCallback3);
-  }, []);
+  });
 
   return (
     <>

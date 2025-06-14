@@ -3,26 +3,19 @@ import styled from "styled-components"
 import "./stack-cards.css"
 import { ScrollObserver, valueAtPercentage } from "./aat.js";
 import { useInView } from 'react-intersection-observer';
-import { Container, PrimaryButton } from '../style.js';
+import { Container } from '../style.js';
 import i1 from "../../images/building-cover.png"
 import i2 from "../../images/sc-2.png"
 import i3 from "../../images/sc-3.svg"
 import i4 from "../../images/sc-4.svg"
 import i5 from "../../images/sc-5.svg"
-import { useNavigate } from 'react-router-dom';
 
 const StackCards = ({ cardsData, title }) => {
     cardsData=["","","",""]
   console.log('useEffect triggered');
     const cardsContainerRef = useRef(null);
     const [containerRef, containerInView] = useInView({ triggerOnce: false });
-const navigate = useNavigate();
 
-    const onButtonClick = () => {
-      // window.open('https://forms.gle/qrA57xAZgHyaJyxz8', '_blank');
-    navigate('/science-champ');
-
-  };
    useEffect(() => {
     if (containerInView){
         const cardsContainer = cardsContainerRef.current;
@@ -69,27 +62,6 @@ const navigate = useNavigate();
         });
       }
       },[containerInView]);
-
-      const   handleButtonClick = () => {
-        // const pdfUrl = 'https://drive.google.com/file/d/1_2M7oCD8awnrzMYfzFIrNd3DUbf0wkiX/view?usp=drive_link';
-        // const link = document.createElement("a");
-        // link.href = pdfUrl;
-        // window.open(pdfUrl, '_blank');
-        navigate('/science-champ-result');
-      };
-      const handleButtonClick1 = () => {
-        const pdfUrl = 'https://drive.google.com/file/d/1ufiBIDJGV9vbfcH8EkSUROi2ndw7wTZ4/view?usp=sharing';
-        const link = document.createElement("a");
-        link.href = pdfUrl;
-        window.open(pdfUrl, '_blank');
-      };
-      const handleButtonClick2 = () => {
-        const pdfUrl = 'https://drive.google.com/file/d/18S6cp_uwnx-kdkzj3daWA7hy2_7PQH8Z/view?usp=drive_link';
-        const link = document.createElement("a");
-        link.href = pdfUrl;
-        window.open(pdfUrl, '_blank');
-      };
-
 
   return (
 
@@ -282,33 +254,5 @@ button{
 
 @media (max-width: ${props => props.theme.screen.xs}){
     order:1;
-}
-`
-const KeyPopup = styled.div`
-font-family:Lexend Medium;
-padding:0px 10px;
-font-size: 40px;
-text-align:center;
-flex-direction:column;
-color:#fff;
-gap:16px;
-img{
-  width: 80px;
-}
-@media (max-width: 500px) {
-font-size:19px;
-}
-span{
-  color:#EFC800;
-  font-family:Lexend Bold;
-}
-`
-const TempStyledDiv = styled.div`
-display: flex;
-gap:16px;
-
-@media (max-width: 600px) {
-flex-direction: column;
-gap:8px;
 }
 `
