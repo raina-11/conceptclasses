@@ -4,6 +4,16 @@ import '../styles/CollegeSearch.css';
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 
+// Add styles for year header hover effect
+const yearHeaderStyles = {
+  hover: {
+    backgroundColor: '#f7fafc',
+    borderRadius: '4px',
+    padding: '8px',
+    transition: 'background-color 0.2s'
+  }
+};
+
 // Debounce helper function
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -28,8 +38,11 @@ const CollegeSearch = () => {
     gender: 'all',
     seatType: 'all',
     collegeTypes: [],
-    quota: 'all'
+    counsellingType: ''  // Start with empty counseling type
   });
+
+  // Add showMainContent state back
+  const [showMainContent, setShowMainContent] = useState(false);
 
   // Add sorting state
   const [sortConfig, setSortConfig] = useState({
@@ -66,6 +79,7 @@ const CollegeSearch = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [expandedYears, setExpandedYears] = useState({});
 
   // Helper function to normalize college names for comparison
   const normalizeCollegeName = (name) => {
@@ -106,65 +120,79 @@ const CollegeSearch = () => {
   // Filter data with loading state
   const filterData = useCallback(() => {
     setIsFiltering(true);
-    setTimeout(() => {
-      let results = processedData;
+    let results = processedData;
 
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        results = results.filter(item => 
-          item.Institute.toLowerCase().includes(query) ||
-          item['Academic Program Name'].toLowerCase().includes(query)
-        );
-      }
+    // Filter by counselling type first
+    if (filters.counsellingType) {
+      results = results.filter(item => 
+        item.TYPE_Counselling === filters.counsellingType
+      );
+    }
 
-      if (filters.rankRange.min) {
-        results = results.filter(item => 
-          parseInt(item['Opening Rank']) >= parseInt(filters.rankRange.min)
-        );
-      }
+    if (filters.searchQuery) {
+      const query = filters.searchQuery.toLowerCase();
+      results = results.filter(item => 
+        item['Institute'].toLowerCase().includes(query) ||
+        item['Academic Program & Stats']?.toLowerCase().includes(query)
+      );
+    }
 
-      if (filters.rankRange.max) {
-        results = results.filter(item => 
-          parseInt(item['Closing Rank']) <= parseInt(filters.rankRange.max)
-        );
-      }
+    if (filters.rankRange.min) {
+      results = results.filter(item => 
+        parseInt(item['Opening Rank']) >= parseInt(filters.rankRange.min)
+      );
+    }
 
-      if (filters.gender !== 'all') {
-        results = results.filter(item => 
-          item.Gender === filters.gender
-        );
-      }
+    if (filters.rankRange.max) {
+      results = results.filter(item => 
+        parseInt(item['Closing Rank']) <= parseInt(filters.rankRange.max)
+      );
+    }
 
-      if (filters.seatType !== 'all') {
-        results = results.filter(item => 
-          item['Seat Type'] === filters.seatType
-        );
-      }
+    if (filters.gender !== 'all') {
+      results = results.filter(item => 
+        item.Gender === filters.gender
+      );
+    }
 
-      if (filters.quota !== 'all') {
-        results = results.filter(item => 
-          item.Quota === filters.quota
-        );
-      }
+    if (filters.seatType !== 'all') {
+      results = results.filter(item => 
+        item['Seat Type'] === filters.seatType
+      );
+    }
 
-      if (filters.collegeTypes.length > 0) {
-        results = results.filter(item => 
-          filters.collegeTypes.includes(item.TYPE)
-        );
-      }
+    // Filter out PwD entries
+    results = results.filter(item => 
+      !item['Seat Type'].includes('PwD')
+    );
 
-      setFilteredData(results);
-      setIsFiltering(false);
-    }, 300);
+    // Filter out GFTIS with HS quota
+    results = results.filter(item => 
+      !(item.TYPE === 'GFTIS' && item.Quota === 'HS')
+    );
+
+    if (filters.collegeTypes.length > 0) {
+      results = results.filter(item => 
+        filters.collegeTypes.includes(item.TYPE)
+      );
+    }
+
+    setFilteredData(results);
+    setIsFiltering(false);
   }, [filters, processedData]);
 
   // Effect to run filtering when filters change
   useEffect(() => {
-    filterData();
+    const filterTimer = setTimeout(() => {
+      filterData();
+    }, 100); // Small delay to prevent too frequent updates
+
+    return () => clearTimeout(filterTimer);
   }, [filterData]);
 
   // Handle input changes without immediate filtering
   const handleInputChange = (field, value) => {
+    setIsFiltering(true);
     setInputValues(prev => ({
       ...prev,
       [field]: value
@@ -173,6 +201,7 @@ const CollegeSearch = () => {
 
   // Handle direct filter changes (dropdowns)
   const handleFilterChange = (field, value) => {
+    setIsFiltering(true);
     setFilters(prev => ({
       ...prev,
       [field]: value
@@ -242,109 +271,274 @@ const CollegeSearch = () => {
     </div>
   );
 
-  // Add print function
-  const handlePrint = useCallback(() => {
-    const printWindow = window.open('', '_blank');
-    const selectedTypes = filters.collegeTypes.length > 0 ? filters.collegeTypes.join(', ') : 'All';
+  // Add CSV export function
+  const exportToCSV = useCallback(() => {
+    // Define CSV headers
+    const headers = [
+      'Counselling',
+      'Type',
+      'Institute',
+      'Academic Program & Placement Stats',
+      'Opening Rank',
+      'Closing Rank',
+      'Seat Type',
+      'Gender',
+      'Quota'
+    ].join(',');
+
+    // Convert data to CSV rows
+    const csvRows = filteredData.map(item => [
+      `"${item.TYPE_Counselling}"`,
+      `"${item.TYPE}"`,
+      `"${item.Institute}"`,
+      `"${item['Academic Program & Stats']}"`,
+      item['Opening Rank'],
+      item['Closing Rank'],
+      item['Seat Type'],
+      item.Gender,
+      item.Quota
+    ].join(','));
+
+    // Combine headers and rows
+    const csvContent = `${headers}\n${csvRows.join('\n')}`;
     
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>College Search Results</title>
-          <style>
-            body { font-family: Arial, sans-serif; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f8f9fa; }
-            .print-header { margin-bottom: 20px; }
-            .filters-summary { margin-bottom: 15px; color: #666; }
-            .placement-stats { margin-top: 5px; }
-            .year-stats { margin-bottom: 10px; }
-            .stats-year { font-weight: bold; }
-            .disclaimer { 
-              margin-bottom: 20px; 
-              padding: 10px; 
-              border-bottom: 1px solid #ddd;
-              color: #666;
-              font-style: italic;
-              font-size: 0.9em;
-            }
-            @media print {
-              .no-break { break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="print-header">
-            <h1>College Search Results</h1>
-            <div class="filters-summary">
-              <p>Filters Applied:</p>
-              <ul>
-                ${filters.searchQuery ? `<li>Search Query: ${filters.searchQuery}</li>` : ''}
-                ${filters.rankRange.min || filters.rankRange.max ? `<li>Rank Range: ${filters.rankRange.min || 'Any'} - ${filters.rankRange.max || 'Any'}</li>` : ''}
-                <li>College Types: ${selectedTypes}</li>
-                <li>Gender: ${filters.gender === 'all' ? 'All' : filters.gender}</li>
-                <li>Seat Type: ${filters.seatType === 'all' ? 'All' : filters.seatType}</li>
-                <li>Quota: ${filters.quota === 'all' ? 'All' : filters.quota}</li>
-              </ul>
+    // Create blob and download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'college_search_results.csv');
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [filteredData]);
+
+  // Helper function to toggle year expansion
+  const toggleYearExpansion = (collegeId, year, rowIndex) => {
+    const key = `${collegeId}-${year}-${rowIndex}`;
+    setExpandedYears(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  // Add helper function to check if columns should be visible
+  const shouldShowColumn = {
+    seat: filters.seatType === 'all',
+    gender: filters.gender === 'all'
+  };
+
+  // Add helper function to handle newlines
+  const formatProgramName = (name) => {
+    const lines = name.split('\n');
+    return lines.map((line, i) => {
+      if (i === 0) {
+        return (
+          <React.Fragment key={i}>
+            {line}
+            <br />
+          </React.Fragment>
+        );
+      }
+
+      // For placement stats lines
+      const yearMatch = line.match(/(\d{4}[-–]\d{2}:)/);
+      const beforeYear = yearMatch ? line.substring(0, yearMatch.index) : '';
+      const restOfLine = yearMatch ? line.substring(yearMatch.index) : line;
+      
+      // Split into main sections
+      const [yearSection, ...statSections] = restOfLine.split(',').map(part => part.trim());
+      
+      // Handle the year and placement section separately
+      const [year, placementStats] = yearSection.split(/:(.*)/); // Split on first colon only
+      
+      return (
+        <React.Fragment key={i}>
+          <span style={{ fontSize: '11px' }}>
+            {beforeYear}
+            {year}: {/* Year */}
+            <span style={{ color: '#ef4444' }}>{placementStats.trim()}</span>
+            {statSections.map((stat, index) => {
+              let element;
+              if (stat.toLowerCase().includes('low')) {
+                element = <span key={index} style={{ color: '#22c55e' }}>{stat}</span>;
+              } else if (stat.toLowerCase().includes('high')) {
+                element = <span key={index} style={{ color: '#3b82f6' }}>{stat}</span>;
+              } else if (stat.toLowerCase().includes('median')) {
+                element = <span key={index} style={{ color: '#eab308' }}>{stat}</span>;
+              } else {
+                element = <span key={index} style={{ color: '#ef4444' }}>{stat}</span>;
+              }
+              return [', ', element];
+            })}
+          </span>
+          {i < lines.length - 1 && <br />}
+        </React.Fragment>
+      );
+    });
+  };
+
+  // Counselling type selection handler
+  const handleCounsellingTypeSelect = (type) => {
+    setFilters(prev => ({
+      ...prev,
+      counsellingType: type
+    }));
+    setShowMainContent(true);
+  };
+
+  if (!showMainContent) {
+    return (
+      <Layout>
+        <Navigation/>
+        <div className="college-search-container" style={{ 
+          minHeight: 'calc(100vh - 200px)',
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          padding: '2rem',
+          background: '#f8fafc'
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '3rem',
+            borderRadius: '16px',
+            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+            width: '100%',
+            maxWidth: '600px',
+            textAlign: 'center'
+          }}>
+            <h1 style={{
+              fontSize: '2.5rem',
+              color: '#1e293b',
+              marginBottom: '1rem',
+              fontWeight: '600'
+            }}>Select Counselling Type</h1>
+            
+            <p style={{
+              fontSize: '1.1rem',
+              color: '#64748b',
+              marginBottom: '2rem',
+              lineHeight: '1.5'
+            }}>
+              Choose the counselling type to view relevant college and placement information
+            </p>
+
+            <div style={{ 
+              display: 'flex', 
+              gap: '1.5rem',
+              flexWrap: 'wrap',
+              justifyContent: 'center'
+            }}>
+              <button 
+                onClick={() => handleCounsellingTypeSelect('JOSAA')}
+                style={{
+                  padding: '1.25rem 2.5rem',
+                  fontSize: '1.25rem',
+                  borderRadius: '12px',
+                  border: 'none',
+                  backgroundColor: '#076B37',
+                  color: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  minWidth: '200px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 6px -1px rgba(7, 107, 55, 0.2)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(7, 107, 55, 0.25)';
+                  e.currentTarget.style.backgroundColor = '#0A864A';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(7, 107, 55, 0.2)';
+                  e.currentTarget.style.backgroundColor = '#076B37';
+                }}
+              >
+                <span style={{ position: 'relative', zIndex: 1 }}>JOSAA</span>
+              </button>
+              <button 
+                onClick={() => handleCounsellingTypeSelect('CSAB')}
+                style={{
+                  padding: '1.25rem 2.5rem',
+                  fontSize: '1.25rem',
+                  borderRadius: '12px',
+                  border: 'none',
+                  backgroundColor: '#076B37',
+                  color: 'white',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  minWidth: '200px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 6px -1px rgba(7, 107, 55, 0.2)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(7, 107, 55, 0.25)';
+                  e.currentTarget.style.backgroundColor = '#0A864A';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(7, 107, 55, 0.2)';
+                  e.currentTarget.style.backgroundColor = '#076B37';
+                }}
+              >
+                <span style={{ position: 'relative', zIndex: 1 }}>CSAB</span>
+              </button>
             </div>
           </div>
-          
-          <div class="disclaimer">
-            <p>Disclaimer: This data has been sourced from various institutions and public records. Concept does not guarantee the accuracy of this information and bears no responsibility for any decisions made based on this data.</p>
-          </div>
-
-          <table>
-            <thead>
-              <tr>
-                <th>Institute</th>
-                <th>Program</th>
-                <th>Opening Rank</th>
-                <th>Closing Rank</th>
-                <th>Seat Type</th>
-                <th>Gender</th>
-                <th>Placement Stats</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredData.map(item => `
-                <tr class="no-break">
-                  <td>${item.Institute}</td>
-                  <td>${item['Academic Program Name']}</td>
-                  <td>${item['Opening Rank']}</td>
-                  <td>${item['Closing Rank']}</td>
-                  <td>${item['Seat Type']}</td>
-                  <td>${item.Gender}</td>
-                  <td>
-                    ${item.Years ? 
-                      item.Years.map(yearData => `
-                        <div class="year-stats">
-                          <div class="stats-year">Year: ${yearData.Year}</div>
-                          <div>Placement: ${yearData['Placement Statistics']['Placement %']}</div>
-                          <div>Average: ${formatCTC(yearData['Placement Statistics']['Average CTC (LPA)'])}</div>
-                          <div>Highest: ${formatCTC(yearData['Placement Statistics']['Highest CTC (LPA)'])}</div>
-                          <div>Median: ${formatCTC(yearData['Placement Statistics']['Median CTC (LPA)'])}</div>
-                        </div>
-                      `).join('') 
-                      : 'No placement data available'
-                    }
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.print();
-  }, [filteredData, filters, formatCTC]);
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <Navigation/>
       <div className="college-search-container">
-        <h1 className="search-header">College & Placement Search</h1>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '1rem'
+        }}>
+          <h1 className="search-header">College & Placement Search</h1>
+          <select
+            value={filters.counsellingType}
+            onChange={(e) => handleFilterChange('counsellingType', e.target.value)}
+            style={{
+              padding: '0.5rem 1rem',
+              fontSize: '1rem',
+              borderRadius: '8px',
+              border: '2px solid #076B37',
+              backgroundColor: 'white',
+              color: '#076B37',
+              cursor: 'pointer',
+              fontWeight: '500',
+              minWidth: '120px'
+            }}
+          >
+            <option value="JOSAA">JOSAA</option>
+            <option value="CSAB">CSAB</option>
+          </select>
+        </div>
         
         {/* Search and Filters Card */}
         <div className="search-card">
@@ -418,20 +612,6 @@ const CollegeSearch = () => {
               </select>
             </div>
 
-            {/* Quota Filter */}
-            <div>
-              <label className="filter-label">Quota</label>
-              <select
-                className="filter-select"
-                value={filters.quota}
-                onChange={(e) => handleFilterChange('quota', e.target.value)}
-              >
-                <option value="all">All Quotas</option>
-                <option value="AI">All India (AI)</option>
-                <option value="OS">Other State (OS)</option>
-              </select>
-            </div>
-
             {/* College Type Filter */}
             <div>
               <label className="filter-label">College Type</label>
@@ -472,7 +652,7 @@ const CollegeSearch = () => {
             </div>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <button
-                onClick={handlePrint}
+                onClick={exportToCSV}
                 className="print-button"
                 disabled={isLoading || isFiltering || filteredData.length === 0}
               >
@@ -498,12 +678,13 @@ const CollegeSearch = () => {
 
           {/* Table with Loading State */}
           <div className="table-wrapper">
+            {/* Loading Overlay */}
             {(isLoading || isFiltering) && (
               <div className="loading-overlay">
                 <div className="loading-content">
                   <div className="spinner"></div>
                   <div className="loading-text">
-                    {isLoading ? 'Loading data...' : 'Filtering results...'}
+                    {isLoading ? 'Loading data...' : 'Updating results...'}
                   </div>
                 </div>
               </div>
@@ -512,63 +693,48 @@ const CollegeSearch = () => {
             <table className="results-table">
               <thead>
                 <tr>
+                  <th>Counselling</th>
+                  <th>TYPE</th>
                   <th>Institute</th>
-                  <th>Program</th>
+                  <th>Academic Program & Placement Stats</th>
                   <th 
                     onClick={() => handleSort('Opening Rank')}
                     style={{ cursor: 'pointer' }}
                   >
-                    Opening Rank {sortConfig.key === 'Opening Rank' && (
-                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    Opening <br/>Rank ↕
                   </th>
                   <th 
                     onClick={() => handleSort('Closing Rank')}
                     style={{ cursor: 'pointer' }}
                   >
-                    Closing Rank {sortConfig.key === 'Closing Rank' && (
-                      <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
-                    )}
+                    Closing <br/> Rank ↕
                   </th>
-                  <th>Seat Type</th>
-                  <th>Gender</th>
-                  <th>Placement Stats</th>
+                  {shouldShowColumn.seat && <th>Seat</th>}
+                  {shouldShowColumn.gender && <th>Gender</th>}
+                  <th>Quota</th>
+                  {filters.counsellingType === 'CSAB' && <th>Round On</th>}
                 </tr>
               </thead>
               <tbody>
                 {!isLoading && !isFiltering && getCurrentPageData().length === 0 ? (
                   <tr>
-                    <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>
+                    <td colSpan={7 + (shouldShowColumn.seat ? 1 : 0) + (shouldShowColumn.gender ? 1 : 0) + (filters.counsellingType === 'CSAB' ? 1 : 0)} style={{ textAlign: 'center', padding: '2rem' }}>
                       No results found
                     </td>
                   </tr>
                 ) : (
                   getCurrentPageData().map((item, index) => (
                     <tr key={index}>
+                      <td>{item.TYPE_Counselling}</td>
+                      <td>{item.TYPE}</td>
                       <td>{item.Institute}</td>
-                      <td>{item['Academic Program Name']}</td>
+                      <td>{formatProgramName(item['Academic Program & Stats'])}</td>
                       <td>{item['Opening Rank']}</td>
                       <td>{item['Closing Rank']}</td>
-                      <td>{item['Seat Type']}</td>
-                      <td>{item.Gender}</td>
-                      <td>
-                        {item.Years ? (
-                          <div className="placement-stats">
-                            {item.Years.map((yearData, index) => (
-                              <div key={index} className="year-stats">
-                                <div className="stats-year">Year: {yearData.Year}</div>
-                                <div className="stats-placement">Placement: {yearData['Placement Statistics']['Placement %']}</div>
-                                <div>Average: {formatCTC(yearData['Placement Statistics']['Average CTC (LPA)'])}</div>
-                                <div className="stats-highlight">Highest: {formatCTC(yearData['Placement Statistics']['Highest CTC (LPA)'])}</div>
-                                <div>Median: {formatCTC(yearData['Placement Statistics']['Median CTC (LPA)'])}</div>
-                                {index < item.Years.length - 1 && <div className="year-divider"></div>}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <span style={{ color: '#a0aec0', fontStyle: 'italic' }}>No placement data available</span>
-                        )}
-                      </td>
+                      {shouldShowColumn.seat && <td>{item['Seat Type']}</td>}
+                      {shouldShowColumn.gender && <td>{item.Gender}</td>}
+                      <td>{item.Quota}</td>
+                      {filters.counsellingType === 'CSAB' && <td>{item['Round On']}</td>}
                     </tr>
                   ))
                 )}

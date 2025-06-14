@@ -1,11 +1,12 @@
 import React from 'react';
 import styled from "styled-components"
-import b1 from "../images/b1.webp"
-import b3 from "../images/b3n.webp"
-import b6 from "../images/bn.webp"
-import b7 from "../images/bn1.webp"
-import b8 from "../images/bn2.webp"
-import b9 from "../images/bn3.webp"
+import b1 from "../images/1.webp"
+import b2 from "../images/2.webp"
+import b3 from "../images/3.webp"
+import b4 from "../images/4.webp"
+import b5 from "../images/5.webp"
+import b6 from "../images/6.webp"
+import b7 from "../images/7.webp"
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import ScrollSmooth from '../components/home/smooth-scroll';
@@ -51,13 +52,16 @@ const navigate = useNavigate();
     link.href = pdfUrl;
     window.open(pdfUrl, '_blank');
   };
+  const handleButtonClick3 = () => {
+    navigate('/college-search');
+  };
 
   return (
     <Layout>
     <Navigation bgwhite={true}/>
 
   
-    {/* <Popup
+    <Popup
             open={true}
             position="center"
             modal
@@ -67,14 +71,19 @@ const navigate = useNavigate();
             closeOnDocumentClick
           >
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
-             Concept NEET UG 2025 Answer Key is Out now <span>Download Now 👇</span> 
-            <TempStyledDiv>
-            <PrimaryButton onClick={handleButtonClick2} >
-              Answer Key
-            </PrimaryButton>
-            </TempStyledDiv>
+              <PopupHeading>
+                Find the right college for you!
+              </PopupHeading>
+              <PopupDescription>
+                Explore placement statistics and opening and closing of IITs, NITs, IIITs, and GFTIs - all in one place
+              </PopupDescription>
+              <TempStyledDiv>
+              <PrimaryButton onClick={handleButtonClick3} >
+                Click here
+              </PrimaryButton>
+              </TempStyledDiv>
             </KeyPopup>
-            </Popup> */}
+            </Popup>
   
     <StyledDiv>
     <Carousel 
@@ -89,27 +98,27 @@ const navigate = useNavigate();
 
     
     <SDiv>
-    <link rel="preload" href={b3} as="image"/>
-    <StyledImage src={b3} alt="concept institute bikaner"></StyledImage> 
+    <link rel="preload" href={b1} as="image"/>
+    <StyledImage src={b1} alt="concept institute bikaner"></StyledImage> 
 
+    </SDiv>
+    <SDiv>
+    <StyledImage src={b2} alt="concept institute bikaner"></StyledImage> 
+    </SDiv>
+    <SDiv>
+    <StyledImage src={b3} alt="concept institute bikaner"></StyledImage> 
+    </SDiv>
+    <SDiv>
+    <StyledImage src={b4} alt="concept institute bikaner"></StyledImage> 
+    </SDiv>
+    <SDiv>
+    <StyledImage src={b5} alt="concept institute bikaner"></StyledImage> 
     </SDiv>
     <SDiv>
     <StyledImage src={b6} alt="concept institute bikaner"></StyledImage> 
     </SDiv>
     <SDiv>
-    <StyledImage src={b7} alt="concept institute bikaner"></StyledImage> 
-    </SDiv>
-    <SDiv>
-    <StyledImage src={b8} alt="concept institute bikaner"></StyledImage> 
-    </SDiv>
-    <SDiv>
-    <StyledImage src={b9} alt="concept institute bikaner"></StyledImage> 
-    </SDiv>
-    {/* <SDiv>
-    <StyledImage src={b4} alt="concept institute bikaner"></StyledImage> 
-    </SDiv> */}
-    <SDiv>
-    <StyledImage src={b1} alt="concept institute bikaner" ></StyledImage> 
+    <StyledImage src={b7} alt="concept institute bikaner" ></StyledImage> 
     </SDiv>
     {/* <SDiv>
     <StyledImage src={b2} alt="IIT JEE institute bikaner"></StyledImage> 
@@ -190,4 +199,22 @@ gap:16px;
 flex-direction: column;
 gap:8px;
 }
+`
+
+const PopupHeading = styled.div`
+  color: #EFC800;
+  font-size: 32px;
+  margin-bottom: 20px;
+  @media (max-width: 500px) {
+    font-size: 24px;
+  }
+`
+
+const PopupDescription = styled.div`
+  color: #B4D9C3;
+  font-size: 24px;
+  line-height: 1.4;
+  @media (max-width: 500px) {
+    font-size: 16px;
+  }
 `

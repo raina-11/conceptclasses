@@ -135,7 +135,9 @@ export default class Navigation extends Component {
                   <AnchorLink offset='100' href='#contactus'>Contact us</AnchorLink>
                 </NavItem>
                 <NavItem>
-                <a href="/college-search/">College Search</a>
+                <a href="/college-search/">College Search </a><Anchor className="labels">
+                <span>New</span>
+              </Anchor>
                 </NavItem>
 
                 {/* <Company /> */}
@@ -501,6 +503,13 @@ const StyledLink = styled.div`
     transform: rotate(12deg);
   }
 `
+const Anchor = styled.a`
+  text-decoration: none;
+  color: #b8b8b8;
+  align-self: center;
+  font-size: 14px;
+`
+
 const StyledButton = styled.button`
 background: #1C1C1F;
 border-radius: 100px;
