@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import Select from 'react-select';
 import allData from '../data/all_data.json';
+import neetData from '../data/neet_data.json';
 import '../styles/CollegeSearch.css';
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
+import neetRajData from '../data/neet_raj_state.json';
+import IITSearch from './iitSerach';
 
 // Debounce helper function
 const useDebounce = (value, delay) => {
@@ -22,29 +26,43 @@ const useDebounce = (value, delay) => {
 };
 
 const CollegeSearch = () => {
+  const [selectedExam, setSelectedExam] = useState(null);
+  const [selectedQuota, setSelectedQuota] = useState('all'); // 'all' or 'state'
+  const [expandedRows, setExpandedRows] = useState(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  
+  // Initialize all filter states
   const [filters, setFilters] = useState({
+    // Common filters
     searchQuery: '',
-    rankRange: { min: '', max: '' },
-    gender: 'all',
-    seatType: 'all',
+    category: 'all',
+    year: '2024',
+    
+    // NEET specific filters
+    states: [],
     collegeTypes: [],
-    counsellingType: ''  // Start with empty counseling type
+    bond: 'all',
+    
+    // IIT JEE specific filters
+    counsellingType: 'JOSAA',
+    round: 'all',
+    instituteTypes: [],
+    gender: 'all',
+    seatType: 'all'
+  });
+
+  const [inputValues, setInputValues] = useState({
+    searchQuery: '',
+    rankRange: {
+      min: '',
+      max: ''
+    }
   });
 
   // Add showMainContent state back
   const [showMainContent, setShowMainContent] = useState(false);
-
-  // Add sorting state
-  const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: 'asc'
-  });
-
-  // Separate state for input values to prevent lag
-  const [inputValues, setInputValues] = useState({
-    searchQuery: '',
-    rankRange: { min: '', max: '' }
-  });
 
   // Debounce the search query and rank range
   const debouncedSearchQuery = useDebounce(inputValues.searchQuery, 300);
@@ -64,8 +82,6 @@ const CollegeSearch = () => {
   }, [debouncedSearchQuery, debouncedRankMin, debouncedRankMax]);
 
   const [filteredData, setFilteredData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
@@ -80,85 +96,160 @@ const CollegeSearch = () => {
   }, []);
 
   // Memoize the initial data processing
-  const processedData = useMemo(() => {
-    return allData.map(item => ({
-      ...item,
-      placementStats: {
-        registered: item.Registered,
-        placed: item.Placed,
-        placementPercentage: item['Placement %'],
-        lowestCTC: item['Lowest CTC (LPA)'],
-        highestCTC: item['Highest CTC (LPA)'],
-        medianCTC: item['Median CTC (LPA)'],
-        averageCTC: item['Average CTC (LPA)'],
-        year: item.Year
-      }
-    }));
-  }, []);
 
-  // Filter data with loading state
+
+  // Add state options for react-select
+  const STATE_OPTIONS = [
+    'Andaman',
+    'Andhra Pradesh',
+    'Arunachal Pradesh',
+    'Assam',
+    'Bihar',
+    'Chandigarh',
+    'Chhattisgarh',
+    'Dadra and Nagar Haveli',
+    'Delhi',
+    'Goa',
+    'Gujarat',
+    'Haryana',
+    'Himachal Pradesh',
+    'Jammu & Kashmir',
+    'Jharkhand',
+    'Karnataka',
+    'Kerala',
+    'Madhya Pradesh',
+    'Maharashtra',
+    'Manipur',
+    'Meghalaya',
+    'Mizoram',
+    'Nagaland',
+    'Odisha',
+    'Puducherry',
+    'Punjab',
+    'Rajasthan',
+    'Tamil Nadu',
+    'Telangana',
+    'Tripura',
+    'Uttar Pradesh',
+    'Uttarakhand',
+    'West Bengal'
+  ].sort().map(state => ({ value: state, label: state }));
+
+  // Add college type options for react-select
+  const COLLEGE_TYPE_OPTIONS = [
+    { value: 'Govt.', label: 'Govt.' },
+    { value: 'AIIMS', label: 'AIIMS' },
+    { value: 'JIPMER', label: 'JIPMER' }
+  ];
+
+  // Add counseling type options for IIT JEE
+  const IIT_COUNSELLING_OPTIONS = [
+    { value: 'JOSAA', label: 'JOSAA' },
+    { value: 'CSAB', label: 'CSAB' }
+  ];
+
+  // Update select styles to be consistent
+  const selectStyles = {
+    control: (base) => ({
+      ...base,
+      borderColor: '#e2e8f0',
+      borderRadius: '4px',
+      minHeight: '42px',
+      backgroundColor: 'white',
+      '&:hover': {
+        borderColor: '#cbd5e1'
+      }
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isSelected ? '#076B37' : state.isFocused ? '#f1f5f9' : 'white',
+      color: state.isSelected ? 'white' : '#1e293b',
+      '&:active': {
+        backgroundColor: '#076B37'
+      }
+    }),
+    multiValue: (base) => ({
+      ...base,
+      backgroundColor: '#e2e8f0'
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      color: '#1e293b'
+    }),
+    multiValueRemove: (base) => ({
+      ...base,
+      color: '#64748b',
+      '&:hover': {
+        backgroundColor: '#cbd5e1',
+        color: '#1e293b'
+      }
+    }),
+    placeholder: (base) => ({
+      ...base,
+      color: '#94a3b8'
+    }),
+    input: (base) => ({
+      ...base,
+      color: '#1e293b'
+    })
+  };
+
+  // Modify filterData to include state filtering
   const filterData = useCallback(() => {
     setIsFiltering(true);
-    let results = processedData;
+    let results =  neetData;
 
-    // Filter by counselling type first
-    if (filters.counsellingType) {
+    if (selectedExam === 'NEET') {
+      // Add state filtering
+      if (filters.states.length > 0) {
+        results = results.filter(item => {
+          const itemState = item.State;
+          return filters.states.some(state => {
+            // Handle state name variations
+            if (state === 'Delhi') return itemState.includes('Delhi');
+            if (state === 'Odisha') return itemState.includes('Odisha') || itemState.includes('Orissa');
+            if (state === 'Jammu & Kashmir') return itemState.includes('Jammu');
+            if (state === 'Andhra Pradesh') return itemState.includes('Andhra P.');
+            if (state === 'Himachal Pradesh') return itemState.includes('Himachal P.');
+            if (state === 'Madhya Pradesh') return itemState.includes('Madhya P.');
+            if (state === 'Uttar Pradesh') return itemState.includes('U. P.');
+            return itemState.includes(state);
+          });
+        });
+      }
+
+      // Filter by category
+      if (filters.category !== 'all') {
+        results = results.filter(item => item.Category === filters.category);
+      }
+
+      // Filter by bond
+      if (filters.bond !== 'all') {
+        const hasBond = filters.bond === 'yes';
+        results = results.filter(item => {
+          const bondInfo = item['UG Bond'] || '';
+          return hasBond ? bondInfo.toLowerCase().includes('yes') : bondInfo.toLowerCase().includes('no');
+        });
+      }
+
+      // Filter by college type
+      if (filters.collegeTypes.length > 0) {
+        results = results.filter(item => filters.collegeTypes.includes(item.TYPE));
+      }
+
+      // Filter by search query
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
       results = results.filter(item => 
-        item.TYPE_Counselling === filters.counsellingType
-      );
-    }
-
-    if (filters.searchQuery) {
-      const query = filters.searchQuery.toLowerCase();
-      results = results.filter(item => 
-        item['Institute'].toLowerCase().includes(query) ||
-        item['Academic Program & Stats']?.toLowerCase().includes(query)
-      );
-    }
-
-    if (filters.rankRange.min) {
-      results = results.filter(item => 
-        parseInt(item['Opening Rank']) >= parseInt(filters.rankRange.min)
-      );
-    }
-
-    if (filters.rankRange.max) {
-      results = results.filter(item => 
-        parseInt(item['Closing Rank']) <= parseInt(filters.rankRange.max)
-      );
-    }
-
-    if (filters.gender !== 'all') {
-      results = results.filter(item => 
-        item.Gender === filters.gender
-      );
-    }
-
-    if (filters.seatType !== 'all') {
-      results = results.filter(item => 
-        item['Seat Type'] === filters.seatType
-      );
-    }
-
-    // Filter out PwD entries
-    results = results.filter(item => 
-      !item['Seat Type'].includes('PwD')
-    );
-
-    // Filter out GFTIS with HS quota
-    results = results.filter(item => 
-      !(item.TYPE === 'GFTIS' && item.Quota === 'HS')
-    );
-
-    if (filters.collegeTypes.length > 0) {
-      results = results.filter(item => 
-        filters.collegeTypes.includes(item.TYPE)
-      );
+          item['Name of the Medical College'].toLowerCase().includes(query) ||
+          item.Location.toLowerCase().includes(query)
+        );
+      }
     }
 
     setFilteredData(results);
     setIsFiltering(false);
-  }, [filters, processedData]);
+  }, [filters, selectedExam]);
 
   // Effect to run filtering when filters change
   useEffect(() => {
@@ -287,8 +378,15 @@ const CollegeSearch = () => {
     gender: filters.gender === 'all'
   };
 
-  // Add helper function to handle newlines
+  // Modify helper function to handle newlines for both NEET and IIT data
   const formatProgramName = (name) => {
+    if (!name) return ''; // Handle undefined/null case
+    
+    if (selectedExam === 'NEET') {
+      return name; // Return as is for NEET data
+    }
+
+    // IIT data formatting
     const lines = name.split('\n');
     return lines.map((line, i) => {
       if (i === 0) {
@@ -337,16 +435,534 @@ const CollegeSearch = () => {
     });
   };
 
-  // Counselling type selection handler
-  const handleCounsellingTypeSelect = (type) => {
+
+
+  // Update the exam selection handler to use string literals
+  const handleExamSelect = (exam) => {
+    setSelectedExam(exam);
     setFilters(prev => ({
       ...prev,
-      counsellingType: type
+      searchQuery: '',
+      category: 'all',
+      year: '2024',
+      // Reset exam-specific filters
+      states: [],
+      collegeTypes: [],
+      bond: 'all',
+      counsellingType: 'JOSAA',
+      round: 'all',
+      instituteTypes: [],
+      gender: 'all',
+      seatType: 'all'
     }));
-    setShowMainContent(true);
+    setCurrentPage(1);
+    setExpandedRows(new Set());
   };
 
-  if (!showMainContent) {
+  // Add toggle function for row expansion
+  const toggleRowExpansion = (index) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  // Add styles for the expand/collapse button
+  const expandButtonStyle = {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    transition: 'all 0.2s ease',
+    color: '#076B37',
+    fontSize: '0.8rem', // Smaller size for the triangle icons
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    width: '24px',
+    height: '24px',
+    lineHeight: 1,
+  };
+
+  // Add styles for the expanded content
+  const expandedContentStyle = {
+    backgroundColor: '#f8fafc',
+    padding: '1rem',
+    borderTop: '1px solid #e2e8f0',
+  };
+
+  const detailRowStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '1rem',
+    marginTop: '0.5rem',
+  };
+
+  const detailItemStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+  };
+
+  const detailLabelStyle = {
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: '0.25rem',
+  };
+
+  const detailValueStyle = {
+    color: '#64748b',
+  };
+
+  // Add CSS for expanded rows
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .expanded-row {
+        background-color: #f1f5f9 !important;
+      }
+      .expanded-row:hover {
+        background-color: #f1f5f9 !important;
+      }
+      .results-table tr:hover .expand-button:hover {
+        background-color: #e2e8f0;
+      }
+      .expand-button {
+        transition: all 0.2s ease;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Modify the table rendering to include expandable rows
+  const renderTableRow = (item, index) => {
+    const isExpanded = expandedRows.has(index);
+    
+    return (
+      <React.Fragment key={index}>
+       <tr className={isExpanded ? 'expanded-row' : ''}>
+          
+          {selectedExam === 'NEET' ? (
+            <>
+            <td style={{ width: '40px', textAlign: 'center' }}>
+            <button
+              onClick={() => toggleRowExpansion(index)}
+              style={expandButtonStyle}
+              className="expand-button"
+              title={isExpanded ? 'Collapse' : 'Expand'}
+            >
+              {isExpanded ? '▼' : '▶'}
+            </button>
+          </td>
+              <td>{item.Location}</td>
+              <td>{item['2023 College Rank']}</td>
+              <td>{item['2022 College Rank']}</td>
+              <td>{item['2021 College Rank']}</td>
+              <td>{item['Name of the Medical College']}</td>
+              <td>{item[`Round-1 (${filters.year})`]}</td>
+              <td>{item[`Round-2 (${filters.year})`]}</td>
+              <td>{item[`MoP_Up (${filters.year})`]}</td>
+              <td>{item[`Stray (${filters.year})`]}</td>
+              <td>{item[`Special Stray (${filters.year})`]}</td>
+              <td>{item[`closing (${filters.year})`]}</td>
+              <td>{item['UG Bond']}</td>
+            </>
+          ) : (
+            <>
+              <td>{item.TYPE_Counselling}</td>
+              <td>{item.TYPE}</td>
+              <td>{item.Institute}</td>
+              <td>{formatProgramName(item['Academic Program & Stats'])}</td>
+              <td>{item['Opening Rank']}</td>
+              <td>{item['Closing Rank']}</td>
+              {shouldShowColumn.seat && <td>{item['Seat Type']}</td>}
+              {shouldShowColumn.gender && <td>{item.Gender}</td>}
+              <td>{item.Quota}</td>
+              {filters.counsellingType === 'CSAB' && <td>{item['Round On']}</td>}
+            </>
+          )}
+        </tr> 
+        {isExpanded && (
+          
+          <tr>
+            <td colSpan={selectedExam === 'NEET' ? 13 : 10} style={expandedContentStyle}>
+              <div style={detailRowStyle}>
+                <div style={detailItemStyle}>
+                  <span style={detailLabelStyle}>MBBS Seats</span>
+                  <span style={detailValueStyle}>{item['MBBS Seats'] || 'Not specified'}</span>
+                </div>
+                <div style={detailItemStyle}>
+                  <span style={detailLabelStyle}>PG</span>
+                  <span style={detailValueStyle}>{item['PG'] || 'Not specified'}</span>
+                </div>
+                <div style={detailItemStyle}>
+                  <span style={detailLabelStyle}>Hostel</span>
+                  <span style={detailValueStyle}>{item['Boys & Girls Hostel'] || 'Not specified'}</span>
+                </div>
+                <div style={detailItemStyle}>
+                  <span style={detailLabelStyle}>Teaching Hospital</span>
+                  <span style={detailValueStyle}>{item['Teaching Hospital'] || 'Not specified'}</span>
+                </div>
+                <div style={detailItemStyle}>
+                  <span style={detailLabelStyle}>Transport</span>
+                  <span style={detailValueStyle}>{item['Transport'] || 'Not specified'}</span>
+                </div>
+              </div>
+            </td>
+          </tr>
+        )}
+      </React.Fragment>
+    );
+  };
+
+  // Modify the table headers to include the expand column
+  const renderTableHeaders = () => {
+    if (selectedExam === 'NEET') {
+      return (
+        <tr>
+          <th style={{ width: '40px' }}></th>
+          <th>Location</th>
+          <th>2023 Rank</th>
+          <th>2022 Rank</th>
+          <th>2021 Rank</th>
+          <th>College Name</th>
+          <th>Round 1</th>
+          <th>Round 2</th>
+          <th>Mop Up</th>
+          <th>Stray</th>
+          <th>Special Stray</th>
+          <th>Closing Rank</th>
+          <th>Bond</th>
+        </tr>
+      );
+    }
+
+    return (
+      <tr>
+        {/* <th style={{ width: '40px' }}></th> */}
+        <th>Counselling</th>
+        <th>TYPE</th>
+        <th>Institute</th>
+        <th>Academic Program & Placement Stats</th>
+        <th>Opening Rank</th>
+        <th>Closing Rank</th>
+        {shouldShowColumn.seat && <th>Seat</th>}
+        {shouldShowColumn.gender && <th>Gender</th>}
+        <th>Quota</th>
+        {filters.counsellingType === 'CSAB' && <th>Round On</th>}
+      </tr>
+    );
+  };
+
+  // Add state filter component
+  const renderStateFilter = () => {
+    return (
+      <div>
+        <label className="filter-label">States</label>
+        <Select
+          isMulti
+          options={STATE_OPTIONS}
+          value={STATE_OPTIONS.filter(option => filters.states.includes(option.value))}
+          onChange={(selectedOptions) => {
+            const selectedStates = selectedOptions ? selectedOptions.map(option => option.value) : [];
+            handleFilterChange('states', selectedStates);
+          }}
+          styles={selectStyles}
+          placeholder="Select states..."
+          className="basic-multi-select"
+          classNamePrefix="select"
+        />
+      </div>
+    );
+  };
+
+  // Function to get the AIR value based on round and year
+  const getRoundValue = (item, round, year) => {
+    const key = `${year} R${round} AIR`;
+    return item[key] || '-';
+  };
+
+  // Function to render table headers for state quota
+  const renderStateQuotaHeaders = () => {
+    return (
+      <tr>
+        <th onClick={() => handleSort('rajasthan college rank')}>College Rank</th>
+        <th onClick={() => handleSort('College Name')}>College Name</th>
+        <th onClick={() => handleSort('Category')}>Category</th>
+        <th>Round 1</th>
+        <th>Round 2</th>
+        <th>Round 3</th>
+      </tr>
+    );
+  };
+
+  // Function to render table row for state quota
+  const renderStateQuotaRow = (item) => {
+    return (
+      <tr key={`${item['sr. no.']}-${item.Category}-${item.Gender}`}>
+        <td>{item['rajasthan college rank']}</td>
+        <td>{item['College Name']}</td>
+        <td>{item.Category}</td>
+        <td>{getRoundValue(item, 1, filters.year)}</td>
+        <td>{getRoundValue(item, 2, filters.year)}</td>
+        <td>{getRoundValue(item, 3, filters.year)}</td>
+      </tr>
+    );
+  };
+
+  // Filter function for state quota data
+  const filterStateQuotaData = useCallback(() => {
+    return neetRajData.filter(item => {
+      if (filters.category !== 'all' && item.Category !== filters.category) return false;
+      if (filters.gender !== 'all' && item.Gender !== filters.gender) return false;
+      return true;
+    });
+  }, [filters]);
+
+  // Function to render filters for state quota
+  const renderStateQuotaFilters = () => {
+    return (
+      <div className="filters-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: '24px',
+        padding: '20px'
+      }}>
+        {/* Year Filter */}
+        <div>
+          <label className="filter-label">Year</label>
+          <select
+            className="filter-select"
+            value={filters.year}
+            onChange={(e) => handleFilterChange('year', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '42px',
+              backgroundColor: 'white'
+            }}
+          >
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+          </select>
+        </div>
+
+        {/* Category Filter */}
+        <div>
+          <label className="filter-label">Category</label>
+          <select
+            className="filter-select"
+            value={filters.category}
+            onChange={(e) => handleFilterChange('category', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '42px',
+              backgroundColor: 'white'
+            }}
+          >
+            <option value="all">All Categories</option>
+            <option value="UR">UR</option>
+            <option value="OBC">OBC</option>
+            <option value="EWS">EWS</option>
+            <option value="MBC">MBC</option>
+            <option value="SC">SC</option>
+            <option value="ST">ST</option>
+            <option value="STA">STA</option>
+          </select>
+        </div>
+
+        {/* Gender Filter */}
+        <div>
+          <label className="filter-label">Gender</label>
+          <select
+            className="filter-select"
+            value={filters.gender}
+            onChange={(e) => handleFilterChange('gender', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '42px',
+              backgroundColor: 'white'
+            }}
+          >
+            <option value="all">All</option>
+            <option value="Boys">Boys</option>
+            <option value="Girls">Girls</option>
+          </select>
+        </div>
+      </div>
+    );
+  };
+
+  // Add quota selection buttons for NEET
+  const renderQuotaSelection = () => {
+    if (selectedExam !== 'NEET') return null;
+    
+    return (
+      <div className="quota-selector" style={{ marginTop: '20px', marginBottom: '20px' }}>
+        <button
+          className={`quota-button ${selectedQuota === 'all' ? 'active' : ''}`}
+          onClick={() => setSelectedQuota('all')}
+          style={{
+            padding: '10px 20px',
+            marginRight: '10px',
+            borderRadius: '4px',
+            border: '1px solid #e2e8f0',
+            backgroundColor: selectedQuota === 'all' ? '#076B37' : 'white',
+            color: selectedQuota === 'all' ? 'white' : '#1e293b',
+            cursor: 'pointer'
+          }}
+        >
+          All India Quota
+        </button>
+        <button
+          className={`quota-button ${selectedQuota === 'state' ? 'active' : ''}`}
+          onClick={() => setSelectedQuota('state')}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '4px',
+            border: '1px solid #e2e8f0',
+            backgroundColor: selectedQuota === 'state' ? '#076B37' : 'white',
+            color: selectedQuota === 'state' ? 'white' : '#1e293b',
+            cursor: 'pointer'
+          }}
+        >
+          State Quota
+        </button>
+      </div>
+    );
+  };
+
+  // Update the print function to handle both AIQ and state quota data
+  const handlePrint = useCallback(() => {
+    let dataToExport;
+    let filename;
+    
+    if (selectedExam === 'NEET' && selectedQuota === 'state') {
+      // Handle state quota data
+      const filteredData = filterStateQuotaData();
+      
+      // Transform data for state quota
+      dataToExport = filteredData.map(item => ({
+        'Rajasthan College Rank': item['rajasthan college rank'] || '-',
+        'College Name': item['College Name'] || '-',
+        'Category': item['Category'] || '-',
+        'Round 1 AIR': getRoundValue(item, 1, filters.year) || '-',
+        'Round 2 AIR': getRoundValue(item, 2, filters.year) || '-',
+        'Round 3 AIR': getRoundValue(item, 3, filters.year) || '-',
+        'Gender': item['Gender'] || '-'
+      }));
+
+      filename = `NEET_State_Quota_${filters.year}_${filters.category}_${filters.gender}.csv`;
+    } else {
+      // Handle AIQ data - use filteredData instead of getCurrentPageData
+      dataToExport = filteredData.map(item => ({
+        'College Name': item['Name of the Medical College'] || '-',
+        'Location': item['Location'] || '-',
+        'Category': item['Category'] || '-',
+        'College Rank 2023': item['2023 College Rank'] || '-',
+        'College Rank 2022': item['2022 College Rank'] || '-',
+        'College Rank 2021': item['2021 College Rank'] || '-',
+        'Round 1': item[`Round-1 (${filters.year})`] || '-',
+        'Round 2': item[`Round-2 (${filters.year})`] || '-',
+        'Mop Up': item[`MoP_Up (${filters.year})`] || '-',
+        'Stray': item[`Stray (${filters.year})`] || '-',
+        'Special Stray': item[`Special Stray (${filters.year})`] || '-',
+        'Closing Rank': item[`closing (${filters.year})`] || '-',
+        'Bond': item['UG Bond'] || '-',
+        'MBBS Seats': item['MBBS Seats'] || '-',
+        'PG': item['PG'] || '-',
+        'Hostel': item['Boys & Girls Hostel'] || '-',
+        'Teaching Hospital': item['Teaching Hospital'] || '-',
+        'Transport': item['Transport'] || '-'
+      }));
+
+      filename = `NEET_AIQ_${filters.year}_${filters.category}_${new Date().toISOString().split('T')[0]}.csv`;
+    }
+
+    if (dataToExport.length === 0) {
+      alert('No data to export. Please adjust your filters.');
+      return;
+    }
+
+    // Convert to CSV
+    const headers = Object.keys(dataToExport[0]);
+    const csvContent = [
+      headers.join(','), // Headers
+      ...dataToExport.map(row => 
+        headers.map(header => {
+          let cell = row[header] || '';
+          // Escape commas and quotes in the cell content
+          if (cell.toString().includes(',') || cell.toString().includes('"')) {
+            cell = `"${cell.toString().replace(/"/g, '""')}"`;
+          }
+          return cell;
+        }).join(',')
+      ) // Data rows
+    ].join('\n');
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  }, [selectedExam, selectedQuota, filters, filteredData, filterStateQuotaData]);
+
+  // Add print button to the UI
+  const renderPrintButton = () => {
+    return (
+      <button
+        onClick={handlePrint}
+        style={{
+          padding: '8px 16px',
+          backgroundColor: '#076B37',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          marginBottom: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 12h8v2H4v-2zM4 6h8v2H4V6zm0-4h8v2H4V2z" fill="currentColor"/>
+        </svg>
+        Download Results
+      </button>
+    );
+  };
+
+  if (!selectedExam) {
     return (
       <Layout>
         <Navigation/>
@@ -373,7 +989,7 @@ const CollegeSearch = () => {
               color: '#1e293b',
               marginBottom: '1rem',
               fontWeight: '600'
-            }}>Select Counselling Type</h1>
+            }}>Select Exam Type</h1>
             
             <p style={{
               fontSize: '1.1rem',
@@ -381,7 +997,7 @@ const CollegeSearch = () => {
               marginBottom: '2rem',
               lineHeight: '1.5'
             }}>
-              Choose the counselling type to view relevant college and placement information
+              Choose the exam type to view relevant college and counselling information
             </p>
 
             <div style={{ 
@@ -391,7 +1007,7 @@ const CollegeSearch = () => {
               justifyContent: 'center'
             }}>
               <button 
-                onClick={() => handleCounsellingTypeSelect('JOSAA')}
+                onClick={() => handleExamSelect('IIT')}
                 style={{
                   padding: '1.25rem 2.5rem',
                   fontSize: '1.25rem',
@@ -422,10 +1038,10 @@ const CollegeSearch = () => {
                   e.currentTarget.style.backgroundColor = '#076B37';
                 }}
               >
-                <span style={{ position: 'relative', zIndex: 1 }}>JOSAA</span>
+                <span style={{ position: 'relative', zIndex: 1 }}>IIT-JEE</span>
               </button>
               <button 
-                onClick={() => handleCounsellingTypeSelect('CSAB')}
+                onClick={() => handleExamSelect('NEET')}
                 style={{
                   padding: '1.25rem 2.5rem',
                   fontSize: '1.25rem',
@@ -456,7 +1072,7 @@ const CollegeSearch = () => {
                   e.currentTarget.style.backgroundColor = '#076B37';
                 }}
               >
-                <span style={{ position: 'relative', zIndex: 1 }}>CSAB</span>
+                <span style={{ position: 'relative', zIndex: 1 }}>NEET</span>
               </button>
             </div>
           </div>
@@ -466,284 +1082,305 @@ const CollegeSearch = () => {
   }
 
   return (
-    <Layout>
-      <Navigation/>
-      <div className="college-search-container">
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          marginBottom: '1rem'
-        }}>
-          <h1 className="search-header">College & Placement Search</h1>
-          <select
-            value={filters.counsellingType}
-            onChange={(e) => handleFilterChange('counsellingType', e.target.value)}
-            style={{
-              padding: '0.5rem 1rem',
-              fontSize: '1rem',
-              borderRadius: '8px',
-              border: '2px solid #076B37',
-              backgroundColor: 'white',
-              color: '#076B37',
-              cursor: 'pointer',
-              fontWeight: '500',
-              minWidth: '120px'
-            }}
-          >
-            <option value="JOSAA">JOSAA</option>
-            <option value="CSAB">CSAB</option>
-          </select>
-        </div>
-        
-        {/* Search and Filters Card */}
-        <div className="search-card">
-          <h2 className="card-title">Search & Filters</h2>
-          
-          <div className="filters-grid">
-            {/* Search Input */}
-            <div className="col-span-full">
-              <label htmlFor="search" className="filter-label">
-                Search Colleges/Programs
-              </label>
-              <input
-                id="search"
-                type="text"
-                placeholder="Type to search colleges or programs..."
-                className="search-input"
-                value={inputValues.searchQuery}
-                onChange={(e) => handleInputChange('searchQuery', e.target.value)}
-              />
-            </div>
-
-            {/* Rank Range */}
-            <div>
-              <label className="filter-label">Rank Range</label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="number"
-                  placeholder="Min"
-                  className="search-input"
-                  value={inputValues.rankRange.min}
-                  onChange={(e) => handleInputChange('rankRange', { ...inputValues.rankRange, min: e.target.value })}
-                />
-                <input
-                  type="number"
-                  placeholder="Max"
-                  className="search-input"
-                  value={inputValues.rankRange.max}
-                  onChange={(e) => handleInputChange('rankRange', { ...inputValues.rankRange, max: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {/* Gender Filter */}
-            <div>
-              <label className="filter-label">Gender</label>
-              <select
-                className="filter-select"
-                value={filters.gender}
-                onChange={(e) => handleFilterChange('gender', e.target.value)}
-              >
-                <option value="all">All Genders</option>
-                <option value="Gender-Neutral">Gender-Neutral</option>
-                <option value="Female-only">Female-only</option>
-              </select>
-            </div>
-
-            {/* Seat Type Filter */}
-            <div>
-              <label className="filter-label">Seat Type</label>
-              <select
-                className="filter-select"
-                value={filters.seatType}
-                onChange={(e) => handleFilterChange('seatType', e.target.value)}
-              >
-                <option value="all">All Seat Types</option>
-                <option value="GEN">GEN</option>
-                <option value="EWS">EWS</option>
-                <option value="OBC-NCL">OBC-NCL</option>
-                <option value="SC">SC</option>
-                <option value="ST">ST</option>
-              </select>
-            </div>
-
-            {/* College Type Filter */}
-            <div>
-              <label className="filter-label">College Type</label>
-              <div className="checkbox-group">
-                {['IIT', 'NIT', 'IIITS', 'GFTIS'].map((type) => (
-                  <label key={type} className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={filters.collegeTypes.includes(type)}
-                      onChange={(e) => {
-                        const updatedTypes = e.target.checked
-                          ? [...filters.collegeTypes, type]
-                          : filters.collegeTypes.filter(t => t !== type);
-                        handleFilterChange('collegeTypes', updatedTypes);
-                      }}
-                    />
-                    {type}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Results Section */}
-        <div className="table-container">
-          {/* Disclaimer */}
-          <div className="disclaimer-container" style={{ borderBottom: '1px solid #e2e8f0', borderTop: 'none', marginTop: 0 }}>
-            <p className="disclaimer-text">
-              Disclaimer: This data has been sourced from various institutions and public records. Concept does not guarantee the accuracy of this information and bears no responsibility for any decisions made based on this data.
-            </p>
-          </div>
-
-          {/* Results Header */}
-          <div className="pagination-container" style={{ borderTop: 'none' }}>
-            <div className="page-info">
-              Total Results: {isLoading ? '...' : filteredData.length}
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+    <>
+      {selectedExam && selectedExam === 'IIT' ? (
+        <IITSearch />
+      ) : (
+        <Layout>
+          <Navigation />
+          <div className="college-search-container">
+            <div className="exam-selector">
               <button
-                onClick={exportToCSV}
-                className="print-button"
-                disabled={isLoading || isFiltering || filteredData.length === 0}
+                className={`exam-button ${selectedExam === 'NEET' ? 'active' : ''}`}
+                onClick={() => handleExamSelect('NEET')}
               >
-                <span className="print-icon">🖨️</span> Print Results
+                NEET
               </button>
-              <div className="rows-per-page">
-                <label htmlFor="pageSize" className="filter-label" style={{ margin: 0 }}>Rows per page:</label>
+              <button
+                className={`exam-button ${selectedExam === 'IIT' ? 'active' : ''}`}
+                onClick={() => handleExamSelect('IIT')}
+              >
+                IIT JEE
+              </button>
+            </div>
+
+            {renderQuotaSelection()}
+
+            <div className="search-card">
+              <h2 className="card-title">Search & Filters</h2>
+              {selectedExam === 'NEET' && selectedQuota === 'state' ? (
+                renderStateQuotaFilters()
+              ) : (
+                <div className="filters-grid" style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '24px',
+                  padding: '20px'
+                }}>
+                {/* Search Input */}
+                  <div style={{ gridColumn: '1' }}>
+                    <label className="filter-label">Search Colleges/Location</label>
+                  <input
+                    type="text"
+                      placeholder="Type to search colleges or location..."
+                    className="search-input"
+                    value={inputValues.searchQuery}
+                    onChange={(e) => handleInputChange('searchQuery', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '14px',
+                        minHeight: '42px'
+                      }}
+                  />
+                </div>
+
+                {/* State Filter */}
+                <div style={{ gridColumn: '2' }}>
+                  <label className="filter-label">States</label>
+                  <Select
+                    isMulti
+                    options={STATE_OPTIONS}
+                    value={STATE_OPTIONS.filter(option => filters.states.includes(option.value))}
+                    onChange={(selectedOptions) => {
+                      const selectedStates = selectedOptions ? selectedOptions.map(option => option.value) : [];
+                      handleFilterChange('states', selectedStates);
+                    }}
+                    styles={selectStyles}
+                    placeholder="Select states..."
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                  />
+                </div>
+
+                {/* Category Filter */}
+                <div style={{ gridColumn: '3' }}>
+                  <label className="filter-label">Category</label>
+                  <select
+                    className="filter-select"
+                    value={filters.category}
+                    onChange={(e) => handleFilterChange('category', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '4px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '14px',
+                      minHeight: '42px',
+                      backgroundColor: 'white'
+                    }}
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="GEN">General</option>
+                    <option value="EWS">EWS</option>
+                    <option value="OBC">OBC</option>
+                    <option value="SC">SC</option>
+                    <option value="ST">ST</option>
+                  </select>
+              </div>
+
+                {/* Bond Filter */}
+                <div style={{ gridColumn: '1' }}>
+                  <label className="filter-label">Bond</label>
                 <select
-                  id="pageSize"
-                  className="rows-select"
-                  value={pageSize}
-                  onChange={handlePageSizeChange}
-                  disabled={isLoading || isFiltering}
-                >
-                  <option value="10">10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
+                  className="filter-select"
+                    value={filters.bond}
+                    onChange={(e) => handleFilterChange('bond', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '4px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '14px',
+                      minHeight: '42px',
+                      backgroundColor: 'white'
+                    }}
+                  >
+                    <option value="all">All</option>
+                    <option value="yes">With Bond</option>
+                    <option value="no">No Bond</option>
                 </select>
               </div>
-            </div>
-          </div>
 
-          {/* Table with Loading State */}
-          <div className="table-wrapper">
-            {/* Loading Overlay */}
-            {(isLoading || isFiltering) && (
-              <div className="loading-overlay">
-                <div className="loading-content">
-                  <div className="spinner"></div>
-                  <div className="loading-text">
-                    {isLoading ? 'Loading data...' : 'Updating results...'}
-                  </div>
+                {/* Year Filter */}
+                <div style={{ gridColumn: '2' }}>
+                  <label className="filter-label">Year</label>
+                <select
+                  className="filter-select"
+                    value={filters.year}
+                    onChange={(e) => handleFilterChange('year', e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      borderRadius: '4px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '14px',
+                      minHeight: '42px',
+                      backgroundColor: 'white'
+                    }}
+                  >
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                </select>
+              </div>
+
+              {/* College Type Filter */}
+                <div style={{ gridColumn: '3' }}>
+                <label className="filter-label">College Type</label>
+                  <Select
+                    isMulti
+                    options={COLLEGE_TYPE_OPTIONS}
+                    value={COLLEGE_TYPE_OPTIONS.filter(option => filters.collegeTypes.includes(option.value))}
+                    onChange={(selectedOptions) => {
+                      const selectedTypes = selectedOptions ? selectedOptions.map(option => option.value) : [];
+                      handleFilterChange('collegeTypes', selectedTypes);
+                    }}
+                    styles={selectStyles}
+                    placeholder="Select college types..."
+                    className="basic-multi-select"
+                    classNamePrefix="select"
+                  />
                 </div>
               </div>
             )}
-            
-            <table className="results-table">
-              <thead>
-                <tr>
-                  <th>Counselling</th>
-                  <th>TYPE</th>
-                  <th>Institute</th>
-                  <th>Academic Program & Placement Stats</th>
-                  <th 
-                    onClick={() => handleSort('Opening Rank')}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    Opening <br/>Rank ↕
-                  </th>
-                  <th 
-                    onClick={() => handleSort('Closing Rank')}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    Closing <br/> Rank ↕
-                  </th>
-                  {shouldShowColumn.seat && <th>Seat</th>}
-                  {shouldShowColumn.gender && <th>Gender</th>}
-                  <th>Quota</th>
-                  {filters.counsellingType === 'CSAB' && <th>Round On</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {!isLoading && !isFiltering && getCurrentPageData().length === 0 ? (
-                  <tr>
-                    <td colSpan={7 + (shouldShowColumn.seat ? 1 : 0) + (shouldShowColumn.gender ? 1 : 0) + (filters.counsellingType === 'CSAB' ? 1 : 0)} style={{ textAlign: 'center', padding: '2rem' }}>
-                      No results found
-                    </td>
-                  </tr>
-                ) : (
-                  getCurrentPageData().map((item, index) => (
-                    <tr key={index}>
-                      <td>{item.TYPE_Counselling}</td>
-                      <td>{item.TYPE}</td>
-                      <td>{item.Institute}</td>
-                      <td>{formatProgramName(item['Academic Program & Stats'])}</td>
-                      <td>{item['Opening Rank']}</td>
-                      <td>{item['Closing Rank']}</td>
-                      {shouldShowColumn.seat && <td>{item['Seat Type']}</td>}
-                      {shouldShowColumn.gender && <td>{item.Gender}</td>}
-                      <td>{item.Quota}</td>
-                      {filters.counsellingType === 'CSAB' && <td>{item['Round On']}</td>}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+            </div>
 
-          {/* Pagination Controls */}
-          <div className="pagination-container">
-            <div className="page-info">
-              {isLoading || isFiltering ? (
-                'Loading...'
-              ) : (
-                `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, filteredData.length)} of ${filteredData.length} results`
-              )}
+            {/* Add print button before the results table */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 20px' }}>
+              {renderPrintButton()}
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={() => handlePageChange(1)}
-                disabled={currentPage === 1 || isLoading || isFiltering}
-                className="pagination-button"
-              >
-                First
-              </button>
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1 || isLoading || isFiltering}
-                className="pagination-button"
-              >
-                Previous
-              </button>
-              <span className="pagination-button" style={{ cursor: 'default' }}>
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages || isLoading || isFiltering}
-                className="pagination-button"
-              >
-                Next
-              </button>
-              <button
-                onClick={() => handlePageChange(totalPages)}
-                disabled={currentPage === totalPages || isLoading || isFiltering}
-                className="pagination-button"
-              >
-                Last
-              </button>
+
+            {/* Results Section */}
+            <div className="table-container">
+              {/* Disclaimer */}
+              <div className="disclaimer-container" style={{ borderBottom: '1px solid #e2e8f0', borderTop: 'none', marginTop: 0 }}>
+                <p className="disclaimer-text">
+                  Disclaimer: This data has been sourced from various institutions and public records. Concept does not guarantee the accuracy of this information and bears no responsibility for any decisions made based on this data.
+                </p>
+              </div>
+
+              {/* Results Header */}
+              <div className="pagination-container" style={{ borderTop: 'none' }}>
+                <div className="page-info">
+                  Total Results: {isLoading ? '...' : filteredData.length}
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  {/* <button
+                    onClick={exportToCSV}
+                    className="print-button"
+                    disabled={isLoading || isFiltering || filteredData.length === 0}
+                  >
+                    <span className="print-icon">🖨️</span> Print Results
+                  </button> */}
+                  <div className="rows-per-page">
+                    <label htmlFor="pageSize" className="filter-label" style={{ margin: 0 }}>Rows per page:</label>
+                    <select
+                      id="pageSize"
+                      className="rows-select"
+                      value={pageSize}
+                      onChange={handlePageSizeChange}
+                      disabled={isLoading || isFiltering}
+                    >
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                      <option value="100">100</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Table with Loading State */}
+              <div className="table-wrapper">
+                {/* Loading Overlay */}
+                {(isLoading || isFiltering) && (
+                  <div className="loading-overlay">
+                    <div className="loading-content">
+                      <div className="spinner"></div>
+                      <div className="loading-text">
+                        {isLoading ? 'Loading data...' : 'Updating results...'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <table className="results-table">
+                  <thead>
+                    {selectedExam === 'NEET' && selectedQuota === 'state' ? (
+                      renderStateQuotaHeaders()
+                    ) : (
+                      renderTableHeaders()
+                    )}
+                  </thead>
+                  <tbody>
+                    {!isLoading && !isFiltering && getCurrentPageData().length === 0 ? (
+                      <tr>
+                        <td colSpan={selectedExam === 'NEET' ? 13 : 10} style={{ textAlign: 'center', padding: '2rem' }}>
+                          No results found
+                        </td>
+                      </tr>
+                    ) : (
+                      selectedExam === 'NEET' && selectedQuota === 'state' ? (
+                        filterStateQuotaData().map(item => renderStateQuotaRow(item))
+                      ) : (
+                        getCurrentPageData().map((item, index) => renderTableRow(item, index))
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="pagination-container">
+                <div className="page-info">
+                  {isLoading || isFiltering ? (
+                    'Loading...'
+                  ) : (
+                    `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, filteredData.length)} of ${filteredData.length} results`
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1 || isLoading || isFiltering}
+                    className="pagination-button"
+                  >
+                    First
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1 || isLoading || isFiltering}
+                    className="pagination-button"
+                  >
+                    Previous
+                  </button>
+                  <span className="pagination-button" style={{ cursor: 'default' }}>
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages || isLoading || isFiltering}
+                    className="pagination-button"
+                  >
+                    Next
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages || isLoading || isFiltering}
+                    className="pagination-button"
+                  >
+                    Last
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </Layout>
+        </Layout>
+      )}
+    </>
   );
 };
 
