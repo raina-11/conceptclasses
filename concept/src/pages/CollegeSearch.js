@@ -292,6 +292,39 @@ const CollegeSearch = () => {
       direction = 'desc';
     }
     setSortConfig({ key, direction });
+
+    // For state quota, the sorting is handled in filterStateQuotaData
+    if (selectedExam === 'NEET' && selectedQuota === 'state') {
+      return;
+    }
+
+    // For all other cases, sort the filtered data directly
+    const sortedData = [...filteredData].sort((a, b) => {
+      let aValue = a[key];
+      let bValue = b[key];
+
+      // Handle special cases like "--" or empty values
+      if (aValue === "--" || aValue === "" || aValue === undefined) aValue = direction === 'asc' ? Infinity : -Infinity;
+      if (bValue === "--" || bValue === "" || bValue === undefined) bValue = direction === 'asc' ? Infinity : -Infinity;
+
+      // Convert to numbers if they're numeric strings
+      if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
+      if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
+
+      // If both values are strings (like college names), use string comparison
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return direction === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      // Numeric comparison
+      return direction === 'asc' 
+        ? aValue - bValue
+        : bValue - aValue;
+    });
+
+    setFilteredData(sortedData);
   };
 
   // Modify getCurrentPageData to include sorting
@@ -496,73 +529,166 @@ const CollegeSearch = () => {
     backgroundColor: '#f8fafc',
     padding: '1rem',
     borderTop: '1px solid #e2e8f0',
-  };
-
-  const detailRowStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '1rem',
-    marginTop: '0.5rem',
-  };
-
-  const detailItemStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-  };
-
-  const detailLabelStyle = {
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: '0.25rem',
-  };
-
-  const detailValueStyle = {
     color: '#64748b',
+    display: 'flex',
+    gap: '2rem'
   };
 
-  // Add CSS for expanded rows
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .expanded-row {
-        background-color: #f1f5f9 !important;
-      }
-      .expanded-row:hover {
-        background-color: #f1f5f9 !important;
-      }
-      .results-table tr:hover .expand-button:hover {
-        background-color: #e2e8f0;
-      }
-      .expand-button {
-        transition: all 0.2s ease;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+  const infoListStyle = {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+    fontSize: '0.9rem',
+    lineHeight: '1.8',
+    flex: '0 0 40%'  // Fixed width for the left column
+  };
 
-  // Modify the table rendering to include expandable rows
+  const infoItemStyle = {
+    display: 'flex',
+    gap: '0.5rem'
+  };
+
+  const infoLabelStyle = {
+    fontWeight: '600',
+    minWidth: '250px',
+    color: '#1e293b',
+    fontSize: '1rem',
+    textAlign: 'left'
+  };
+
+  const infoValueStyle = {
+    color: '#64748b',
+    fontSize: '1rem',
+    textAlign: 'left'
+  };
+
+  const pgCoursesContainerStyle = {
+    flex: '1',
+    borderLeft: '1px solid #e2e8f0',
+    paddingLeft: '2rem'
+  };
+
+  const pgCoursesStyle = {
+    color: '#475569',
+    lineHeight: '1.6'
+  };
+
+  const formatPGCoursesList = (coursesList, item) => {
+    if (!coursesList) return null;
+    
+    // Transform the numbered list into comma-separated format
+    const formattedCourses = coursesList
+      .split(/\d+\.\s*/)  // Split by numbers followed by dots
+      .filter(Boolean)     // Remove empty strings
+      .map(course => course.trim())
+      .join(', ');
+    
+    return (
+      <div style={pgCoursesStyle}>
+        <div style={{ 
+          fontWeight: '600', 
+          marginBottom: '0.75rem',
+          fontSize: '0.95rem',
+          color: '#1e293b'
+        }}>
+          PG Courses Available ({item['No. of pg courses']} courses, {item['No. of pg seats']} seats)
+        </div>
+        <div style={{ 
+          color: '#475569',
+          lineHeight: '1.6',
+          textAlign: 'left'
+        }}>
+          {formattedCourses}
+        </div>
+      </div>
+    );
+  };
+
+  // Update the renderExpandedContent function
+  const renderExpandedContent = (item) => {
+    return (
+      <div style={expandedContentStyle}>
+        <ul style={infoListStyle}>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>MBBS Seats:</span>
+            <span style={infoValueStyle}>{item['Annual Intake (Seats)']}</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>PG Specialisations:</span>
+            <span style={infoValueStyle}>{item['No. of pg courses'] ? 'Yes' : 'No'}</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>Hostel:</span>
+            <span style={infoValueStyle}>Yes</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>Teaching Hospital:</span>
+            <span style={infoValueStyle}>Yes</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>Transport:</span>
+            <span style={infoValueStyle}>{item['Transport'] || '-'}</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>Est. Year:</span>
+            <span style={infoValueStyle}>{item['Year of Inspection of College']}</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>University Name:</span>
+            <span style={infoValueStyle}>{item['University  Name']}</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>Management of College:</span>
+            <span style={infoValueStyle}>{item['Managemet of College']}</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>After MBBS Service Bond:</span>
+            <span style={infoValueStyle}>{item['UG Bond']}</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>Penalty if Service Bond Broken:</span>
+            <span style={infoValueStyle}>₹{item['penalty of service bond if broken']}</span>
+          </li>
+          <li style={infoItemStyle}>
+            <span style={infoLabelStyle}>Discontinuation Bond Penalty:</span>
+            <span style={infoValueStyle}>₹{item['mbbs discontinuation bond penalty']}</span>
+          </li>
+        </ul>
+        {item['pg courses available list'] && (
+          <div style={pgCoursesContainerStyle}>
+            {formatPGCoursesList(item['pg courses available list'], item)}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Update the renderTableRow function
   const renderTableRow = (item, index) => {
     const isExpanded = expandedRows.has(index);
     
     return (
       <React.Fragment key={index}>
-       <tr className={isExpanded ? 'expanded-row' : ''}>
-          
-          {selectedExam === 'NEET' ? (
-            <>
-            <td style={{ width: '40px', textAlign: 'center' }}>
+        <tr 
+          className={isExpanded ? 'expanded-row' : ''} 
+          onClick={() => toggleRowExpansion(index)}
+          style={{ cursor: 'pointer' }}
+        >
+          <td style={{ width: '40px', textAlign: 'center' }}>
             <button
-              onClick={() => toggleRowExpansion(index)}
               style={expandButtonStyle}
               className="expand-button"
               title={isExpanded ? 'Collapse' : 'Expand'}
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent row click event when clicking the button
+                toggleRowExpansion(index);
+              }}
             >
               {isExpanded ? '▼' : '▶'}
             </button>
           </td>
+          {selectedExam === 'NEET' ? (
+            <>
               <td>{item.Location}</td>
               <td>{item['2023 College Rank']}</td>
               <td>{item['2022 College Rank']}</td>
@@ -590,33 +716,11 @@ const CollegeSearch = () => {
               {filters.counsellingType === 'CSAB' && <td>{item['Round On']}</td>}
             </>
           )}
-        </tr> 
+        </tr>
         {isExpanded && (
-          
           <tr>
-            <td colSpan={selectedExam === 'NEET' ? 13 : 10} style={expandedContentStyle}>
-              <div style={detailRowStyle}>
-                <div style={detailItemStyle}>
-                  <span style={detailLabelStyle}>MBBS Seats</span>
-                  <span style={detailValueStyle}>{item['MBBS Seats'] || 'Not specified'}</span>
-                </div>
-                <div style={detailItemStyle}>
-                  <span style={detailLabelStyle}>PG</span>
-                  <span style={detailValueStyle}>{item['PG'] || 'Not specified'}</span>
-                </div>
-                <div style={detailItemStyle}>
-                  <span style={detailLabelStyle}>Hostel</span>
-                  <span style={detailValueStyle}>{item['Boys & Girls Hostel'] || 'Not specified'}</span>
-                </div>
-                <div style={detailItemStyle}>
-                  <span style={detailLabelStyle}>Teaching Hospital</span>
-                  <span style={detailValueStyle}>{item['Teaching Hospital'] || 'Not specified'}</span>
-                </div>
-                <div style={detailItemStyle}>
-                  <span style={detailLabelStyle}>Transport</span>
-                  <span style={detailValueStyle}>{item['Transport'] || 'Not specified'}</span>
-                </div>
-              </div>
+            <td colSpan={selectedExam === 'NEET' ? 13 : 10}>
+              {renderExpandedContent(item)}
             </td>
           </tr>
         )}
@@ -640,7 +744,12 @@ const CollegeSearch = () => {
           <th>Mop Up</th>
           <th>Stray</th>
           <th>Special Stray</th>
-          <th>Closing Rank</th>
+          <th 
+            onClick={() => handleSort(`closing (${filters.year})`)}
+            style={{ cursor: 'pointer' }}
+          >
+            Closing Rank ↕
+          </th>
           <th>Bond</th>
         </tr>
       );
@@ -695,38 +804,125 @@ const CollegeSearch = () => {
   const renderStateQuotaHeaders = () => {
     return (
       <tr>
+        <th style={{ width: '40px' }}></th>
         <th onClick={() => handleSort('rajasthan college rank')}>College Rank</th>
         <th onClick={() => handleSort('College Name')}>College Name</th>
         <th onClick={() => handleSort('Category')}>Category</th>
-        <th>Round 1</th>
-        <th>Round 2</th>
-        <th>Round 3</th>
+        <th 
+          onClick={() => handleSort(`${filters.year} R1 AIR`)}
+          style={{ cursor: 'pointer' }}
+        >
+          Round 1 ↕
+        </th>
+        <th 
+          onClick={() => handleSort(`${filters.year} R2 AIR`)}
+          style={{ cursor: 'pointer' }}
+        >
+          Round 2 ↕
+        </th>
+        <th 
+          onClick={() => handleSort(`${filters.year} R3 AIR`)}
+          style={{ cursor: 'pointer' }}
+        >
+          Round 3 ↕
+        </th>
       </tr>
     );
   };
 
   // Function to render table row for state quota
-  const renderStateQuotaRow = (item) => {
+  const renderStateQuotaRow = (item, index) => {
+    const isExpanded = expandedRows.has(index);
+    
     return (
-      <tr key={`${item['sr. no.']}-${item.Category}-${item.Gender}`}>
-        <td>{item['rajasthan college rank']}</td>
-        <td>{item['College Name']}</td>
-        <td>{item.Category}</td>
-        <td>{getRoundValue(item, 1, filters.year)}</td>
-        <td>{getRoundValue(item, 2, filters.year)}</td>
-        <td>{getRoundValue(item, 3, filters.year)}</td>
-      </tr>
+      <React.Fragment key={index}>
+        <tr 
+          className={isExpanded ? 'expanded-row' : ''} 
+          onClick={() => toggleRowExpansion(index)}
+          style={{ cursor: 'pointer' }}
+        >
+          <td style={{ width: '40px', textAlign: 'center' }}>
+            <button
+              style={expandButtonStyle}
+              className="expand-button"
+              title={isExpanded ? 'Collapse' : 'Expand'}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleRowExpansion(index);
+              }}
+            >
+              {isExpanded ? '▼' : '▶'}
+            </button>
+          </td>
+          <td>{item['rajasthan college rank']}</td>
+          <td>{item['College Name']}</td>
+          <td>{item.Category}</td>
+          <td>{getRoundValue(item, 1, filters.year)}</td>
+          <td>{getRoundValue(item, 2, filters.year)}</td>
+          <td>{getRoundValue(item, 3, filters.year)}</td>
+        </tr>
+        {isExpanded && (
+          <tr>
+            <td colSpan={7}>
+              <div style={expandedContentStyle}>
+                <ul style={infoListStyle}>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>MBBS Seats:</span>
+                    <span style={infoValueStyle}>{item['Annual Intake (Seats)']}</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>PG Specialisations:</span>
+                    <span style={infoValueStyle}>{item['no. of pg courses'] ? 'Yes' : 'No'}</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>Hostel:</span>
+                    <span style={infoValueStyle}>Yes</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>Teaching Hospital:</span>
+                    <span style={infoValueStyle}>Yes</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>Transport:</span>
+                    <span style={infoValueStyle}>{item['Transport'] || '-'}</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>Est. Year:</span>
+                    <span style={infoValueStyle}>{item['Year of Inspection of College']}</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>University Name:</span>
+                    <span style={infoValueStyle}>{item['University  Name']}</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>Management of College:</span>
+                    <span style={infoValueStyle}>{item['Managemet of College']}</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>After MBBS Service Bond:</span>
+                    <span style={infoValueStyle}>{item['after mbbs service bond']}</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>Penalty if Service Bond Broken:</span>
+                    <span style={infoValueStyle}>₹{item['penalty of service bond if broken']}</span>
+                  </li>
+                  <li style={infoItemStyle}>
+                    <span style={infoLabelStyle}>Discontinuation Bond Penalty:</span>
+                    <span style={infoValueStyle}>₹{item['mbbs discontinuation bond penalty']}</span>
+                  </li>
+                </ul>
+                {item['pg courses available list'] && (
+                  <div style={pgCoursesContainerStyle}>
+                    {formatPGCoursesList(item['pg courses available list'], item)}
+                  </div>
+                )}
+              </div>
+            </td>
+          </tr>
+        )}
+      </React.Fragment>
     );
   };
-
-  // Filter function for state quota data
-  const filterStateQuotaData = useCallback(() => {
-    return neetRajData.filter(item => {
-      if (filters.category !== 'all' && item.Category !== filters.category) return false;
-      if (filters.gender !== 'all' && item.Gender !== filters.gender) return false;
-      return true;
-    });
-  }, [filters]);
 
   // Function to render filters for state quota
   const renderStateQuotaFilters = () => {
@@ -737,6 +933,27 @@ const CollegeSearch = () => {
         gap: '24px',
         padding: '20px'
       }}>
+        {/* College Search Input */}
+        <div style={{ gridColumn: 'span 3' }}>
+          <label className="filter-label">Search Colleges</label>
+          <input
+            type="text"
+            placeholder="Type to search colleges..."
+            className="search-input"
+            value={inputValues.searchQuery}
+            onChange={(e) => handleInputChange('searchQuery', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '42px',
+              backgroundColor: 'white'
+            }}
+          />
+        </div>
+
         {/* Year Filter */}
         <div>
           <label className="filter-label">Year</label>
@@ -778,7 +995,7 @@ const CollegeSearch = () => {
             }}
           >
             <option value="all">All Categories</option>
-            <option value="UR">UR</option>
+            <option value="GEN">GEN</option>
             <option value="OBC">OBC</option>
             <option value="EWS">EWS</option>
             <option value="MBC">MBC</option>
@@ -813,6 +1030,54 @@ const CollegeSearch = () => {
       </div>
     );
   };
+
+  // Update filterStateQuotaData to include search functionality
+  const filterStateQuotaData = useCallback(() => {
+    let results = neetRajData.filter(item => {
+      // Apply category and gender filters
+      if (filters.category !== 'all' && item.Category !== filters.category) return false;
+      if (filters.gender !== 'all' && item.Gender !== filters.gender) return false;
+      
+      // Apply search filter
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        const collegeName = (item['College Name'] || '').toLowerCase();
+        if (!collegeName.includes(query)) return false;
+      }
+      
+      return true;
+    });
+
+    // Apply sorting if configured
+    if (sortConfig.key) {
+      results.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        // Handle special cases like "--" or empty values
+        if (aValue === "--" || aValue === "" || aValue === undefined) aValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        if (bValue === "--" || bValue === "" || bValue === undefined) bValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+
+        // Convert to numbers if they're numeric strings
+        if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
+        if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
+
+        // If both values are strings (like college names), use string comparison
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+
+        // Numeric comparison
+        return sortConfig.direction === 'asc' 
+          ? aValue - bValue
+          : bValue - aValue;
+      });
+    }
+
+    return results;
+  }, [filters, sortConfig, neetRajData]);
 
   // Add quota selection buttons for NEET
   const renderQuotaSelection = () => {
@@ -1324,7 +1589,7 @@ const CollegeSearch = () => {
                       </tr>
                     ) : (
                       selectedExam === 'NEET' && selectedQuota === 'state' ? (
-                        filterStateQuotaData().map(item => renderStateQuotaRow(item))
+                        filterStateQuotaData().map((item, index) => renderStateQuotaRow(item, index))
                       ) : (
                         getCurrentPageData().map((item, index) => renderTableRow(item, index))
                       )
