@@ -1514,9 +1514,9 @@ const CollegeSearch = () => {
             </div>
 
             {/* Add print button before the results table */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 20px' }}>
+            {/* <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 20px' }}>
               {renderPrintButton()}
-            </div>
+            </div> */}
 
             {/* Results Section */}
             <div className="table-container">
