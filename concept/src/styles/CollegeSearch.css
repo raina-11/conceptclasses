@@ -115,14 +115,15 @@
 }
 
 .results-table th {
-  background-color: #f7fafc;
+  background-color: #1B5431;
   padding: 7px;
   text-align: center;
   font-size: 14px;
   font-weight: 600;
-  color: #000;
+  color: #fff;
   text-transform: uppercase;
   border-bottom: 1px solid #e2e8f0;
+  font-family: 'Lexend Medium';
 }
 
 /* Add styles for sortable headers */
@@ -214,7 +215,7 @@
 
 .page-info {
   font-size: 0.875rem;
-  color: #000;
+  color: #fff;
 }
 
 .rows-per-page {

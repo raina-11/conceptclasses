@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Select from 'react-select';
-import allData from '../data/all_data.json';
 import neetData from '../data/neet_data.json';
 import '../styles/CollegeSearch.css';
 import Navigation from '../components/common/navigation/navigation';
@@ -86,6 +85,58 @@ const CollegeSearch = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
 
+  // Move filterStateQuotaData before its usage
+  // Update filterStateQuotaData to include search functionality
+  const filterStateQuotaData = useCallback(() => {
+    let results = neetRajData.filter(item => {
+      // Apply category and gender filters
+      if (filters.category !== 'all' && item.Category !== filters.category) return false;
+      if (filters.gender !== 'all' && item.Gender !== filters.gender) return false;
+      
+      // Apply search filter
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase().trim();
+        const collegeName = (item['College Name'] || '').toLowerCase();
+        const words = query.split(/\s+/); // Split search query into words
+        
+        // Check if all words in the query are present in the college name
+        return words.every(word => collegeName.includes(word));
+      }
+      
+      return true;
+    });
+
+    // Apply sorting if configured
+    if (sortConfig.key) {
+      results.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        // Handle special cases like "--" or empty values
+        if (aValue === "--" || aValue === "" || aValue === undefined) aValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        if (bValue === "--" || bValue === "" || bValue === undefined) bValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+
+        // Convert to numbers if they're numeric strings
+        if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
+        if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
+
+        // If both values are strings (like college names), use string comparison
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+
+        // Numeric comparison
+        return sortConfig.direction === 'asc' 
+          ? aValue - bValue
+          : bValue - aValue;
+      });
+    }
+
+    return results;
+  }, [filters, sortConfig, neetRajData]);
+
   // Initialize loading state
   useEffect(() => {
     setIsLoading(true);
@@ -95,8 +146,72 @@ const CollegeSearch = () => {
     }, 1000);
   }, []);
 
-  // Memoize the initial data processing
+  // Calculate pagination values
+  useEffect(() => {
+    const totalItems = selectedExam === 'NEET' && selectedQuota === 'state' 
+      ? filterStateQuotaData().length 
+      : filteredData.length;
+    setTotalPages(Math.ceil(totalItems / pageSize));
+    // Reset to first page when filters change
+    setCurrentPage(1);
+  }, [filteredData, pageSize, selectedExam, selectedQuota, filterStateQuotaData]);
 
+  // Update getCurrentPageData to handle both AIQ and state quota data
+  const getCurrentPageData = () => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    
+    let dataToDisplay = selectedExam === 'NEET' && selectedQuota === 'state' 
+      ? filterStateQuotaData()
+      : filteredData;
+
+    if (sortConfig.key) {
+      dataToDisplay = [...dataToDisplay].sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        // Handle special cases like "--" or empty values
+        if (aValue === "--" || aValue === "" || aValue === undefined) aValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        if (bValue === "--" || bValue === "" || bValue === undefined) bValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+
+        // Convert to numbers if they're numeric strings
+        if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
+        if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
+
+        // If both values are strings (like college names), use string comparison
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+
+        // Numeric comparison
+        return sortConfig.direction === 'asc' 
+          ? aValue - bValue
+          : bValue - aValue;
+      });
+    }
+    
+    return dataToDisplay.slice(startIndex, endIndex);
+  };
+
+  // Handle input changes without immediate filtering
+  const handleInputChange = (field, value) => {
+    setIsFiltering(true);
+    setInputValues(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle direct filter changes (dropdowns)
+  const handleFilterChange = (field, value) => {
+    setIsFiltering(true);
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   // Add state options for react-select
   const STATE_OPTIONS = [
@@ -227,8 +342,21 @@ const CollegeSearch = () => {
       if (filters.bond !== 'all') {
         const hasBond = filters.bond === 'yes';
         results = results.filter(item => {
-          const bondInfo = item['UG Bond'] || '';
-          return hasBond ? bondInfo.toLowerCase().includes('yes') : bondInfo.toLowerCase().includes('no');
+          const bondInfo = (item['UG Bond'] || '').toLowerCase();
+          if (hasBond) {
+            // First check if it contains 'no' or 'not' - if so, exclude it
+            if (bondInfo.includes('no ') || bondInfo.includes('not ') || /^no$/i.test(bondInfo)) {
+              return false;
+            }
+            // Then check for positive bond indicators
+            return bondInfo.includes('yes') || 
+                   (bondInfo.includes('bond') && !bondInfo.includes('no bond')) || 
+                   /\d+\s*(?:year|yr)/.test(bondInfo) ||
+                   bondInfo.includes('compulsory') ||
+                   bondInfo.includes('mandatory');
+          } else {
+            return bondInfo.includes('no') || bondInfo === '' || bondInfo.includes('not');
+          }
         });
       }
 
@@ -259,94 +387,6 @@ const CollegeSearch = () => {
 
     return () => clearTimeout(filterTimer);
   }, [filterData]);
-
-  // Handle input changes without immediate filtering
-  const handleInputChange = (field, value) => {
-    setIsFiltering(true);
-    setInputValues(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Handle direct filter changes (dropdowns)
-  const handleFilterChange = (field, value) => {
-    setIsFiltering(true);
-    setFilters(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Calculate pagination values
-  useEffect(() => {
-    setTotalPages(Math.ceil(filteredData.length / pageSize));
-    // Reset to first page when filters change
-    setCurrentPage(1);
-  }, [filteredData, pageSize]);
-
-  // Add sorting function
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-
-    // For state quota, the sorting is handled in filterStateQuotaData
-    if (selectedExam === 'NEET' && selectedQuota === 'state') {
-      return;
-    }
-
-    // For all other cases, sort the filtered data directly
-    const sortedData = [...filteredData].sort((a, b) => {
-      let aValue = a[key];
-      let bValue = b[key];
-
-      // Handle special cases like "--" or empty values
-      if (aValue === "--" || aValue === "" || aValue === undefined) aValue = direction === 'asc' ? Infinity : -Infinity;
-      if (bValue === "--" || bValue === "" || bValue === undefined) bValue = direction === 'asc' ? Infinity : -Infinity;
-
-      // Convert to numbers if they're numeric strings
-      if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
-      if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
-
-      // If both values are strings (like college names), use string comparison
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return direction === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      // Numeric comparison
-      return direction === 'asc' 
-        ? aValue - bValue
-        : bValue - aValue;
-    });
-
-    setFilteredData(sortedData);
-  };
-
-  // Modify getCurrentPageData to include sorting
-  const getCurrentPageData = () => {
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    
-    let sortedData = [...filteredData];
-    if (sortConfig.key) {
-      sortedData.sort((a, b) => {
-        const aValue = parseInt(a[sortConfig.key]) || 0;
-        const bValue = parseInt(b[sortConfig.key]) || 0;
-        
-        if (sortConfig.direction === 'asc') {
-          return aValue - bValue;
-        }
-        return bValue - aValue;
-      });
-    }
-    
-    return sortedData.slice(startIndex, endIndex);
-  };
 
   // Handle page change
   const handlePageChange = (newPage) => {
@@ -535,31 +575,44 @@ const CollegeSearch = () => {
   };
 
   const infoListStyle = {
-    listStyle: 'none',
-    padding: 0,
+    listStyle: 'disc',
+    paddingLeft: '1.5rem',
     margin: 0,
-    fontSize: '0.9rem',
-    lineHeight: '1.8',
+    lineHeight: '1.7',
+    fontSize: '14px',
+    textAlign: 'left',
     flex: '0 0 40%'  // Fixed width for the left column
   };
 
   const infoItemStyle = {
     display: 'flex',
-    gap: '0.5rem'
+    gap: '0.5rem',
+    alignItems: 'baseline'
   };
 
   const infoLabelStyle = {
-    fontWeight: '600',
-    minWidth: '250px',
-    color: '#1e293b',
-    fontSize: '1rem',
-    textAlign: 'left'
+    display: 'inline',
+    fontWeight: '700',
+    color: '#000',
+    fontSize: '14px',
+    fontFamily: 'Lexend Semibold'
   };
 
   const infoValueStyle = {
-    color: '#64748b',
-    fontSize: '1rem',
-    textAlign: 'left'
+    display: 'inline',
+    color: '#000',
+    fontSize: '14px',
+    fontWeight: '400'
+  };
+
+  const infoHeaderStyle = {
+    fontWeight: '700',
+    fontSize: '1.1rem',
+    color: '#000',
+    textDecoration: 'underline',
+    textAlign: 'center',
+    marginBottom: '1.5rem',
+    fontFamily: 'Lexend Semibold'
   };
 
   const pgCoursesContainerStyle = {
@@ -570,35 +623,49 @@ const CollegeSearch = () => {
 
   const pgCoursesStyle = {
     color: '#475569',
-    lineHeight: '1.6'
+    // lineHeight: '1.6'
   };
 
   const formatPGCoursesList = (coursesList, item) => {
     if (!coursesList) return null;
     
-    // Transform the numbered list into comma-separated format
-    const formattedCourses = coursesList
+    // Split the courses into an array and clean up
+    const courses = coursesList
       .split(/\d+\.\s*/)  // Split by numbers followed by dots
       .filter(Boolean)     // Remove empty strings
-      .map(course => course.trim())
-      .join(', ');
+      .map(course => course.trim());
     
     return (
       <div style={pgCoursesStyle}>
         <div style={{ 
-          fontWeight: '600', 
-          marginBottom: '0.75rem',
-          fontSize: '0.95rem',
-          color: '#1e293b'
+          fontWeight: '700',
+          marginBottom: '1.5rem',
+          fontSize: '1.1rem',
+          color: '#000',
+          textDecoration: 'underline',
+          textAlign: 'center',
+          fontFamily: 'Lexend Semibold'
         }}>
-          PG Courses Available ({item['No. of pg courses']} courses, {item['No. of pg seats']} seats)
+          PG specializations ({item['No. of pg courses']} courses, {item['No. of pg seats']} seats)
         </div>
         <div style={{ 
-          color: '#475569',
-          lineHeight: '1.6',
-          textAlign: 'left'
+          color: '#000',
+          lineHeight: '1.8',
+          textAlign: 'left',
+          columnCount: courses.length > 6 ? 2 : 1,
+          columnGap: '2rem'
         }}>
-          {formattedCourses}
+          {courses.map((course, index) => (
+            <div key={index} style={{
+              // marginBottom: '0.5rem',
+              breakInside: 'avoid-column',
+              display: 'flex',
+              gap: '0.5rem'
+            }}>
+              <span style={{ minWidth: '25px' }}>{index + 1}.</span>
+              <span>{course}</span>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -608,52 +675,60 @@ const CollegeSearch = () => {
   const renderExpandedContent = (item) => {
     return (
       <div style={expandedContentStyle}>
-        <ul style={infoListStyle}>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>MBBS Seats:</span>
-            <span style={infoValueStyle}>{item['Annual Intake (Seats)']}</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>PG Specialisations:</span>
-            <span style={infoValueStyle}>{item['No. of pg courses'] ? 'Yes' : 'No'}</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>Hostel:</span>
-            <span style={infoValueStyle}>Yes</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>Teaching Hospital:</span>
-            <span style={infoValueStyle}>Yes</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>Transport:</span>
-            <span style={infoValueStyle}>{item['Transport'] || '-'}</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>Est. Year:</span>
-            <span style={infoValueStyle}>{item['Year of Inspection of College']}</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>University Name:</span>
-            <span style={infoValueStyle}>{item['University  Name']}</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>Management of College:</span>
-            <span style={infoValueStyle}>{item['Managemet of College']}</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>After MBBS Service Bond:</span>
-            <span style={infoValueStyle}>{item['UG Bond']}</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>Penalty if Service Bond Broken:</span>
-            <span style={infoValueStyle}>₹{item['penalty of service bond if broken']}</span>
-          </li>
-          <li style={infoItemStyle}>
-            <span style={infoLabelStyle}>Discontinuation Bond Penalty:</span>
-            <span style={infoValueStyle}>₹{item['mbbs discontinuation bond penalty']}</span>
-          </li>
-        </ul>
+        <div>
+          <div style={infoHeaderStyle}>Important Information</div>
+          <ul style={infoListStyle}>
+            <li>
+              <div>
+                <span style={infoLabelStyle}>MBBS Seats</span>
+                <span style={infoLabelStyle}> : </span>
+                <span style={infoValueStyle}>{item['Annual Intake (Seats)']}</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <span style={infoLabelStyle}>Transport</span>
+                <span style={infoLabelStyle}> : </span>
+                <span style={infoValueStyle}>{item['Transport'] || '-'}</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <span style={infoLabelStyle}>University Name</span>
+                <span style={infoLabelStyle}> : </span>
+                <span style={infoValueStyle}>{item['University  Name']}</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <span style={infoLabelStyle}>Management of College</span>
+                <span style={infoLabelStyle}> : </span>
+                <span style={infoValueStyle}>{item['Managemet of College']?.toLowerCase()}</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <span style={infoLabelStyle}>After MBBS Service Bond</span>
+                <span style={infoLabelStyle}> : </span>
+                <span style={infoValueStyle}>{item['UG Bond']}</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <span style={infoLabelStyle}>Penalty if Service Bond Broken</span>
+                <span style={infoLabelStyle}> : </span>
+                <span style={infoValueStyle}>{item['penalty of service bond if broken'] ? `₹${item['penalty of service bond if broken']}` : 'no penalty'}</span>
+              </div>
+            </li>
+            <li>
+              <div>
+                <span style={infoLabelStyle}>Discontinuation Bond Penalty</span>
+                <span style={infoLabelStyle}> : </span>
+                <span style={infoValueStyle}>{item['mbbs discontinuation bond penalty'] ? `₹${item['mbbs discontinuation bond penalty']}` : 'debarred from next neet ug'}</span>
+              </div>
+            </li>
+          </ul>
+        </div>
         {item['pg courses available list'] && (
           <div style={pgCoursesContainerStyle}>
             {formatPGCoursesList(item['pg courses available list'], item)}
@@ -1031,54 +1106,6 @@ const CollegeSearch = () => {
     );
   };
 
-  // Update filterStateQuotaData to include search functionality
-  const filterStateQuotaData = useCallback(() => {
-    let results = neetRajData.filter(item => {
-      // Apply category and gender filters
-      if (filters.category !== 'all' && item.Category !== filters.category) return false;
-      if (filters.gender !== 'all' && item.Gender !== filters.gender) return false;
-      
-      // Apply search filter
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        const collegeName = (item['College Name'] || '').toLowerCase();
-        if (!collegeName.includes(query)) return false;
-      }
-      
-      return true;
-    });
-
-    // Apply sorting if configured
-    if (sortConfig.key) {
-      results.sort((a, b) => {
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
-
-        // Handle special cases like "--" or empty values
-        if (aValue === "--" || aValue === "" || aValue === undefined) aValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
-        if (bValue === "--" || bValue === "" || bValue === undefined) bValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
-
-        // Convert to numbers if they're numeric strings
-        if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
-        if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
-
-        // If both values are strings (like college names), use string comparison
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-          return sortConfig.direction === 'asc' 
-            ? aValue.localeCompare(bValue)
-            : bValue.localeCompare(aValue);
-        }
-
-        // Numeric comparison
-        return sortConfig.direction === 'asc' 
-          ? aValue - bValue
-          : bValue - aValue;
-      });
-    }
-
-    return results;
-  }, [filters, sortConfig, neetRajData]);
-
   // Add quota selection buttons for NEET
   const renderQuotaSelection = () => {
     if (selectedExam !== 'NEET') return null;
@@ -1112,7 +1139,7 @@ const CollegeSearch = () => {
             cursor: 'pointer'
           }}
         >
-          State Quota
+          Rajasthan State Quota
         </button>
       </div>
     );
@@ -1225,6 +1252,48 @@ const CollegeSearch = () => {
         Download Results
       </button>
     );
+  };
+
+  // Add sorting function
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+
+    // For state quota, the sorting is handled in filterStateQuotaData
+    if (selectedExam === 'NEET' && selectedQuota === 'state') {
+      return;
+    }
+
+    // For all other cases, sort the filtered data directly
+    const sortedData = [...filteredData].sort((a, b) => {
+      let aValue = a[key];
+      let bValue = b[key];
+
+      // Handle special cases like "--" or empty values
+      if (aValue === "--" || aValue === "" || aValue === undefined) aValue = direction === 'asc' ? Infinity : -Infinity;
+      if (bValue === "--" || bValue === "" || bValue === undefined) bValue = direction === 'asc' ? Infinity : -Infinity;
+
+      // Convert to numbers if they're numeric strings
+      if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
+      if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
+
+      // If both values are strings (like college names), use string comparison
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return direction === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      // Numeric comparison
+      return direction === 'asc' 
+        ? aValue - bValue
+        : bValue - aValue;
+    });
+
+    setFilteredData(sortedData);
   };
 
   if (!selectedExam) {
@@ -1528,7 +1597,7 @@ const CollegeSearch = () => {
               </div>
 
               {/* Results Header */}
-              <div className="pagination-container" style={{ borderTop: 'none' }}>
+              <div className="pagination-container" style={{ borderTop: 'none', backgroundColor: '#1B5431' }}>
                 <div className="page-info">
                   Total Results: {isLoading ? '...' : filteredData.length}
                 </div>
@@ -1541,7 +1610,7 @@ const CollegeSearch = () => {
                     <span className="print-icon">🖨️</span> Print Results
                   </button> */}
                   <div className="rows-per-page">
-                    <label htmlFor="pageSize" className="filter-label" style={{ margin: 0 }}>Rows per page:</label>
+                    <label htmlFor="pageSize" className="filter-label" style={{ margin: 0, color: '#fff' }}>Rows per page:</label>
                     <select
                       id="pageSize"
                       className="rows-select"
@@ -1588,10 +1657,10 @@ const CollegeSearch = () => {
                         </td>
                       </tr>
                     ) : (
-                      selectedExam === 'NEET' && selectedQuota === 'state' ? (
-                        filterStateQuotaData().map((item, index) => renderStateQuotaRow(item, index))
-                      ) : (
-                        getCurrentPageData().map((item, index) => renderTableRow(item, index))
+                      getCurrentPageData().map((item, index) => 
+                        selectedExam === 'NEET' && selectedQuota === 'state' 
+                          ? renderStateQuotaRow(item, index)
+                          : renderTableRow(item, index)
                       )
                     )}
                   </tbody>
@@ -1604,7 +1673,7 @@ const CollegeSearch = () => {
                   {isLoading || isFiltering ? (
                     'Loading...'
                   ) : (
-                    `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, filteredData.length)} of ${filteredData.length} results`
+                    `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, selectedExam === 'NEET' && selectedQuota === 'state' ? filterStateQuotaData().length : filteredData.length)} of ${selectedExam === 'NEET' && selectedQuota === 'state' ? filterStateQuotaData().length : filteredData.length} results`
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>

@@ -47,7 +47,7 @@ const navigate = useNavigate();
                 Find the right college for you!
               </PopupHeading>
               <PopupDescription>
-                Explore placement statistics and opening and closing of IITs, NITs, IIITs, and GFTIs - all in one place
+              Explore placement statistics and opening and closing ranks of IITs, NITs, IIITs, GFTIs, MBBS, and BDS colleges — all in one place.
               </PopupDescription>
               <TempStyledDiv>
               <PrimaryButton onClick={handleButtonClick3} >
