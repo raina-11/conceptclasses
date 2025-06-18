@@ -6,6 +6,7 @@ import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import neetRajData from '../data/neet_raj_state.json';
 import IITSearch from './iitSerach';
+import neetBdsData from '../data/neet_bds_data.json';
 
 // Debounce helper function
 const useDebounce = (value, delay) => {
@@ -26,7 +27,7 @@ const useDebounce = (value, delay) => {
 
 const CollegeSearch = () => {
   const [selectedExam, setSelectedExam] = useState(null);
-  const [selectedQuota, setSelectedQuota] = useState('all'); // 'all' or 'state'
+  const [selectedQuota, setSelectedQuota] = useState('all'); // 'all', 'state', or 'bds'
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -312,23 +313,23 @@ const CollegeSearch = () => {
   // Modify filterData to include state filtering
   const filterData = useCallback(() => {
     setIsFiltering(true);
-    let results =  neetData;
+    let results = selectedQuota === 'bds' ? neetBdsData : neetData;
 
     if (selectedExam === 'NEET') {
       // Add state filtering
       if (filters.states.length > 0) {
         results = results.filter(item => {
-          const itemState = item.State;
-          return filters.states.some(state => {
+          const [city, state] = (item['City, State'] || '').split(',').map(s => s.trim());
+          return filters.states.some(filterState => {
             // Handle state name variations
-            if (state === 'Delhi') return itemState.includes('Delhi');
-            if (state === 'Odisha') return itemState.includes('Odisha') || itemState.includes('Orissa');
-            if (state === 'Jammu & Kashmir') return itemState.includes('Jammu');
-            if (state === 'Andhra Pradesh') return itemState.includes('Andhra P.');
-            if (state === 'Himachal Pradesh') return itemState.includes('Himachal P.');
-            if (state === 'Madhya Pradesh') return itemState.includes('Madhya P.');
-            if (state === 'Uttar Pradesh') return itemState.includes('U. P.');
-            return itemState.includes(state);
+            if (filterState === 'Delhi') return state.includes('Delhi');
+            if (filterState === 'Odisha') return state.includes('Odisha') || state.includes('Orissa');
+            if (filterState === 'Jammu & Kashmir') return state.includes('Jammu');
+            if (filterState === 'Andhra Pradesh') return state.includes('Andhra');
+            if (filterState === 'Himachal Pradesh') return state.includes('Himachal');
+            if (filterState === 'Madhya Pradesh') return state.includes('Madhya');
+            if (filterState === 'Uttar Pradesh') return state.includes('Uttar');
+            return state.includes(filterState);
           });
         });
       }
@@ -338,46 +339,47 @@ const CollegeSearch = () => {
         results = results.filter(item => item.Category === filters.category);
       }
 
-      // Filter by bond
-      if (filters.bond !== 'all') {
-        const hasBond = filters.bond === 'yes';
-        results = results.filter(item => {
-          const bondInfo = (item['UG Bond'] || '').toLowerCase();
-          if (hasBond) {
-            // First check if it contains 'no' or 'not' - if so, exclude it
-            if (bondInfo.includes('no ') || bondInfo.includes('not ') || /^no$/i.test(bondInfo)) {
-              return false;
-            }
-            // Then check for positive bond indicators
-            return bondInfo.includes('yes') || 
-                   (bondInfo.includes('bond') && !bondInfo.includes('no bond')) || 
-                   /\d+\s*(?:year|yr)/.test(bondInfo) ||
-                   bondInfo.includes('compulsory') ||
-                   bondInfo.includes('mandatory');
-          } else {
-            return bondInfo.includes('no') || bondInfo === '' || bondInfo.includes('not');
-          }
-        });
-      }
-
-      // Filter by college type
-      if (filters.collegeTypes.length > 0) {
-        results = results.filter(item => filters.collegeTypes.includes(item.TYPE));
-      }
-
       // Filter by search query
       if (filters.searchQuery) {
         const query = filters.searchQuery.toLowerCase();
-      results = results.filter(item => 
-          item['Name of the Medical College'].toLowerCase().includes(query) ||
-          item.Location.toLowerCase().includes(query)
+        results = results.filter(item => 
+          item['College Name'].toLowerCase().includes(query) ||
+          item['City, State'].toLowerCase().includes(query)
         );
+      }
+
+      // Only apply these filters for MBBS (not BDS)
+      if (selectedQuota !== 'bds') {
+        // Filter by bond
+        if (filters.bond !== 'all') {
+          const hasBond = filters.bond === 'yes';
+          results = results.filter(item => {
+            const bondInfo = (item['After MBBS Service Bond'] || '').toLowerCase();
+            if (hasBond) {
+              if (bondInfo.includes('no ') || bondInfo.includes('not ') || /^no$/i.test(bondInfo)) {
+                return false;
+              }
+              return bondInfo.includes('yes') || 
+                     (bondInfo.includes('bond') && !bondInfo.includes('no bond')) || 
+                     /\d+\s*(?:year|yr)/.test(bondInfo) ||
+                     bondInfo.includes('compulsory') ||
+                     bondInfo.includes('mandatory');
+            } else {
+              return bondInfo.includes('no') || bondInfo === '' || bondInfo.includes('not');
+            }
+          });
+        }
+
+        // Filter by college type
+        if (filters.collegeTypes.length > 0) {
+          results = results.filter(item => filters.collegeTypes.includes(item.TYPE));
+        }
       }
     }
 
     setFilteredData(results);
     setIsFiltering(false);
-  }, [filters, selectedExam]);
+  }, [filters, selectedExam, selectedQuota]);
 
   // Effect to run filtering when filters change
   useEffect(() => {
@@ -581,7 +583,7 @@ const CollegeSearch = () => {
     lineHeight: '1.7',
     fontSize: '14px',
     textAlign: 'left',
-    flex: '0 0 40%'  // Fixed width for the left column
+    // flex: '0 0 40%'  // Fixed width for the left column
   };
 
   const infoItemStyle = {
@@ -646,7 +648,7 @@ const CollegeSearch = () => {
           textAlign: 'center',
           fontFamily: 'Lexend Semibold'
         }}>
-          PG specializations ({item['No. of pg courses']} courses, {item['No. of pg seats']} seats)
+          PG specializations ({item['no. of pg courses']} courses, {item['no. of pg seats']} seats)
         </div>
         <div style={{ 
           color: '#000',
@@ -657,7 +659,6 @@ const CollegeSearch = () => {
         }}>
           {courses.map((course, index) => (
             <div key={index} style={{
-              // marginBottom: '0.5rem',
               breakInside: 'avoid-column',
               display: 'flex',
               gap: '0.5rem'
@@ -682,21 +683,21 @@ const CollegeSearch = () => {
               <div>
                 <span style={infoLabelStyle}>MBBS Seats</span>
                 <span style={infoLabelStyle}> : </span>
-                <span style={infoValueStyle}>{item['Annual Intake (Seats)']}</span>
+                <span style={infoValueStyle}>{item['Annual Intake (MBBS Seats)']}</span>
               </div>
             </li>
             <li>
               <div>
-                <span style={infoLabelStyle}>Transport</span>
+                <span style={infoLabelStyle}>Connectivity</span>
                 <span style={infoLabelStyle}> : </span>
-                <span style={infoValueStyle}>{item['Transport'] || '-'}</span>
+                <span style={infoValueStyle}>{item['Connectivity'] || '-'}</span>
               </div>
             </li>
             <li>
               <div>
                 <span style={infoLabelStyle}>University Name</span>
                 <span style={infoLabelStyle}> : </span>
-                <span style={infoValueStyle}>{item['University  Name']}</span>
+                <span style={infoValueStyle}>{item['University Name']}</span>
               </div>
             </li>
             <li>
@@ -710,35 +711,62 @@ const CollegeSearch = () => {
               <div>
                 <span style={infoLabelStyle}>After MBBS Service Bond</span>
                 <span style={infoLabelStyle}> : </span>
-                <span style={infoValueStyle}>{item['UG Bond']}</span>
+                <span style={infoValueStyle}>{item['After MBBS Service Bond']}</span>
               </div>
             </li>
             <li>
               <div>
                 <span style={infoLabelStyle}>Penalty if Service Bond Broken</span>
                 <span style={infoLabelStyle}> : </span>
-                <span style={infoValueStyle}>{item['penalty of service bond if broken'] ? `₹${item['penalty of service bond if broken']}` : 'no penalty'}</span>
+                <span style={infoValueStyle}>{item['Penalty if Service Bond Broken']}</span>
               </div>
             </li>
             <li>
               <div>
                 <span style={infoLabelStyle}>Discontinuation Bond Penalty</span>
                 <span style={infoLabelStyle}> : </span>
-                <span style={infoValueStyle}>{item['mbbs discontinuation bond penalty'] ? `₹${item['mbbs discontinuation bond penalty']}` : 'debarred from next neet ug'}</span>
+                <span style={infoValueStyle}>{item['MBBS Discontinuation Bond Penalty']}</span>
               </div>
             </li>
+            <li>
+              <div>
+                <span style={infoLabelStyle}>Established Year</span>
+                <span style={infoLabelStyle}> : </span>
+                <span style={infoValueStyle}>{item['Est. Year']}</span>
+              </div>
+            </li>
+            {item['Disclaimer'] && (
+              <li>
+                <div>
+                  <span style={infoLabelStyle}>Disclaimer</span>
+                  <span style={infoLabelStyle}> : </span>
+                  <span style={infoValueStyle}>{item['Disclaimer']}</span>
+                </div>
+              </li>
+            )}
           </ul>
         </div>
-        {item['pg courses available list'] && (
+        {item['PG Specializations'] && (
           <div style={pgCoursesContainerStyle}>
-            {formatPGCoursesList(item['pg courses available list'], item)}
+            {formatPGCoursesList(item['PG Specializations'], item)}
           </div>
         )}
       </div>
     );
   };
 
-  // Update the renderTableRow function
+  // Add helper function to format table cell text with newlines
+  const formatCellText = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    return text.split('\n').map((line, i) => (
+      <React.Fragment key={i}>
+        {line}
+        {i < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
+  // Update renderTableRow function to use formatCellText
   const renderTableRow = (item, index) => {
     const isExpanded = expandedRows.has(index);
     
@@ -755,7 +783,7 @@ const CollegeSearch = () => {
               className="expand-button"
               title={isExpanded ? 'Collapse' : 'Expand'}
               onClick={(e) => {
-                e.stopPropagation(); // Prevent row click event when clicking the button
+                e.stopPropagation();
                 toggleRowExpansion(index);
               }}
             >
@@ -763,20 +791,35 @@ const CollegeSearch = () => {
             </button>
           </td>
           {selectedExam === 'NEET' ? (
-            <>
-              <td>{item.Location}</td>
-              <td>{item['2023 College Rank']}</td>
-              <td>{item['2022 College Rank']}</td>
-              <td>{item['2021 College Rank']}</td>
-              <td>{item['Name of the Medical College']}</td>
-              <td>{item[`Round-1 (${filters.year})`]}</td>
-              <td>{item[`Round-2 (${filters.year})`]}</td>
-              <td>{item[`MoP_Up (${filters.year})`]}</td>
-              <td>{item[`Stray (${filters.year})`]}</td>
-              <td>{item[`Special Stray (${filters.year})`]}</td>
-              <td>{item[`closing (${filters.year})`]}</td>
-              <td>{item['UG Bond']}</td>
-            </>
+            selectedQuota === 'bds' ? (
+              <>
+                <td>{item['College Name']}</td>
+                <td>{item['City, State']}</td>
+                <td>{item['BDS College Ranking']}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item['Round-1\nR1\n(2024)'])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item['Round-2\nR2\n(2024)'])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item['Round-3\nR3\n(2024)'])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item['Closing\nMax(R1, R2, R3)\n(2024)'])}</td>
+              </>
+            ) : selectedQuota === 'state' ? (
+              renderStateQuotaRow(item, index)
+            ) : (
+              // MBBS All India Quota row
+              <>
+                <td>{item['College Name']}</td>
+                <td>{item['City, State']}</td>
+                <td>{item['TYPE']}</td>
+                <td>{item['NIRF Ranking']}</td>
+                <td>{item['Category']}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round-1\nR1\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round-2\nR2\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`MoP_Up\nR3\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Stray\nR4\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Special Stray\nR5\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Closing\nMax(R1 to R5)\n(${filters.year})`])}</td>
+                <td>{item['After MBBS Service Bond']}</td>
+              </>
+            )
           ) : (
             <>
               <td>{item.TYPE_Counselling}</td>
@@ -794,7 +837,7 @@ const CollegeSearch = () => {
         </tr>
         {isExpanded && (
           <tr>
-            <td colSpan={selectedExam === 'NEET' ? 13 : 10}>
+            <td colSpan={selectedQuota === 'bds' ? 8 : selectedExam === 'NEET' ? 13 : 10}>
               {renderExpandedContent(item)}
             </td>
           </tr>
@@ -803,36 +846,86 @@ const CollegeSearch = () => {
     );
   };
 
-  // Modify the table headers to include the expand column
+  // Add helper function to format table header text with newlines
+  const formatHeaderText = (text) => {
+    return text.split('\n').map((line, i) => (
+      <React.Fragment key={i}>
+        {line}
+        {i < text.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
+
+  // Update renderTableHeaders function to use formatHeaderText
   const renderTableHeaders = () => {
     if (selectedExam === 'NEET') {
-      return (
-        <tr>
-          <th style={{ width: '40px' }}></th>
-          <th>Location</th>
-          <th>2023 Rank</th>
-          <th>2022 Rank</th>
-          <th>2021 Rank</th>
-          <th>College Name</th>
-          <th>Round 1</th>
-          <th>Round 2</th>
-          <th>Mop Up</th>
-          <th>Stray</th>
-          <th>Special Stray</th>
-          <th 
-            onClick={() => handleSort(`closing (${filters.year})`)}
-            style={{ cursor: 'pointer' }}
-          >
-            Closing Rank ↕
-          </th>
-          <th>Bond</th>
-        </tr>
-      );
+      if (selectedQuota === 'bds') {
+        const roundHeaders = [
+          'Round-1\nR1',
+          'Round-2\nR2',
+          'Round-3\nR3'
+        ];
+
+        return (
+          <tr>
+            <th style={{ width: '40px' }}></th>
+            <th>College Name</th>
+            <th>City, State</th>
+            <th>BDS Rank</th>
+            {roundHeaders.map((header, index) => (
+              <th key={index} style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+                {formatHeaderText(`${header}\n(${filters.year})`)}
+              </th>
+            ))}
+            <th 
+              onClick={() => handleSort(`Closing\nMax(R1, R2, R3)\n(${filters.year})`)}
+              style={{ cursor: 'pointer', whiteSpace: 'pre-line', textAlign: 'center' }}
+            >
+              {formatHeaderText(`Closing\nMax(R1, R2, R3)\n(${filters.year})`)} ↕
+            </th>
+          </tr>
+        );
+      } else if (selectedQuota === 'state') {
+        return renderStateQuotaHeaders();
+      } else {
+        // MBBS All India Quota headers
+        return (
+          <tr>
+            <th style={{ width: '40px' }}></th>
+            <th>College Name</th>
+            <th>City, State</th>
+            <th>Type</th>
+            <th>NIRF Rank</th>
+            <th>Category</th>
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`Round-1\nR1\n(${filters.year})`)}
+            </th>
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`Round-2\nR2\n(${filters.year})`)}
+            </th>
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`MoP_Up\nR3\n(${filters.year})`)}
+            </th>
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`Stray\nR4\n(${filters.year})`)}
+            </th>
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`Special Stray\nR5\n(${filters.year})`)}
+            </th>
+            <th 
+              onClick={() => handleSort(`Closing\nMax(R1 to R5)\n(${filters.year})`)}
+              style={{ cursor: 'pointer', whiteSpace: 'pre-line', textAlign: 'center' }}
+            >
+              {formatHeaderText(`Closing\nMax(R1 to R5)\n(${filters.year})`)} ↕
+            </th>
+            <th>Bond</th>
+          </tr>
+        );
+      }
     }
 
     return (
       <tr>
-        {/* <th style={{ width: '40px' }}></th> */}
         <th>Counselling</th>
         <th>TYPE</th>
         <th>Institute</th>
@@ -877,29 +970,31 @@ const CollegeSearch = () => {
 
   // Function to render table headers for state quota
   const renderStateQuotaHeaders = () => {
+    const roundHeaders = [
+      'Round-1\nR1',
+      'Round-2\nR2',
+      'Round-3\nR3'
+    ];
+
     return (
       <tr>
         <th style={{ width: '40px' }}></th>
-        <th onClick={() => handleSort('rajasthan college rank')}>College Rank</th>
-        <th onClick={() => handleSort('College Name')}>College Name</th>
-        <th onClick={() => handleSort('Category')}>Category</th>
+        <th>College Name</th>
+        <th>City, State</th>
+        <th>NIRF Rank</th>
+        <th>Raj. Rank</th>
+        <th>Category</th>
+        <th>Gender</th>
+        {roundHeaders.map((header, index) => (
+          <th key={index} style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+            {formatHeaderText(`${header}\n(${filters.year})`)}
+          </th>
+        ))}
         <th 
-          onClick={() => handleSort(`${filters.year} R1 AIR`)}
-          style={{ cursor: 'pointer' }}
+          onClick={() => handleSort(`Closing\nMax(R1, R2, R3)\n(${filters.year})`)}
+          style={{ cursor: 'pointer', whiteSpace: 'pre-line', textAlign: 'center' }}
         >
-          Round 1 ↕
-        </th>
-        <th 
-          onClick={() => handleSort(`${filters.year} R2 AIR`)}
-          style={{ cursor: 'pointer' }}
-        >
-          Round 2 ↕
-        </th>
-        <th 
-          onClick={() => handleSort(`${filters.year} R3 AIR`)}
-          style={{ cursor: 'pointer' }}
-        >
-          Round 3 ↕
+          {formatHeaderText(`Closing\nMax(R1, R2, R3)\n(${filters.year})`)} ↕
         </th>
       </tr>
     );
@@ -929,66 +1024,94 @@ const CollegeSearch = () => {
               {isExpanded ? '▼' : '▶'}
             </button>
           </td>
-          <td>{item['rajasthan college rank']}</td>
           <td>{item['College Name']}</td>
+          <td>{item['City, State']}</td>
+          <td>{item['NIRF Ranking']}</td>
+          <td>{item['Rajasthan College Ranking']}</td>
           <td>{item.Category}</td>
-          <td>{getRoundValue(item, 1, filters.year)}</td>
-          <td>{getRoundValue(item, 2, filters.year)}</td>
-          <td>{getRoundValue(item, 3, filters.year)}</td>
+          <td>{item.Gender}</td>
+          <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round-1\nR1\n(${filters.year})`])}</td>
+          <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round-2\nR2\n(${filters.year})`])}</td>
+          <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round-3\nR3\n(${filters.year})`])}</td>
+          <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Closing\nMax(R1, R2, R3)\n(${filters.year})`])}</td>
         </tr>
         {isExpanded && (
           <tr>
-            <td colSpan={7}>
+            <td colSpan={11}>
               <div style={expandedContentStyle}>
-                <ul style={infoListStyle}>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>MBBS Seats:</span>
-                    <span style={infoValueStyle}>{item['Annual Intake (Seats)']}</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>PG Specialisations:</span>
-                    <span style={infoValueStyle}>{item['no. of pg courses'] ? 'Yes' : 'No'}</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>Hostel:</span>
-                    <span style={infoValueStyle}>Yes</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>Teaching Hospital:</span>
-                    <span style={infoValueStyle}>Yes</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>Transport:</span>
-                    <span style={infoValueStyle}>{item['Transport'] || '-'}</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>Est. Year:</span>
-                    <span style={infoValueStyle}>{item['Year of Inspection of College']}</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>University Name:</span>
-                    <span style={infoValueStyle}>{item['University  Name']}</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>Management of College:</span>
-                    <span style={infoValueStyle}>{item['Managemet of College']}</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>After MBBS Service Bond:</span>
-                    <span style={infoValueStyle}>{item['after mbbs service bond']}</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>Penalty if Service Bond Broken:</span>
-                    <span style={infoValueStyle}>₹{item['penalty of service bond if broken']}</span>
-                  </li>
-                  <li style={infoItemStyle}>
-                    <span style={infoLabelStyle}>Discontinuation Bond Penalty:</span>
-                    <span style={infoValueStyle}>₹{item['mbbs discontinuation bond penalty']}</span>
-                  </li>
-                </ul>
-                {item['pg courses available list'] && (
+                <div>
+                  <div style={infoHeaderStyle}>Important Information</div>
+                  <ul style={infoListStyle}>
+                    <li>
+                      <div>
+                        <span style={infoLabelStyle}>MBBS Seats</span>
+                        <span style={infoLabelStyle}> : </span>
+                        <span style={infoValueStyle}>{item['Annual Intake (MBBS Seats)']}</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div>
+                        <span style={infoLabelStyle}>Connectivity</span>
+                        <span style={infoLabelStyle}> : </span>
+                        <span style={infoValueStyle}>{item['Connectivity'] || '-'}</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div>
+                        <span style={infoLabelStyle}>University Name</span>
+                        <span style={infoLabelStyle}> : </span>
+                        <span style={infoValueStyle}>{item['University Name']}</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div>
+                        <span style={infoLabelStyle}>Management of College</span>
+                        <span style={infoLabelStyle}> : </span>
+                        <span style={infoValueStyle}>{item['Managemet  of College']?.toLowerCase()}</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div>
+                        <span style={infoLabelStyle}>After MBBS Service Bond</span>
+                        <span style={infoLabelStyle}> : </span>
+                        <span style={infoValueStyle}>{item['After MBBS Service Bond']}</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div>
+                        <span style={infoLabelStyle}>Penalty if Service Bond Broken</span>
+                        <span style={infoLabelStyle}> : </span>
+                        <span style={infoValueStyle}>{item['Penalty if Service Bond Broken']}</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div>
+                        <span style={infoLabelStyle}>Discontinuation Bond Penalty</span>
+                        <span style={infoLabelStyle}> : </span>
+                        <span style={infoValueStyle}>{item['MBBS Discontinuation Bond Penalty']}</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div>
+                        <span style={infoLabelStyle}>Established Year</span>
+                        <span style={infoLabelStyle}> : </span>
+                        <span style={infoValueStyle}>{item['Est. Year']}</span>
+                      </div>
+                    </li>
+                    {item['Disclaimer'] && (
+                      <li>
+                        <div>
+                          <span style={infoLabelStyle}>Disclaimer</span>
+                          <span style={infoLabelStyle}> : </span>
+                          <span style={infoValueStyle}>{item['Disclaimer']}</span>
+                        </div>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+                {item['PG Specializations'] && (
                   <div style={pgCoursesContainerStyle}>
-                    {formatPGCoursesList(item['pg courses available list'], item)}
+                    {formatPGCoursesList(item['PG Specializations'], item)}
                   </div>
                 )}
               </div>
@@ -1125,13 +1248,14 @@ const CollegeSearch = () => {
             cursor: 'pointer'
           }}
         >
-          All India Quota
+          MBBS All India Quota
         </button>
         <button
           className={`quota-button ${selectedQuota === 'state' ? 'active' : ''}`}
           onClick={() => setSelectedQuota('state')}
           style={{
             padding: '10px 20px',
+            marginRight: '10px',
             borderRadius: '4px',
             border: '1px solid #e2e8f0',
             backgroundColor: selectedQuota === 'state' ? '#076B37' : 'white',
@@ -1139,13 +1263,85 @@ const CollegeSearch = () => {
             cursor: 'pointer'
           }}
         >
-          Rajasthan State Quota
+          MBBS State Quota
+        </button>
+        <button
+          className={`quota-button ${selectedQuota === 'bds' ? 'active' : ''}`}
+          onClick={() => setSelectedQuota('bds')}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '4px',
+            border: '1px solid #e2e8f0',
+            backgroundColor: selectedQuota === 'bds' ? '#076B37' : 'white',
+            color: selectedQuota === 'bds' ? 'white' : '#1e293b',
+            cursor: 'pointer'
+          }}
+        >
+          BDS All India
         </button>
       </div>
     );
   };
 
-  // Update the print function to handle both AIQ and state quota data
+  // Add sorting function
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+
+    // For state quota, the sorting is handled in filterStateQuotaData
+    if (selectedExam === 'NEET' && selectedQuota === 'state') {
+      return;
+    }
+
+    // For all other cases, sort the filtered data directly
+    const sortedData = [...filteredData].sort((a, b) => {
+      let aValue = a[key];
+      let bValue = b[key];
+
+      // Handle special cases like "--" or empty values
+      if (aValue === "--" || aValue === "" || aValue === undefined) aValue = direction === 'asc' ? Infinity : -Infinity;
+      if (bValue === "--" || bValue === "" || bValue === undefined) bValue = direction === 'asc' ? Infinity : -Infinity;
+
+      // For NIRF Ranking, lower is better
+      if (key === 'NIRF Ranking') {
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return direction === 'asc' 
+            ? aValue - bValue
+            : bValue - aValue;
+        }
+      }
+
+      // For closing ranks, handle the new format
+      if (key.includes('Closing')) {
+        // Convert to numbers if they're numeric strings
+        if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
+        if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
+
+        return direction === 'asc' 
+          ? aValue - bValue
+          : bValue - aValue;
+      }
+
+      // If both values are strings (like college names), use string comparison
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return direction === 'asc' 
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+
+      // Default numeric comparison
+      return direction === 'asc' 
+        ? aValue - bValue
+        : bValue - aValue;
+    });
+
+    setFilteredData(sortedData);
+  };
+
+  // Update the print function to handle the new data format
   const handlePrint = useCallback(() => {
     let dataToExport;
     let filename;
@@ -1156,37 +1352,45 @@ const CollegeSearch = () => {
       
       // Transform data for state quota
       dataToExport = filteredData.map(item => ({
-        'Rajasthan College Rank': item['rajasthan college rank'] || '-',
         'College Name': item['College Name'] || '-',
+        'City, State': item['City, State'] || '-',
+        'NIRF Ranking': item['NIRF Ranking'] || '-',
+        'Rajasthan College Ranking': item['Rajasthan College Ranking'] || '-',
         'Category': item['Category'] || '-',
-        'Round 1 AIR': getRoundValue(item, 1, filters.year) || '-',
-        'Round 2 AIR': getRoundValue(item, 2, filters.year) || '-',
-        'Round 3 AIR': getRoundValue(item, 3, filters.year) || '-',
-        'Gender': item['Gender'] || '-'
+        'Gender': item['Gender'] || '-',
+        'Round 1': item[`Round-1\nR1\n(${filters.year})`] || '-',
+        'Round 2': item[`Round-2\nR2\n(${filters.year})`] || '-',
+        'Round 3': item[`Round-3\nR3\n(${filters.year})`] || '-',
+        'Closing Rank': item[`Closing\nMax(R1, R2, R3)\n(${filters.year})`] || '-',
+        'MBBS Seats': item['Annual Intake (MBBS Seats)'] || '-',
+        'PG Courses': item['no. of pg courses'] || '-',
+        'PG Seats': item['no. of pg seats'] || '-',
+        'Connectivity': item['Connectivity'] || '-',
+        'Bond': item['After MBBS Service Bond'] || '-',
+        'Bond Penalty': item['Penalty if Service Bond Broken'] || '-',
+        'Discontinuation Penalty': item['MBBS Discontinuation Bond Penalty'] || '-'
       }));
 
       filename = `NEET_State_Quota_${filters.year}_${filters.category}_${filters.gender}.csv`;
     } else {
       // Handle AIQ data - use filteredData instead of getCurrentPageData
       dataToExport = filteredData.map(item => ({
-        'College Name': item['Name of the Medical College'] || '-',
-        'Location': item['Location'] || '-',
+        'College Name': item['College Name'] || '-',
+        'City, State': item['City, State'] || '-',
+        'NIRF Ranking': item['NIRF Ranking'] || '-',
         'Category': item['Category'] || '-',
-        'College Rank 2023': item['2023 College Rank'] || '-',
-        'College Rank 2022': item['2022 College Rank'] || '-',
-        'College Rank 2021': item['2021 College Rank'] || '-',
-        'Round 1': item[`Round-1 (${filters.year})`] || '-',
-        'Round 2': item[`Round-2 (${filters.year})`] || '-',
-        'Mop Up': item[`MoP_Up (${filters.year})`] || '-',
-        'Stray': item[`Stray (${filters.year})`] || '-',
-        'Special Stray': item[`Special Stray (${filters.year})`] || '-',
-        'Closing Rank': item[`closing (${filters.year})`] || '-',
-        'Bond': item['UG Bond'] || '-',
-        'MBBS Seats': item['MBBS Seats'] || '-',
-        'PG': item['PG'] || '-',
-        'Hostel': item['Boys & Girls Hostel'] || '-',
-        'Teaching Hospital': item['Teaching Hospital'] || '-',
-        'Transport': item['Transport'] || '-'
+        'Round 1': item[`Round-1\nR1\n(${filters.year})`] || '-',
+        'Round 2': item[`Round-2\nR2\n(${filters.year})`] || '-',
+        'Mop Up': item[`MoP_Up\nR3\n(${filters.year})`] || '-',
+        'Stray': item[`Stray\nR4\n(${filters.year})`] || '-',
+        'Special Stray': item[`Special Stray\nR5\n(${filters.year})`] || '-',
+        'Closing Rank': item[`Closing\nMax(R1 to R5)\n(${filters.year})`] || '-',
+        'Bond': item['After MBBS Service Bond'] || '-',
+        'MBBS Seats': item['Annual Intake (MBBS Seats)'] || '-',
+        'PG Courses': item['no. of pg courses'] || '-',
+        'PG Seats': item['no. of pg seats'] || '-',
+        'Connectivity': item['Connectivity'] || '-',
+        'Est. Year': item['Est. Year'] || '-'
       }));
 
       filename = `NEET_AIQ_${filters.year}_${filters.category}_${new Date().toISOString().split('T')[0]}.csv`;
@@ -1227,74 +1431,6 @@ const CollegeSearch = () => {
       URL.revokeObjectURL(url);
     }
   }, [selectedExam, selectedQuota, filters, filteredData, filterStateQuotaData]);
-
-  // Add print button to the UI
-  const renderPrintButton = () => {
-    return (
-      <button
-        onClick={handlePrint}
-        style={{
-          padding: '8px 16px',
-          backgroundColor: '#076B37',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          marginBottom: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 12h8v2H4v-2zM4 6h8v2H4V6zm0-4h8v2H4V2z" fill="currentColor"/>
-        </svg>
-        Download Results
-      </button>
-    );
-  };
-
-  // Add sorting function
-  const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-
-    // For state quota, the sorting is handled in filterStateQuotaData
-    if (selectedExam === 'NEET' && selectedQuota === 'state') {
-      return;
-    }
-
-    // For all other cases, sort the filtered data directly
-    const sortedData = [...filteredData].sort((a, b) => {
-      let aValue = a[key];
-      let bValue = b[key];
-
-      // Handle special cases like "--" or empty values
-      if (aValue === "--" || aValue === "" || aValue === undefined) aValue = direction === 'asc' ? Infinity : -Infinity;
-      if (bValue === "--" || bValue === "" || bValue === undefined) bValue = direction === 'asc' ? Infinity : -Infinity;
-
-      // Convert to numbers if they're numeric strings
-      if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
-      if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
-
-      // If both values are strings (like college names), use string comparison
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return direction === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      // Numeric comparison
-      return direction === 'asc' 
-        ? aValue - bValue
-        : bValue - aValue;
-    });
-
-    setFilteredData(sortedData);
-  };
 
   if (!selectedExam) {
     return (
@@ -1652,7 +1788,7 @@ const CollegeSearch = () => {
                   <tbody>
                     {!isLoading && !isFiltering && getCurrentPageData().length === 0 ? (
                       <tr>
-                        <td colSpan={selectedExam === 'NEET' ? 13 : 10} style={{ textAlign: 'center', padding: '2rem' }}>
+                        <td colSpan={selectedExam === 'NEET' ? 11 : 10} style={{ textAlign: 'center', padding: '2rem' }}>
                           No results found
                         </td>
                       </tr>
