@@ -103,32 +103,35 @@
 }
 
 .table-container {
+  width: 100%;
+  overflow: hidden;
   background: white;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
 }
 
 .results-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 800px;
 }
 
 .results-table th {
   background-color: #1B5431;
-  padding: 7px;
+  padding: 16px 10px;
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #fff;
   text-transform: uppercase;
   border-bottom: 1px solid #e2e8f0;
-  font-family: 'Lexend Medium';
+  font-family: 'Lexend SemiBold';
+  position: relative;
 }
 
 /* Add styles for sortable headers */
 .results-table th[style*="cursor: pointer"]:hover {
-  background-color: #edf2f7;
+  background-color: #1a4d2d;
 }
 
 .results-table th span {
@@ -138,15 +141,89 @@
 }
 
 .results-table td {
-  padding: 5px;
   border-bottom: 1px solid #e2e8f0;
   color: #000;
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
+  background-color: white;
+  position: relative;
+}
+
+/* Use relative widths for columns */
+.results-table th:nth-child(1),
+.results-table td:nth-child(1) {
+  width: 5%;
+  min-width: 60px;
+}
+
+.results-table th:nth-child(2),
+.results-table td:nth-child(2) {
+  width: 25%;
+  min-width: 300px;
+}
+
+.results-table th:nth-child(3),
+.results-table td:nth-child(3) {
+  width: 15%;
+  min-width: 120px;
+}
+
+.results-table th:nth-child(4),
+.results-table td:nth-child(4) {
+  /* width: 8%; */
+  min-width: 80px;
+}
+
+/* Round columns */
+.results-table th:nth-child(n+5),
+.results-table td:nth-child(n+5) {
+  /* width: 8%; */
+  min-width: 88px;
+}
+
+/* Style for expanded rows */
+.results-table tr.expanded-row td {
+  border-bottom: none;
+}
+
+/* Add transition for smooth expansion */
+.results-table tr {
+  transition: all 0.2s ease-in-out;
 }
 
 .results-table tr:hover {
   background-color: #f7fafc;
+}
+
+/* Ensure expanded content has proper styling */
+.results-table tr:not(.expanded-row) + tr td {
+  background-color: #f8fafc;
+  padding: 0;
+}
+
+/* Add overflow handling */
+.table-wrapper {
+  overflow-x: auto;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Add fade effect for scroll indication */
+.table-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.9));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.table-wrapper.has-overflow::after {
+  opacity: 1;
 }
 
 .placement-stats {
@@ -264,7 +341,7 @@
 .loading-text {
   text-align: center;
   color: #2d3748;
-  font-size: 1.1rem;
+  font-size: 13px;
   font-weight: 500;
 }
 
