@@ -129,6 +129,32 @@
   position: relative;
 }
 
+.results-table-iit {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.results-table-iit th {
+  background-color: #1B5431;
+  padding: 16px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+  font-family: 'Lexend SemiBold';
+  position: relative;
+}
+
+.results-table-iit td {
+  border-bottom: 1px solid #e2e8f0;
+  color: #000;
+  font-size: 13px;
+  background-color: white;
+  position: relative;
+}
+
 /* Add styles for sortable headers */
 .results-table th[style*="cursor: pointer"]:hover {
   background-color: #1a4d2d;
@@ -478,4 +504,39 @@
 
 .sortable-header:hover .sort-indicator {
   color: #4299e1;
+}
+
+/* Add exam selector styles */
+.exam-selector {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.exam-button {
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid #1B5431;
+  border-radius: 8px;
+  background-color: transparent;
+  color: #1B5431;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 80px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.exam-button:hover {
+  background-color: #1B5431;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(27, 84, 49, 0.1), 0 2px 4px -1px rgba(27, 84, 49, 0.06);
+}
+
+.exam-button.active {
+  background-color: #1B5431;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(27, 84, 49, 0.1), 0 2px 4px -1px rgba(27, 84, 49, 0.06);
 } 

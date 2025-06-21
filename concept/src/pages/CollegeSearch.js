@@ -679,16 +679,15 @@ const CollegeSearch = () => {
     setExpandedRows(new Set());
   };
 
-  // Add toggle function for row expansion
+  // Update toggle function for row expansion to handle single expansion
   const toggleRowExpansion = (index) => {
     setExpandedRows(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
+      // If clicking the same row that's already expanded, close it by returning empty set
+      if (prev.has(index)) {
+        return new Set();
       }
-      return newSet;
+      // If clicking a different row, close the current one and open the new one
+      return new Set([index]);
     });
   };
 
@@ -1456,16 +1455,16 @@ const CollegeSearch = () => {
             selectedQuota === 'bds' ? (
               <>
                 <td style={{ textAlign: 'center' }}>{serialNumber}</td>
-                <td style={{ position: 'relative', maxWidth: '400px' }}>{renderCollegeNameCell(item, true)}</td>
+                <td style={{ position: 'relative', maxWidth: '400px' , padding: '16px 10px'}}>{renderCollegeNameCell(item, true)}</td>
                 <td>{item['City, State']}</td>
                 {shouldShowCategoryColumn() && <td>{item.Category}</td>}
                 <td style={{ textAlign: 'center' }}>{item['BDS College Ranking']}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 1\nR1\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 2\nR2\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 3\nR3\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 4\nR4\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 5\nR5\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{formatCellText(item[`Closing\nMax(R1 to R5)\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 1\nR1\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 2\nR2\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 3\nR3\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 4\nR4\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 5\nR5\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{formatCellText(item[`Closing\nMax(R1 to R5)\n(${filters.year})`])}</td>
               </>
             ) : selectedQuota === 'state' ? (
               renderStateQuotaRow(item, index)
@@ -1473,23 +1472,23 @@ const CollegeSearch = () => {
               // MBBS All India Quota row
               <>
                 <td style={{ textAlign: 'center' }}>{serialNumber}</td>
-                <td style={{ position: 'relative', maxWidth: '400px' }}>{renderCollegeNameCell(item)}</td>
+                <td style={{ position: 'relative', maxWidth: '400px' , padding: '16px 10px'}}>{renderCollegeNameCell(item)}</td>
                 <td>{item['Est. Year'] || '-'}</td>
                 <td>{item['City, State']}</td>
-                {shouldShowCategoryColumn() && <td>{item.Category}</td>}
-                <td>{item['NIRF Ranking']}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 1\nR1\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 2\nR2\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`MoP Up\nR3\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{maxR1toR3}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Stray\nR4\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Special Stray\nR5\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{maxR1toR5}</td>
+                {shouldShowCategoryColumn() && <td style={{ padding: '16px 10px' }}>{item.Category}</td>}
+                <td style={{ padding: '16px 10px' }}>{item['NIRF Ranking']}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 1\nR1\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 2\nR2\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`MoP Up\nR3\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{maxR1toR3}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Stray\nR4\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Special Stray\nR5\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{maxR1toR5}</td>
               </>
             )
           ) : (
             <>
-              <td>{item.TYPE_Counselling}</td>
+              <td >{item.TYPE_Counselling}</td>
               <td>{item.TYPE}</td>
               <td>{item.Institute}</td>
               <td>{formatProgramName(item['Academic Program & Stats'])}</td>

@@ -646,7 +646,7 @@ const IITSearch = () => {
               </div>
             )}
             
-            <table className="results-table">
+            <table className="results-table-iit">
               <thead>
                 <tr>
                   <th>Counselling</th>
