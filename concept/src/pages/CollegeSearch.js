@@ -7,6 +7,7 @@ import Layout from '../components/common/layout/layout';
 import neetRajData from '../data/neet_raj_state.json';
 import IITSearch from './iitSerach';
 import neetBdsData from '../data/neet_bds_data.json';
+import neetMgmtData from '../data/neet_mgmt_data.json';
 
 // Debounce helper function
 const useDebounce = (value, delay) => {
@@ -86,6 +87,7 @@ const CollegeSearch = () => {
     searchQuery: '',
     category: 'all',
     year: '2024',
+    course: 'all', // Add course filter for management seats
     
     // NEET specific filters
     states: [],
@@ -109,8 +111,6 @@ const CollegeSearch = () => {
     }
   });
 
-  // Add showMainContent state back
-  const [showMainContent, setShowMainContent] = useState(false);
 
   // Debounce the search query and rank range
   const debouncedSearchQuery = useDebounce(inputValues.searchQuery, 300);
@@ -322,11 +322,6 @@ const CollegeSearch = () => {
     { value: 'JIPMER', label: 'JIPMER' }
   ];
 
-  // Add counseling type options for IIT JEE
-  const IIT_COUNSELLING_OPTIONS = [
-    { value: 'JOSAA', label: 'JOSAA' },
-    { value: 'CSAB', label: 'CSAB' }
-  ];
 
   // Add custom components for react-select with checkboxes
   const Option = props => {
@@ -449,74 +444,105 @@ const CollegeSearch = () => {
   // Modify filterData to include PG availability filtering
   const filterData = useCallback(() => {
     setIsFiltering(true);
-    let results = selectedQuota === 'bds' ? neetBdsData : neetData;
+    let results = selectedQuota === 'mgmt' ? neetMgmtData : selectedQuota === 'bds' ? neetBdsData : neetData;
 
     if (selectedExam === 'NEET') {
-      // Add state filtering
-      if (filters.states.length > 0) {
-        results = results.filter(item => {
-          const [city, state] = (item['City, State'] || '').split(',').map(s => s.trim());
-          return filters.states.some(filterState => {
-            // Handle state name variations
-            if (filterState === 'Delhi') return state.includes('Delhi');
-            if (filterState === 'Odisha') return state.includes('Odisha') || state.includes('Orissa');
-            if (filterState === 'Jammu & Kashmir') return state.includes('Jammu');
-            if (filterState === 'Andhra Pradesh') return state.includes('Andhra');
-            if (filterState === 'Himachal Pradesh') return state.includes('Himachal');
-            if (filterState === 'Madhya Pradesh') return state.includes('Madhya');
-            if (filterState === 'Uttar Pradesh') return state.includes('Uttar');
-            return state.includes(filterState);
-          });
-        });
-      }
+      // Handle management seat data format differently
+      if (selectedQuota === 'mgmt') {
+        // Filter by year
+        if (filters.year !== 'all') {
+          results = results.filter(item => item.Year === parseInt(filters.year));
+        }
 
-      // Filter by category
-      if (filters.category !== 'all') {
-        results = results.filter(item => item.Category === filters.category);
-      }
+        // Filter by category
+        if (filters.category !== 'all') {
+          results = results.filter(item => item.CATEGORY === filters.category);
+        }
 
-      // Filter by search query
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        results = results.filter(item => 
-          item['College Name'].toLowerCase().includes(query) ||
-          item['City, State'].toLowerCase().includes(query)
-        );
-      }
+        // Filter by gender
+        if (filters.gender !== 'all') {
+          results = results.filter(item => item.GENDER === filters.gender);
+        }
 
-      // Filter by PG availability
-      if (filters.pgAvailability !== 'all') {
-        results = results.filter(item => {
-          const hasPG = item['PG Specializations'] && item['PG Specializations'].trim() !== '';
-          return filters.pgAvailability === 'yes' ? hasPG : !hasPG;
-        });
-      }
+        // Filter by course (MBBS/BDS)
+        if (filters.course && filters.course !== 'all') {
+          results = results.filter(item => item.Course === filters.course);
+        }
 
-      // Only apply these filters for MBBS (not BDS)
-      if (selectedQuota !== 'bds') {
-        // Filter by bond
-        if (filters.bond !== 'all') {
-          const hasBond = filters.bond === 'yes';
+        // Filter by search query
+        if (filters.searchQuery) {
+          const query = filters.searchQuery.toLowerCase();
+          results = results.filter(item => 
+            item['COLLEGE NAME'].toLowerCase().includes(query)
+          );
+        }
+      } else {
+        // Add state filtering for non-management data
+        if (filters.states.length > 0) {
           results = results.filter(item => {
-            const bondInfo = (item['After MBBS Service Bond'] || '').toLowerCase();
-            if (hasBond) {
-              if (bondInfo.includes('no ') || bondInfo.includes('not ') || /^no$/i.test(bondInfo)) {
-                return false;
-              }
-              return bondInfo.includes('yes') || 
-                     (bondInfo.includes('bond') && !bondInfo.includes('no bond')) || 
-                     /\d+\s*(?:year|yr)/.test(bondInfo) ||
-                     bondInfo.includes('compulsory') ||
-                     bondInfo.includes('mandatory');
-            } else {
-              return bondInfo.includes('no') || bondInfo === '' || bondInfo.includes('not');
-            }
+            const [city, state] = (item['City, State'] || '').split(',').map(s => s.trim());
+            return filters.states.some(filterState => {
+              // Handle state name variations
+              if (filterState === 'Delhi') return state.includes('Delhi');
+              if (filterState === 'Odisha') return state.includes('Odisha') || state.includes('Orissa');
+              if (filterState === 'Jammu & Kashmir') return state.includes('Jammu');
+              if (filterState === 'Andhra Pradesh') return state.includes('Andhra');
+              if (filterState === 'Himachal Pradesh') return state.includes('Himachal');
+              if (filterState === 'Madhya Pradesh') return state.includes('Madhya');
+              if (filterState === 'Uttar Pradesh') return state.includes('Uttar');
+              return state.includes(filterState);
+            });
           });
         }
 
-        // Filter by college type
-        if (filters.collegeTypes.length > 0) {
-          results = results.filter(item => filters.collegeTypes.includes(item.TYPE));
+        // Filter by category
+        if (filters.category !== 'all') {
+          results = results.filter(item => item.Category === filters.category);
+        }
+
+        // Filter by search query
+        if (filters.searchQuery) {
+          const query = filters.searchQuery.toLowerCase();
+          results = results.filter(item => 
+            item['College Name'].toLowerCase().includes(query) ||
+            item['City, State'].toLowerCase().includes(query)
+          );
+        }
+
+        // Filter by PG availability
+        if (filters.pgAvailability !== 'all') {
+          results = results.filter(item => {
+            const hasPG = item['PG Specializations'] && item['PG Specializations'].trim() !== '';
+            return filters.pgAvailability === 'yes' ? hasPG : !hasPG;
+          });
+        }
+
+        // Only apply these filters for MBBS (not BDS)
+        if (selectedQuota !== 'bds') {
+          // Filter by bond
+          if (filters.bond !== 'all') {
+            const hasBond = filters.bond === 'yes';
+            results = results.filter(item => {
+              const bondInfo = (item['After MBBS Service Bond'] || '').toLowerCase();
+              if (hasBond) {
+                if (bondInfo.includes('no ') || bondInfo.includes('not ') || /^no$/i.test(bondInfo)) {
+                  return false;
+                }
+                return bondInfo.includes('yes') || 
+                       (bondInfo.includes('bond') && !bondInfo.includes('no bond')) || 
+                       /\d+\s*(?:year|yr)/.test(bondInfo) ||
+                       bondInfo.includes('compulsory') ||
+                       bondInfo.includes('mandatory');
+              } else {
+                return bondInfo.includes('no') || bondInfo === '' || bondInfo.includes('not');
+              }
+            });
+          }
+
+          // Filter by college type
+          if (filters.collegeTypes.length > 0) {
+            results = results.filter(item => filters.collegeTypes.includes(item.TYPE));
+          }
         }
       }
     }
@@ -896,11 +922,17 @@ const CollegeSearch = () => {
 
   // Add helper function to check if category column should be shown
   const shouldShowCategoryColumn = () => {
+    if (selectedQuota === 'mgmt') {
+      return filters.category === 'all';
+    }
     return filters.category === 'all';
   };
 
   // Add helper function to check if gender column should be shown
   const shouldShowGenderColumn = () => {
+    if (selectedQuota === 'mgmt') {
+      return filters.gender === 'all';
+    }
     return filters.gender === 'all';
   };
 
@@ -945,6 +977,43 @@ const CollegeSearch = () => {
               style={{ cursor: 'pointer', whiteSpace: 'pre-line', textAlign: 'center' }}
             >
               {formatHeaderText(`Closing\nMax(R1 to R5)\n(${filters.year})`)} ↕
+            </th>
+          </tr>
+        );
+      } else if (selectedQuota === 'mgmt') {
+        // Determine which rounds to show based on year
+        const getRoundsForYear = (year) => {
+          switch (year) {
+            case '2024':
+              return ['R1', 'R2', 'R3', 'R4', 'R5'];
+            case '2023':
+              return ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7'];
+            case '2022':
+              return ['R1', 'R2', 'R3', 'R4'];
+            default:
+              return ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7'];
+          }
+        };
+
+        const rounds = getRoundsForYear(filters.year);
+        
+        return (
+          <tr>
+            <th style={{ textAlign: 'center', width: '60px' }}>S No.</th>
+            <th>College Name</th>
+            <th>Course</th>
+            {shouldShowCategoryColumn() && <th>Category</th>}
+            {shouldShowGenderColumn() && <th>Gender</th>}
+            {rounds.map(round => (
+              <th key={round} style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+                {round}
+              </th>
+            ))}
+            <th 
+              onClick={() => handleSort('CLOSING RANK')}
+              style={{ cursor: 'pointer', whiteSpace: 'pre-line', textAlign: 'center', fontWeight: '700' }}
+            >
+              Closing Rank ↕
             </th>
           </tr>
         );
@@ -1242,9 +1311,16 @@ const CollegeSearch = () => {
         return direction === 'asc' ? aValue - bValue : bValue - aValue;
       }
 
+      // Special handling for management seat CLOSING RANK
+      if (key === 'CLOSING RANK') {
+        aValue = !aValue || aValue === '--' || aValue === 'NA' || aValue === 0 ? Infinity : parseInt(aValue);
+        bValue = !bValue || bValue === '--' || bValue === 'NA' || bValue === 0 ? Infinity : parseInt(bValue);
+        return direction === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
       // Handle special cases like "--" or empty values
-      if (aValue === "--" || aValue === "" || aValue === undefined) aValue = direction === 'asc' ? Infinity : -Infinity;
-      if (bValue === "--" || bValue === "" || bValue === undefined) bValue = direction === 'asc' ? Infinity : -Infinity;
+      if (aValue === "--" || aValue === "" || aValue === undefined || aValue === "N/A") aValue = direction === 'asc' ? Infinity : -Infinity;
+      if (bValue === "--" || bValue === "" || bValue === undefined || bValue === "N/A") bValue = direction === 'asc' ? Infinity : -Infinity;
 
       // Convert to numbers if they're numeric strings
       if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
@@ -1466,6 +1542,38 @@ const CollegeSearch = () => {
                 <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 5\nR5\n(${filters.year})`])}</td>
                 <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{formatCellText(item[`Closing\nMax(R1 to R5)\n(${filters.year})`])}</td>
               </>
+            ) : selectedQuota === 'mgmt' ? (
+              <>
+                <td style={{ textAlign: 'center' }}>{serialNumber}</td>
+                <td style={{ position: 'relative', maxWidth: '400px', padding: '16px 10px' }}>{item['COLLEGE NAME']}</td>
+                <td style={{ padding: '16px 10px' }}>{item.Course}</td>
+                {shouldShowCategoryColumn() && <td style={{ padding: '16px 10px' }}>{item.CATEGORY}</td>}
+                {shouldShowGenderColumn() && <td style={{ padding: '16px 10px' }}>{item.GENDER}</td>}
+                {(() => {
+                  // Determine which rounds to show based on year
+                  const getRoundsForYear = (year) => {
+                    switch (year) {
+                      case '2024':
+                        return ['R1', 'R2', 'R3', 'R4', 'R5'];
+                      case '2023':
+                        return ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7'];
+                      case '2022':
+                        return ['R1', 'R2', 'R3', 'R4'];
+                      default:
+                        return ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7'];
+                    }
+                  };
+                  
+                  const rounds = getRoundsForYear(filters.year);
+                  
+                  return rounds.map(round => (
+                    <td key={round} style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>
+                      {formatCellText(item[round])}
+                    </td>
+                  ));
+                })()}
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{formatCellText(item['CLOSING RANK'])}</td>
+              </>
             ) : selectedQuota === 'state' ? (
               renderStateQuotaRow(item, index)
             ) : (
@@ -1486,20 +1594,7 @@ const CollegeSearch = () => {
                 <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{maxR1toR5}</td>
               </>
             )
-          ) : (
-            <>
-              <td >{item.TYPE_Counselling}</td>
-              <td>{item.TYPE}</td>
-              <td>{item.Institute}</td>
-              <td>{formatProgramName(item['Academic Program & Stats'])}</td>
-              <td>{item['Opening Rank']}</td>
-              <td style={{ fontWeight: '700', fontFamily: 'Lexend Bold' }}>{item['Closing Rank']}</td>
-              {shouldShowColumn.seat && <td>{item['Seat Type']}</td>}
-              {shouldShowColumn.gender && <td>{item.Gender}</td>}
-              <td>{item.Quota}</td>
-              {filters.counsellingType === 'CSAB' && <td>{item['Round On']}</td>}
-            </>
-          )}
+          ) :<></>}
         </tr>
         {isExpanded && selectedQuota!= 'bds' && (
           <tr>
@@ -1678,12 +1773,13 @@ const CollegeSearch = () => {
         >
           Rajasthan State Counselling (Govt Seat)
         </button>
-      <button
+        <button
           className={`quota-button ${selectedQuota === 'bds' ? 'active' : ''}`}
           onClick={() => setSelectedQuota('bds')}
-        style={{
+          style={{
             padding: '10px 20px',
-          borderRadius: '4px',
+            marginRight: '10px',
+            borderRadius: '4px',
             border: '1px solid #e2e8f0',
             backgroundColor: selectedQuota === 'bds' ? '#076B37' : 'white',
             color: selectedQuota === 'bds' ? 'white' : '#1e293b',
@@ -1691,7 +1787,21 @@ const CollegeSearch = () => {
           }}
         >
           BDS All India
-      </button>
+        </button>
+        <button
+          className={`quota-button ${selectedQuota === 'mgmt' ? 'active' : ''}`}
+          onClick={() => setSelectedQuota('mgmt')}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '4px',
+            border: '1px solid #e2e8f0',
+            backgroundColor: selectedQuota === 'mgmt' ? '#076B37' : 'white',
+            color: selectedQuota === 'mgmt' ? 'white' : '#1e293b',
+            cursor: 'pointer'
+          }}
+        >
+          Rajasthan State Counceling (Management Seat)
+        </button>
       </div>
     );
   };
@@ -1701,6 +1811,27 @@ const CollegeSearch = () => {
     if (selectedExam === 'NEET') {
       if (selectedQuota === 'bds') {
         return shouldShowCategoryColumn() ? 11 : 10;
+      } else if (selectedQuota === 'mgmt') {
+        // Calculate rounds based on year
+        const getRoundsForYear = (year) => {
+          switch (year) {
+            case '2024':
+              return 5; // R1-R5
+            case '2023':
+              return 7; // R1-R7
+            case '2022':
+              return 4; // R1-R4
+            default:
+              return 7; // R1-R7
+          }
+        };
+        
+        let baseCount = 3; // S.No, College Name, Course
+        if (shouldShowCategoryColumn()) baseCount++;
+        if (shouldShowGenderColumn()) baseCount++;
+        baseCount += getRoundsForYear(filters.year); // Add rounds
+        baseCount += 1; // Add Closing Rank
+        return baseCount;
       } else if (selectedQuota === 'state') {
         let baseCount = 10; // Base count without category and gender
         if (shouldShowCategoryColumn()) baseCount++;
@@ -1723,6 +1854,183 @@ const CollegeSearch = () => {
       return filterStateQuotaData().length;
     }
     return filteredData.length;
+  };
+
+  // Function to render filters for management seats
+  const renderManagementFilters = () => {
+    return (
+      <div className="filters-grid" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '16px',
+        padding: '16px',
+        alignItems: 'start',
+        backgroundColor: '#fff',
+        borderRadius: '8px',
+        boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
+      }}>
+        {/* Search Input */}
+        <div style={{ gridColumn: 'span 2' }}>
+          <label className="filter-label" style={{
+            display: 'block',
+            marginBottom: '6px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#1e293b'
+          }}>Search Colleges</label>
+          <input
+            type="text"
+            placeholder="Type to search colleges..."
+            className="search-input"
+            value={inputValues.searchQuery}
+            onChange={(e) => handleInputChange('searchQuery', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '40px',
+              backgroundColor: '#fff',
+              transition: 'all 0.2s ease',
+              outline: 'none'
+            }}
+          />
+        </div>
+
+        {/* Course Filter */}
+        <div>
+          <label className="filter-label" style={{
+            display: 'block',
+            marginBottom: '6px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#1e293b'
+          }}>Course</label>
+          <select
+            className="filter-select"
+            value={filters.course}
+            onChange={(e) => handleFilterChange('course', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '40px',
+              backgroundColor: '#fff',
+              transition: 'all 0.2s ease',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="all">All Courses</option>
+            <option value="MBBS">MBBS</option>
+            <option value="BDS">BDS</option>
+          </select>
+        </div>
+
+        {/* Year Filter */}
+        <div>
+          <label className="filter-label" style={{
+            display: 'block',
+            marginBottom: '6px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#1e293b'
+          }}>Year</label>
+          <select
+            className="filter-select"
+            value={filters.year}
+            onChange={(e) => handleFilterChange('year', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '40px',
+              backgroundColor: '#fff',
+              transition: 'all 0.2s ease',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+          </select>
+        </div>
+
+        {/* Category Filter */}
+        <div>
+          <label className="filter-label" style={{
+            display: 'block',
+            marginBottom: '6px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#1e293b'
+          }}>Category</label>
+          <select
+            className="filter-select"
+            value={filters.category}
+            onChange={(e) => handleFilterChange('category', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '40px',
+              backgroundColor: '#fff',
+              transition: 'all 0.2s ease',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="all">All Categories</option>
+            <option value="GEN">General</option>
+            <option value="OBC">OBC</option>
+            <option value="EWS">EWS</option>
+            <option value="SC">SC</option>
+            <option value="ST">ST</option>
+            <option value="STA">STA</option>
+          </select>
+        </div>
+
+        {/* Gender Filter */}
+        <div>
+          <label className="filter-label" style={{
+            display: 'block',
+            marginBottom: '6px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#1e293b'
+          }}>Gender</label>
+          <select
+            className="filter-select"
+            value={filters.gender}
+            onChange={(e) => handleFilterChange('gender', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '40px',
+              backgroundColor: '#fff',
+              transition: 'all 0.2s ease',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="all">All</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+      </div>
+    );
   };
 
   if (!selectedExam) {
@@ -1873,6 +2181,8 @@ const CollegeSearch = () => {
               <h2 className="card-title">Search & Filters</h2>
               {selectedExam === 'NEET' && selectedQuota === 'state' ? (
                 renderStateQuotaFilters()
+              ) : selectedQuota === 'mgmt' ? (
+                renderManagementFilters()
               ) : selectedQuota === 'bds' ? (
                 // Special layout for BDS view
                 <div className="filters-grid" style={{
