@@ -26,7 +26,7 @@ const useDebounce = (value, delay) => {
 };
 
 // Add TrophyIcon component at the top of the file
-const TrophyIcon = () => (
+const TrophyIcon = (props) => (
   <div style={{ 
     display: 'flex', 
     alignItems: 'center',
@@ -59,8 +59,14 @@ const TrophyIcon = () => (
       fontSize: '14px',
       lineHeight: '1.2'
     }}>
-      <div>NIRF</div>
-      <div>Ranking</div>
+      {props.selectedQuota === 'bds' ?
+        <div>BDS Rank </div>
+        :
+        <>
+          <div>NIRF</div>
+          <div>Ranking</div>
+        </>
+      }
     </div>
   </div>
 );
@@ -84,6 +90,7 @@ const CollegeSearch = () => {
     states: [],
     collegeTypes: [],
     bond: 'all',
+    pgAvailability: 'all',  // Add this line
     
     // IIT JEE specific filters
     counsellingType: 'JOSAA',
@@ -133,6 +140,13 @@ const CollegeSearch = () => {
       // Apply category and gender filters
       if (filters.category !== 'all' && item.Category !== filters.category) return false;
       if (filters.gender !== 'all' && item.Gender !== filters.gender) return false;
+      
+      // Apply PG availability filter
+      if (filters.pgAvailability !== 'all') {
+        const hasPG = item['PG Specializations'] && item['PG Specializations'].trim() !== '';
+        if (filters.pgAvailability === 'yes' && !hasPG) return false;
+        if (filters.pgAvailability === 'no' && hasPG) return false;
+      }
       
       // Apply search filter
       if (filters.searchQuery) {
@@ -304,30 +318,91 @@ const CollegeSearch = () => {
     { value: 'CSAB', label: 'CSAB' }
   ];
 
-  // Update select styles to be consistent
+  // Add custom components for react-select with checkboxes
+  const Option = props => {
+    return (
+      <div
+        {...props.innerProps}
+        style={{
+          padding: '8px 12px',
+          backgroundColor: props.isFocused ? '#f1f5f9' : 'white',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={props.isSelected}
+          onChange={() => {}}
+          style={{
+            width: '16px',
+            height: '16px',
+            accentColor: '#076B37'
+          }}
+        />
+        <span>{props.label}</span>
+      </div>
+    );
+  };
+
+  const MultiValue = props => {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          backgroundColor: '#e2e8f0',
+          borderRadius: '4px',
+          margin: '2px',
+          padding: '2px 8px',
+          fontSize: '14px'
+        }}
+      >
+        <span style={{ marginRight: '6px' }}>{props.data.label}</span>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            props.removeProps.onClick();
+          }}
+          style={{
+            border: 'none',
+            background: 'none',
+            padding: '0 2px',
+            cursor: 'pointer',
+            color: '#64748b',
+            fontSize: '14px'
+          }}
+        >
+          ×
+        </button>
+      </div>
+    );
+  };
+
+  // Update selectStyles to include new styles for the checkbox dropdown
   const selectStyles = {
     control: (base) => ({
       ...base,
       borderColor: '#e2e8f0',
-      borderRadius: '4px',
-      minHeight: '42px',
+      borderRadius: '6px',
+      minHeight: '40px',
       backgroundColor: 'white',
+      padding: '0 4px',
+      boxShadow: 'none',
+      transition: 'all 0.2s ease',
       '&:hover': {
-        borderColor: '#cbd5e1'
+        borderColor: '#076B37'
+      },
+      '&:focus-within': {
+        borderColor: '#076B37',
+        boxShadow: '0 0 0 1px #076B37'
       }
     }),
-    option: (base, state) => ({
-      ...base,
-      backgroundColor: state.isSelected ? '#076B37' : state.isFocused ? '#f1f5f9' : 'white',
-      color: state.isSelected ? 'white' : '#1e293b',
-      '&:active': {
-        backgroundColor: '#076B37'
-      }
-    }),
-    multiValue: (base) => ({
-      ...base,
-      backgroundColor: '#e2e8f0'
-    }),
+    option: () => ({}), // Reset option styles as we're using custom Option component
+    multiValue: () => ({}), // Reset multiValue styles as we're using custom MultiValue component
     multiValueLabel: (base) => ({
       ...base,
       color: '#1e293b'
@@ -347,10 +422,21 @@ const CollegeSearch = () => {
     input: (base) => ({
       ...base,
       color: '#1e293b'
+    }),
+    menu: (base) => ({
+      ...base,
+      borderRadius: '6px',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      zIndex: 999
+    }),
+    menuList: (base) => ({
+      ...base,
+      padding: '4px',
+      maxHeight: '250px'
     })
   };
 
-  // Modify filterData to include state filtering
+  // Modify filterData to include PG availability filtering
   const filterData = useCallback(() => {
     setIsFiltering(true);
     let results = selectedQuota === 'bds' ? neetBdsData : neetData;
@@ -388,32 +474,40 @@ const CollegeSearch = () => {
         );
       }
 
-      // Only apply these filters for MBBS (not BDS)
-      if (selectedQuota !== 'bds') {
-      // Filter by bond
-      if (filters.bond !== 'all') {
-        const hasBond = filters.bond === 'yes';
+      // Filter by PG availability
+      if (filters.pgAvailability !== 'all') {
         results = results.filter(item => {
-            const bondInfo = (item['After MBBS Service Bond'] || '').toLowerCase();
-          if (hasBond) {
-            if (bondInfo.includes('no ') || bondInfo.includes('not ') || /^no$/i.test(bondInfo)) {
-              return false;
-            }
-            return bondInfo.includes('yes') || 
-                   (bondInfo.includes('bond') && !bondInfo.includes('no bond')) || 
-                   /\d+\s*(?:year|yr)/.test(bondInfo) ||
-                   bondInfo.includes('compulsory') ||
-                   bondInfo.includes('mandatory');
-          } else {
-            return bondInfo.includes('no') || bondInfo === '' || bondInfo.includes('not');
-          }
+          const hasPG = item['PG Specializations'] && item['PG Specializations'].trim() !== '';
+          return filters.pgAvailability === 'yes' ? hasPG : !hasPG;
         });
       }
 
-      // Filter by college type
-      if (filters.collegeTypes.length > 0) {
-        results = results.filter(item => filters.collegeTypes.includes(item.TYPE));
-      }
+      // Only apply these filters for MBBS (not BDS)
+      if (selectedQuota !== 'bds') {
+        // Filter by bond
+        if (filters.bond !== 'all') {
+          const hasBond = filters.bond === 'yes';
+          results = results.filter(item => {
+            const bondInfo = (item['After MBBS Service Bond'] || '').toLowerCase();
+            if (hasBond) {
+              if (bondInfo.includes('no ') || bondInfo.includes('not ') || /^no$/i.test(bondInfo)) {
+                return false;
+              }
+              return bondInfo.includes('yes') || 
+                     (bondInfo.includes('bond') && !bondInfo.includes('no bond')) || 
+                     /\d+\s*(?:year|yr)/.test(bondInfo) ||
+                     bondInfo.includes('compulsory') ||
+                     bondInfo.includes('mandatory');
+            } else {
+              return bondInfo.includes('no') || bondInfo === '' || bondInfo.includes('not');
+            }
+          });
+        }
+
+        // Filter by college type
+        if (filters.collegeTypes.length > 0) {
+          results = results.filter(item => filters.collegeTypes.includes(item.TYPE));
+        }
       }
     }
 
@@ -485,6 +579,7 @@ const CollegeSearch = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }, [filteredData]);
 
   // Add helper function to check if columns should be visible
@@ -790,36 +885,50 @@ const CollegeSearch = () => {
     ));
   };
 
+  // Add helper function to check if category column should be shown
+  const shouldShowCategoryColumn = () => {
+    return filters.category === 'all';
+  };
+
+  // Add helper function to check if gender column should be shown
+  const shouldShowGenderColumn = () => {
+    return filters.gender === 'all';
+  };
+
   // Update renderTableHeaders function
   const renderTableHeaders = () => {
     if (selectedExam === 'NEET') {
       if (selectedQuota === 'bds') {
-        const roundHeaders = [
-          'Round 1\nR1',
-          'Round 2\nR2',
-          'Round 3\nR3'
-        ];
-
-      return (
-        <tr>
-          <th style={{ width: '40px' }}></th>
-          <th>College Name</th>
+        return (
+          <tr>
+            <th style={{ width: '40px' }}></th>
+            <th>College Name</th>
             <th>City, State</th>
+            {shouldShowCategoryColumn() && <th>Category</th>}
             <th style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <TrophyIcon />
-              BDS Rank
+              <TrophyIcon selectedQuota={selectedQuota} />
             </th>
-            {roundHeaders.map((header, index) => (
-              <th key={index} style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
-                {formatHeaderText(`${header}\n(${filters.year})`)}
-              </th>
-            ))}
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`Round 1\nR1\n(${filters.year})`)}
+            </th>
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`Round 2\nR2\n(${filters.year})`)}
+            </th>
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`Round 3\nR3\n(${filters.year})`)}
+            </th>
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`Round 4\nR4\n(${filters.year})`)}
+            </th>
+            <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
+              {formatHeaderText(`Round 5\nR5\n(${filters.year})`)}
+            </th>
             <th 
-              onClick={() => handleSort(`Closing\nMax(R1, R2, R3)\n(${filters.year})`)}
+              onClick={() => handleSort(`Closing\nMax(R1 to R5)\n(${filters.year})`)}
               style={{ cursor: 'pointer', whiteSpace: 'pre-line', textAlign: 'center' }}
             >
-              {formatHeaderText(`Closing\nMax(R1, R2, R3)\n(${filters.year})`)} ↕
-          </th>
+              {formatHeaderText(`Closing\nMax(R1 to R5)\n(${filters.year})`)} ↕
+            </th>
           </tr>
         );
       } else if (selectedQuota === 'state') {
@@ -831,18 +940,27 @@ const CollegeSearch = () => {
           }}>
             <th style={{ textAlign: 'center', width: '60px', padding: '16px 10px' }}>S No.</th>
             <th style={{ padding: '16px 10px' }}>College Name</th>
+            <th 
+              onClick={() => handleSort('Est. Year')}
+              style={{ 
+                cursor: 'pointer', 
+                padding: '16px 10px',
+                position: 'relative'
+              }}
+            >
+              Est. Year ↕
+            </th>
             <th style={{ padding: '16px 10px' }}>City, State</th>
             <th style={{ 
               padding: '0',
               textAlign: 'center',
               minWidth: '120px'
             }}>
-              <TrophyIcon />
-              NIRF Ranking
+              <TrophyIcon selectedQuota={selectedQuota} />
             </th>
             <th style={{ padding: '16px 10px' }}>Raj. Rank</th>
-            <th style={{ padding: '16px 10px' }}>Category</th>
-            <th style={{ padding: '16px 10px' }}>Gender</th>
+            {shouldShowCategoryColumn() && <th style={{ padding: '16px 10px' }}>Category</th>}
+            {shouldShowGenderColumn() && <th style={{ padding: '16px 10px' }}>Gender</th>}
             <th style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>
               {formatHeaderText('Round 1\nR1')}
             </th>
@@ -872,13 +990,23 @@ const CollegeSearch = () => {
           <tr>
             <th style={{ textAlign: 'center', width: '60px' }}>S No.</th>
             <th>College Name</th>
+            <th 
+              onClick={() => handleSort('Est. Year')}
+              style={{ 
+                cursor: 'pointer',
+                position: 'relative'
+              }}
+            >
+              Est. Year ↕
+            </th>
             <th>City, State</th>
+            {shouldShowCategoryColumn() && <th>Category</th>}
             <th style={{ 
               padding: '0',
               minWidth: '120px',
               textAlign: 'center'
             }}>
-              <TrophyIcon />
+              <TrophyIcon selectedQuota={selectedQuota} />
             </th>
             <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
               {formatHeaderText('Round 1\nR1')}
@@ -907,8 +1035,8 @@ const CollegeSearch = () => {
             >
               {formatHeaderText('Closing\nMax(R1 to R5)')} ↕
             </th>
-        </tr>
-      );
+          </tr>
+        );
       }
     }
 
@@ -942,9 +1070,12 @@ const CollegeSearch = () => {
             handleFilterChange('states', selectedStates);
           }}
           styles={selectStyles}
+          components={{ Option, MultiValue }}
           placeholder="Select states..."
           className="basic-multi-select"
           classNamePrefix="select"
+          closeMenuOnSelect={false}
+          hideSelectedOptions={false}
         />
       </div>
     );
@@ -966,14 +1097,27 @@ const CollegeSearch = () => {
       }}>
         <th style={{ textAlign: 'center', width: '60px', padding: '16px 10px' }}>S No.</th>
         <th style={{ padding: '16px 10px' }}>College Name</th>
+        <th 
+          onClick={() => handleSort('Est. Year')}
+          style={{ 
+            cursor: 'pointer', 
+            padding: '16px 10px',
+            position: 'relative'
+          }}
+        >
+          Est. Year ↕
+        </th>
         <th style={{ padding: '16px 10px' }}>City, State</th>
-        <th style={{ padding: '16px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <TrophyIcon />
-          NIRF Rank
+        <th style={{ 
+          padding: '0',
+          textAlign: 'center',
+          minWidth: '120px'
+        }}>
+          <TrophyIcon selectedQuota={selectedQuota} />
         </th>
         <th style={{ padding: '16px 10px' }}>Raj. Rank</th>
-        <th style={{ padding: '16px 10px' }}>Category</th>
-        <th style={{ padding: '16px 10px' }}>Gender</th>
+        {shouldShowCategoryColumn() && <th style={{ padding: '16px 10px' }}>Category</th>}
+        {shouldShowGenderColumn() && <th style={{ padding: '16px 10px' }}>Gender</th>}
         <th style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>
           {formatHeaderText('Round 1\nR1')}
         </th>
@@ -1019,19 +1163,20 @@ const CollegeSearch = () => {
         >
           <td style={{ textAlign: 'center', padding: '16px 10px' }}>{serialNumber}</td>
           <td style={{ position: 'relative', maxWidth: '400px', padding: '16px 10px' }}>{renderCollegeNameCell(item)}</td>
+          <td style={{ padding: '16px 10px' }}>{item['Est. Year'] || '-'}</td>
           <td style={{ padding: '16px 10px' }}>{item['City, State']}</td>
           <td style={{ padding: '16px 10px', textAlign: 'center' }}>{item['NIRF Ranking']}</td>
           <td style={{ padding: '16px 10px' }}>{item['Rajasthan College Ranking']}</td>
-          <td style={{ padding: '16px 10px' }}>{item.Category}</td>
-          <td style={{ padding: '16px 10px' }}>{item.Gender}</td>
+          {shouldShowCategoryColumn() && <td style={{ padding: '16px 10px' }}>{item.Category}</td>}
+          {shouldShowGenderColumn() && <td style={{ padding: '16px 10px' }}>{item.Gender}</td>}
           <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 1\nR1\n(${filters.year})`])}</td>
           <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 2\nR2\n(${filters.year})`])}</td>
           <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Round 3\nR3\n(${filters.year})`])}</td>
-          <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px' }}>{formatCellText(item[`Closing\nMax(R1, R2, R3)\n(${filters.year})`])}</td>
+          <td style={{ whiteSpace: 'pre-line', textAlign: 'center', padding: '16px 10px', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{formatCellText(item[`Closing\nMax(R1, R2, R3)\n(${filters.year})`])}</td>
         </tr>
         {isExpanded && (
           <tr style={{ backgroundColor: '#f8fafc' }}>
-            <td colSpan={11} style={{ padding: 0, border: 'none' }}>
+            <td colSpan={getColSpan()} style={{ padding: 0, border: 'none' }}>
               {renderExpandedContent(item)}
             </td>
           </tr>
@@ -1061,6 +1206,17 @@ const CollegeSearch = () => {
       // Handle special cases like "--" or empty values
       if (aValue === "--" || aValue === "" || aValue === undefined) aValue = direction === 'asc' ? Infinity : -Infinity;
       if (bValue === "--" || bValue === "" || bValue === undefined) bValue = direction === 'asc' ? Infinity : -Infinity;
+
+      // For Est. Year, convert to numbers and handle special cases
+      if (key === 'Est. Year') {
+        // Convert to numbers if they're numeric strings
+        aValue = parseInt(aValue) || (direction === 'asc' ? Infinity : -Infinity);
+        bValue = parseInt(bValue) || (direction === 'asc' ? Infinity : -Infinity);
+        
+        return direction === 'asc' 
+          ? aValue - bValue
+          : bValue - aValue;
+      }
 
       // For NIRF Ranking, lower is better
       if (key === 'NIRF Ranking') {
@@ -1285,13 +1441,17 @@ const CollegeSearch = () => {
           {selectedExam === 'NEET' ? (
             selectedQuota === 'bds' ? (
               <>
-                <td>{item['College Name']}</td>
+                <td style={{ textAlign: 'center' }}>{serialNumber}</td>
+                <td style={{ position: 'relative', maxWidth: '400px' }}>{renderCollegeNameCell(item)}</td>
                 <td>{item['City, State']}</td>
-                <td>{item['BDS College Ranking']}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item['Round 1\nR1\n(2024)'])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item['Round 2\nR2\n(2024)'])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item['Round 3\nR3\n(2024)'])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item['Closing\nMax(R1, R2, R3)\n(2024)'])}</td>
+                {shouldShowCategoryColumn() && <td>{item.Category}</td>}
+                <td style={{ textAlign: 'center' }}>{item['BDS College Ranking']}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 1\nR1\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 2\nR2\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 3\nR3\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 4\nR4\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 5\nR5\n(${filters.year})`])}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{formatCellText(item[`Closing\nMax(R1 to R5)\n(${filters.year})`])}</td>
               </>
             ) : selectedQuota === 'state' ? (
               renderStateQuotaRow(item, index)
@@ -1300,15 +1460,17 @@ const CollegeSearch = () => {
               <>
                 <td style={{ textAlign: 'center' }}>{serialNumber}</td>
                 <td style={{ position: 'relative', maxWidth: '400px' }}>{renderCollegeNameCell(item)}</td>
+                <td>{item['Est. Year'] || '-'}</td>
                 <td>{item['City, State']}</td>
+                {shouldShowCategoryColumn() && <td>{item.Category}</td>}
                 <td>{item['NIRF Ranking']}</td>
                 <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 1\nR1\n(${filters.year})`])}</td>
                 <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Round 2\nR2\n(${filters.year})`])}</td>
                 <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`MoP Up\nR3\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{maxR1toR3}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{maxR1toR3}</td>
                 <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Stray\nR4\n(${filters.year})`])}</td>
                 <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{formatCellText(item[`Special Stray\nR5\n(${filters.year})`])}</td>
-                <td style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>{maxR1toR5}</td>
+                <td style={{ whiteSpace: 'pre-line', textAlign: 'center', fontWeight: '700', fontFamily: 'Lexend Bold' }}>{maxR1toR5}</td>
               </>
             )
           ) : (
@@ -1318,7 +1480,7 @@ const CollegeSearch = () => {
               <td>{item.Institute}</td>
               <td>{formatProgramName(item['Academic Program & Stats'])}</td>
               <td>{item['Opening Rank']}</td>
-              <td>{item['Closing Rank']}</td>
+              <td style={{ fontWeight: '700', fontFamily: 'Lexend Bold' }}>{item['Closing Rank']}</td>
               {shouldShowColumn.seat && <td>{item['Seat Type']}</td>}
               {shouldShowColumn.gender && <td>{item.Gender}</td>}
               <td>{item.Quota}</td>
@@ -1328,7 +1490,7 @@ const CollegeSearch = () => {
         </tr>
         {isExpanded && (
           <tr>
-            <td colSpan={selectedQuota === 'bds' ? 7 : selectedExam === 'NEET' ? 20 : 9}>
+            <td colSpan={getColSpan()}>
               {renderExpandedContent(item)}
             </td>
           </tr>
@@ -1440,6 +1602,29 @@ const CollegeSearch = () => {
             <option value="Girls">Girls</option>
           </select>
         </div>
+
+        {/* PG Availability Filter */}
+        <div>
+          <label className="filter-label">PG Availability</label>
+          <select
+            className="filter-select"
+            value={filters.pgAvailability}
+            onChange={(e) => handleFilterChange('pgAvailability', e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: '4px',
+              border: '1px solid #e2e8f0',
+              fontSize: '14px',
+              minHeight: '42px',
+              backgroundColor: 'white'
+            }}
+          >
+            <option value="all">All</option>
+            <option value="yes">With PG</option>
+            <option value="no">Without PG</option>
+          </select>
+        </div>
       </div>
     );
   };
@@ -1478,7 +1663,7 @@ const CollegeSearch = () => {
             cursor: 'pointer'
           }}
         >
-          MBBS State Quota
+          Rajasthan State Counselling (Govt Seat)
         </button>
       <button
           className={`quota-button ${selectedQuota === 'bds' ? 'active' : ''}`}
@@ -1496,6 +1681,35 @@ const CollegeSearch = () => {
       </button>
       </div>
     );
+  };
+
+  // Add helper function to calculate colspan based on current view and filters
+  const getColSpan = () => {
+    if (selectedExam === 'NEET') {
+      if (selectedQuota === 'bds') {
+        return shouldShowCategoryColumn() ? 11 : 10;
+      } else if (selectedQuota === 'state') {
+        let baseCount = 10; // Base count without category and gender
+        if (shouldShowCategoryColumn()) baseCount++;
+        if (shouldShowGenderColumn()) baseCount++;
+        return baseCount;
+      } else {
+        return shouldShowCategoryColumn() ? 13 : 12;
+      }
+    }
+    let baseCount = 9;
+    if (shouldShowColumn.seat) baseCount++;
+    if (shouldShowColumn.gender) baseCount++;
+    if (filters.counsellingType === 'CSAB') baseCount++;
+    return baseCount;
+  };
+
+  // Add helper function to get total results count
+  const getTotalResults = () => {
+    if (selectedExam === 'NEET' && selectedQuota === 'state') {
+      return filterStateQuotaData().length;
+    }
+    return filteredData.length;
   };
 
   if (!selectedExam) {
@@ -1646,22 +1860,143 @@ const CollegeSearch = () => {
               <h2 className="card-title">Search & Filters</h2>
               {selectedExam === 'NEET' && selectedQuota === 'state' ? (
                 renderStateQuotaFilters()
+              ) : selectedQuota === 'bds' ? (
+                // Special layout for BDS view
+                <div className="filters-grid" style={{
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1fr 1fr',
+                  gap: '16px',
+                  padding: '16px',
+                  alignItems: 'start',
+                  backgroundColor: '#fff',
+                  borderRadius: '8px',
+                  boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
+                }}>
+                  {/* Search Input */}
+                  <div>
+                    <label className="filter-label" style={{
+                      display: 'block',
+                      marginBottom: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#1e293b'
+                    }}>Search Colleges/Location</label>
+                    <input
+                      type="text"
+                      placeholder="Type to search colleges or location..."
+                      className="search-input"
+                      value={inputValues.searchQuery}
+                      onChange={(e) => handleInputChange('searchQuery', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '14px',
+                        minHeight: '40px',
+                        backgroundColor: '#fff',
+                        transition: 'all 0.2s ease',
+                        outline: 'none',
+                        '&:focus': {
+                          borderColor: '#076B37',
+                          boxShadow: '0 0 0 1px #076B37'
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {/* Category Filter */}
+                  <div>
+                    <label className="filter-label" style={{
+                      display: 'block',
+                      marginBottom: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#1e293b'
+                    }}>Category</label>
+                    <select
+                      className="filter-select"
+                      value={filters.category}
+                      onChange={(e) => handleFilterChange('category', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '14px',
+                        minHeight: '40px',
+                        backgroundColor: '#fff',
+                        transition: 'all 0.2s ease',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        '&:focus': {
+                          borderColor: '#076B37',
+                          boxShadow: '0 0 0 1px #076B37'
+                        }
+                      }}
+                    >
+                      <option value="all">All Categories</option>
+                      <option value="GEN">General</option>
+                      <option value="EWS">EWS</option>
+                      <option value="OBC">OBC</option>
+                      <option value="SC">SC</option>
+                      <option value="ST">ST</option>
+                    </select>
+                  </div>
+
+                  {/* Year Filter */}
+                  <div>
+                    <label className="filter-label" style={{
+                      display: 'block',
+                      marginBottom: '6px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#1e293b'
+                    }}>Year</label>
+                    <select
+                      className="filter-select"
+                      value={filters.year}
+                      onChange={(e) => handleFilterChange('year', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '14px',
+                        minHeight: '40px',
+                        backgroundColor: '#fff',
+                        transition: 'all 0.2s ease',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        '&:focus': {
+                          borderColor: '#076B37',
+                          boxShadow: '0 0 0 1px #076B37'
+                        }
+                      }}
+                    >
+                      <option value="2024">2024</option>
+                      <option value="2023">2023</option>
+                      <option value="2022">2022</option>
+                    </select>
+                  </div>
+                </div>
               ) : (
+                // Regular layout for MBBS views
                 <div className="filters-grid" style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
                   gap: '24px',
                   padding: '20px'
                 }}>
-                {/* Search Input */}
+                  {/* Search Input */}
                   <div style={{ gridColumn: '1' }}>
                     <label className="filter-label">Search Colleges/Location</label>
-                  <input
-                    type="text"
+                    <input
+                      type="text"
                       placeholder="Type to search colleges or location..."
-                    className="search-input"
-                    value={inputValues.searchQuery}
-                    onChange={(e) => handleInputChange('searchQuery', e.target.value)}
+                      className="search-input"
+                      value={inputValues.searchQuery}
+                      onChange={(e) => handleInputChange('searchQuery', e.target.value)}
                       style={{
                         width: '100%',
                         padding: '10px',
@@ -1670,118 +2005,149 @@ const CollegeSearch = () => {
                         fontSize: '14px',
                         minHeight: '42px'
                       }}
-                  />
+                    />
+                  </div>
+
+                  {/* State Filter - Only show for All India MBBS quota */}
+                  {selectedQuota === 'all' && (
+                    <div style={{ gridColumn: '2' }}>
+                      <label className="filter-label">States</label>
+                      <Select
+                        isMulti
+                        options={STATE_OPTIONS}
+                        value={STATE_OPTIONS.filter(option => filters.states.includes(option.value))}
+                        onChange={(selectedOptions) => {
+                          const selectedStates = selectedOptions ? selectedOptions.map(option => option.value) : [];
+                          handleFilterChange('states', selectedStates);
+                        }}
+                        styles={selectStyles}
+                        components={{ Option, MultiValue }}
+                        placeholder="Select states..."
+                        className="basic-multi-select"
+                        classNamePrefix="select"
+                        closeMenuOnSelect={false}
+                        hideSelectedOptions={false}
+                      />
+                    </div>
+                  )}
+
+                  {/* Category Filter */}
+                  <div style={{ gridColumn: '3' }}>
+                    <label className="filter-label">Category</label>
+                    <select
+                      className="filter-select"
+                      value={filters.category}
+                      onChange={(e) => handleFilterChange('category', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '14px',
+                        minHeight: '42px',
+                        backgroundColor: 'white'
+                      }}
+                    >
+                      <option value="all">All Categories</option>
+                      <option value="GEN">General</option>
+                      <option value="EWS">EWS</option>
+                      <option value="OBC">OBC</option>
+                      <option value="SC">SC</option>
+                      <option value="ST">ST</option>
+                    </select>
+                  </div>
+
+                  {/* PG Availability Filter */}
+                  <div style={{ gridColumn: '1' }}>
+                    <label className="filter-label">PG Availability</label>
+                    <select
+                      className="filter-select"
+                      value={filters.pgAvailability}
+                      onChange={(e) => handleFilterChange('pgAvailability', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '14px',
+                        minHeight: '42px',
+                        backgroundColor: 'white'
+                      }}
+                    >
+                      <option value="all">All</option>
+                      <option value="yes">With PG</option>
+                      <option value="no">Without PG</option>
+                    </select>
+                  </div>
+
+                  {/* Bond Filter */}
+                  <div style={{ gridColumn: '2' }}>
+                    <label className="filter-label">Bond</label>
+                    <select
+                      className="filter-select"
+                      value={filters.bond}
+                      onChange={(e) => handleFilterChange('bond', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '14px',
+                        minHeight: '42px',
+                        backgroundColor: 'white'
+                      }}
+                    >
+                      <option value="all">All</option>
+                      <option value="yes">With Bond</option>
+                      <option value="no">No Bond</option>
+                    </select>
+                  </div>
+
+                  {/* Year Filter */}
+                  <div style={{ gridColumn: '3' }}>
+                    <label className="filter-label">Year</label>
+                    <select
+                      className="filter-select"
+                      value={filters.year}
+                      onChange={(e) => handleFilterChange('year', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '4px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '14px',
+                        minHeight: '42px',
+                        backgroundColor: 'white'
+                      }}
+                    >
+                      <option value="2024">2024</option>
+                      <option value="2023">2023</option>
+                      <option value="2022">2022</option>
+                    </select>
+                  </div>
+
+                  {/* College Type Filter */}
+                  <div style={{ gridColumn: '1' }}>
+                    <label className="filter-label">College Type</label>
+                    <Select
+                      isMulti
+                      options={COLLEGE_TYPE_OPTIONS}
+                      value={COLLEGE_TYPE_OPTIONS.filter(option => filters.collegeTypes.includes(option.value))}
+                      onChange={(selectedOptions) => {
+                        const selectedTypes = selectedOptions ? selectedOptions.map(option => option.value) : [];
+                        handleFilterChange('collegeTypes', selectedTypes);
+                      }}
+                      styles={selectStyles}
+                      components={{ Option, MultiValue }}
+                      placeholder="Select college types..."
+                      className="basic-multi-select"
+                      classNamePrefix="select"
+                      closeMenuOnSelect={false}
+                      hideSelectedOptions={false}
+                    />
+                  </div>
                 </div>
-
-                {/* State Filter */}
-                <div style={{ gridColumn: '2' }}>
-                  <label className="filter-label">States</label>
-                  <Select
-                    isMulti
-                    options={STATE_OPTIONS}
-                    value={STATE_OPTIONS.filter(option => filters.states.includes(option.value))}
-                    onChange={(selectedOptions) => {
-                      const selectedStates = selectedOptions ? selectedOptions.map(option => option.value) : [];
-                      handleFilterChange('states', selectedStates);
-                    }}
-                    styles={selectStyles}
-                    placeholder="Select states..."
-                    className="basic-multi-select"
-                    classNamePrefix="select"
-                  />
-                </div>
-
-                {/* Category Filter */}
-                <div style={{ gridColumn: '3' }}>
-                  <label className="filter-label">Category</label>
-                  <select
-                    className="filter-select"
-                    value={filters.category}
-                    onChange={(e) => handleFilterChange('category', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '4px',
-                      border: '1px solid #e2e8f0',
-                      fontSize: '14px',
-                      minHeight: '42px',
-                      backgroundColor: 'white'
-                    }}
-                  >
-                    <option value="all">All Categories</option>
-                    <option value="GEN">General</option>
-                    <option value="EWS">EWS</option>
-                    <option value="OBC">OBC</option>
-                    <option value="SC">SC</option>
-                    <option value="ST">ST</option>
-                  </select>
-              </div>
-
-                {/* Bond Filter */}
-                <div style={{ gridColumn: '1' }}>
-                  <label className="filter-label">Bond</label>
-                <select
-                  className="filter-select"
-                    value={filters.bond}
-                    onChange={(e) => handleFilterChange('bond', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '4px',
-                      border: '1px solid #e2e8f0',
-                      fontSize: '14px',
-                      minHeight: '42px',
-                      backgroundColor: 'white'
-                    }}
-                  >
-                    <option value="all">All</option>
-                    <option value="yes">With Bond</option>
-                    <option value="no">No Bond</option>
-                </select>
-              </div>
-
-                {/* Year Filter */}
-                <div style={{ gridColumn: '2' }}>
-                  <label className="filter-label">Year</label>
-                <select
-                  className="filter-select"
-                    value={filters.year}
-                    onChange={(e) => handleFilterChange('year', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      borderRadius: '4px',
-                      border: '1px solid #e2e8f0',
-                      fontSize: '14px',
-                      minHeight: '42px',
-                      backgroundColor: 'white'
-                    }}
-                  >
-                    <option value="2024">2024</option>
-                    <option value="2023">2023</option>
-                    <option value="2022">2022</option>
-                </select>
-              </div>
-
-              {/* College Type Filter */}
-                <div style={{ gridColumn: '3' }}>
-                <label className="filter-label">College Type</label>
-                  <Select
-                    isMulti
-                    options={COLLEGE_TYPE_OPTIONS}
-                    value={COLLEGE_TYPE_OPTIONS.filter(option => filters.collegeTypes.includes(option.value))}
-                    onChange={(selectedOptions) => {
-                      const selectedTypes = selectedOptions ? selectedOptions.map(option => option.value) : [];
-                      handleFilterChange('collegeTypes', selectedTypes);
-                    }}
-                    styles={selectStyles}
-                    placeholder="Select college types..."
-                    className="basic-multi-select"
-                    classNamePrefix="select"
-                  />
-                </div>
-              </div>
-            )}
+              )}
             </div>
 
             {/* Add print button before the results table */}
@@ -1801,16 +2167,9 @@ const CollegeSearch = () => {
               {/* Results Header */}
               <div className="pagination-container" style={{ borderTop: 'none', backgroundColor: '#1B5431' }}>
                 <div className="page-info">
-                  Total Results: {isLoading ? '...' : filteredData.length}
+                  Total Results: {isLoading ? '...' : getTotalResults()}
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  {/* <button
-                    onClick={exportToCSV}
-                    className="print-button"
-                    disabled={isLoading || isFiltering || filteredData.length === 0}
-                  >
-                    <span className="print-icon">🖨️</span> Print Results
-                  </button> */}
                   <div className="rows-per-page">
                     <label htmlFor="pageSize" className="filter-label" style={{ margin: 0, color: '#fff' }}>Rows per page:</label>
                     <select
@@ -1875,7 +2234,7 @@ const CollegeSearch = () => {
                   {isLoading || isFiltering ? (
                     'Loading...'
                   ) : (
-                    `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, selectedExam === 'NEET' && selectedQuota === 'state' ? filterStateQuotaData().length : filteredData.length)} of ${selectedExam === 'NEET' && selectedQuota === 'state' ? filterStateQuotaData().length : filteredData.length} results`
+                    `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, getTotalResults())} of ${getTotalResults()} results`
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
