@@ -718,13 +718,33 @@ const CollegeSearch = () => {
     });
   };
 
+  // Add mobile detection hook
+  const useIsMobile = () => {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+      const checkIsMobile = () => {
+        setIsMobile(window.innerWidth <= 768);
+      };
+
+      checkIsMobile();
+      window.addEventListener('resize', checkIsMobile);
+
+      return () => window.removeEventListener('resize', checkIsMobile);
+    }, []);
+
+    return isMobile;
+  };
+
+  const isMobile = useIsMobile();
+
   // Update expandedContentStyle to be more responsive
   const expandedContentStyle = {
     backgroundColor: '#f8fafc',
-    padding: '24px',
+    padding: isMobile ? '16px' : '24px',
     color: '#64748b',
     display: 'flex',
-    flexWrap: 'wrap',  // Allow wrapping on smaller screens
+    flexWrap: 'wrap',
     gap: '0px',
     borderBottom: '1px solid #e2e8f0',
     width: '100%',
@@ -736,10 +756,10 @@ const CollegeSearch = () => {
     padding: 0,
     margin: 0,
     lineHeight: '1.7',
-    fontSize: '14px',
+    fontSize: isMobile ? '12px' : '14px',
     textAlign: 'left',
     flex: '1',
-    minWidth: '300px',  // Minimum width before wrapping
+    minWidth: isMobile ? '250px' : '300px',
     boxSizing: 'border-box'
   };
 
@@ -752,50 +772,44 @@ const CollegeSearch = () => {
   const infoLabelStyle = {
     fontWeight: '700',
     color: '#000',
-    fontSize: '14px',
+    fontSize: isMobile ? '12px' : '14px',
     fontFamily: 'Lexend Semibold',
-    minWidth: '200px',  // Fixed width for labels
+    minWidth: isMobile ? '120px' : '200px',
     marginRight: '8px'
   };
 
   const infoValueStyle = {
     color: '#000',
-    fontSize: '14px',
+    fontSize: isMobile ? '12px' : '14px',
     fontWeight: '400',
-    flex: '1'  // Take remaining space
+    flex: '1'
   };
 
   const infoHeaderStyle = {
     fontWeight: '700',
-    fontSize: '14px',
+    fontSize: isMobile ? '12px' : '14px',
     color: '#000',
     textDecoration: 'underline',
     textAlign: 'center',
-    marginBottom: '1.5rem',
+    marginBottom: isMobile ? '1rem' : '1.5rem',
     fontFamily: 'Lexend Semibold'
   };
 
   const pgCoursesContainerStyle = {
     flex: '1',
-    minWidth: '300px',  // Minimum width before wrapping
-    borderLeft: '1px solid #e2e8f0',
-    paddingLeft: '2rem',
-    boxSizing: 'border-box',
-    '@media (max-width: 768px)': {
-      borderLeft: 'none',
-      borderTop: '1px solid #e2e8f0',
-      paddingLeft: 0,
-      paddingTop: '2rem',
-      marginTop: '2rem'
-    }
+    minWidth: isMobile ? '250px' : '300px',
+    borderLeft: isMobile ? 'none' : '1px solid #e2e8f0',
+    borderTop: isMobile ? '1px solid #e2e8f0' : 'none',
+    paddingLeft: isMobile ? '0' : '2rem',
+    paddingTop: isMobile ? '1rem' : '0',
+    marginTop: isMobile ? '1rem' : '0',
+    boxSizing: 'border-box'
   };
 
   const pgCoursesStyle = {
     color: '#475569',
     width: '100%',
-    '@media (max-width: 768px)': {
-      columnCount: 1  // Single column on mobile
-    }
+    columnCount: isMobile ? 1 : 2
   };
 
   // Update formatPGCoursesList to improve layout
@@ -1441,11 +1455,12 @@ const CollegeSearch = () => {
       <div style={{ 
         display: 'flex', 
         flexDirection: 'column', 
-        gap: '8px',
-        minHeight: '60px'  // Add minimum height to maintain consistency
+        gap: isMobile ? '4px' : '8px',
+        minHeight: isMobile ? '40px' : '60px',
+        position: 'relative'
       }}>
         <div style={{ 
-          fontSize: '14px',
+          fontSize: isMobile ? '12px' : '14px',
           fontWeight: '600', 
           color: '#000',
           fontFamily: 'Lexend Semibold',
@@ -1458,8 +1473,8 @@ const CollegeSearch = () => {
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '4px', 
-          fontSize: '12px',
+          gap: isMobile ? '2px' : '4px', 
+          fontSize: isMobile ? '10px' : '12px',
           color: '#4B5563'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -1484,13 +1499,13 @@ const CollegeSearch = () => {
 
         <div style={{ 
           position: 'absolute',
-          right: '12px',
+          right: isMobile ? '8px' : '12px',
           top: '50%',
           transform: 'translateY(-50%)',
-          fontSize: '12px',
+          fontSize: isMobile ? '10px' : '12px',
           color: '#6366F1',
           cursor: 'pointer',
-          padding: '4px 8px',
+          padding: isMobile ? '2px 4px' : '4px 8px',
           borderRadius: '4px',
           transition: 'all 0.2s ease'
         }}>
@@ -1613,12 +1628,12 @@ const CollegeSearch = () => {
     return (
       <div className="filters-grid" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '24px',
-        padding: '20px'
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+        gap: isMobile ? '16px' : '24px',
+        padding: isMobile ? '16px' : '20px'
       }}>
         {/* College Search Input */}
-        <div style={{ gridColumn: 'span 3' }}>
+        <div style={{ gridColumn: isMobile ? '1' : 'span 3' }}>
           <label className="filter-label">Search Colleges</label>
           <input
             type="text"
@@ -1628,11 +1643,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleInputChange('searchQuery', e.target.value)}
             style={{
               width: '100%',
-              padding: '10px',
+              padding: isMobile ? '8px 12px' : '10px',
               borderRadius: '4px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '42px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '42px',
               backgroundColor: 'white'
             }}
           />
@@ -1647,11 +1662,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleFilterChange('year', e.target.value)}
             style={{
               width: '100%',
-              padding: '10px',
+              padding: isMobile ? '8px 12px' : '10px',
               borderRadius: '4px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '42px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '42px',
               backgroundColor: 'white'
             }}
           >
@@ -1670,11 +1685,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleFilterChange('category', e.target.value)}
             style={{
               width: '100%',
-              padding: '10px',
+              padding: isMobile ? '8px 12px' : '10px',
               borderRadius: '4px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '42px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '42px',
               backgroundColor: 'white'
             }}
           >
@@ -1698,11 +1713,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleFilterChange('gender', e.target.value)}
             style={{
               width: '100%',
-              padding: '10px',
+              padding: isMobile ? '8px 12px' : '10px',
               borderRadius: '4px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '42px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '42px',
               backgroundColor: 'white'
             }}
           >
@@ -1721,11 +1736,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleFilterChange('pgAvailability', e.target.value)}
             style={{
               width: '100%',
-              padding: '10px',
+              padding: isMobile ? '8px 12px' : '10px',
               borderRadius: '4px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '42px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '42px',
               backgroundColor: 'white'
             }}
           >
@@ -1743,18 +1758,28 @@ const CollegeSearch = () => {
     if (selectedExam !== 'NEET') return null;
     
     return (
-      <div className="quota-selector" style={{ marginTop: '20px', marginBottom: '20px' }}>
+      <div className="quota-selector" style={{ 
+        marginTop: '20px', 
+        marginBottom: '20px',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '0.5rem' : '0.5rem',
+        flexWrap: 'wrap'
+      }}>
         <button
           className={`quota-button ${selectedQuota === 'all' ? 'active' : ''}`}
           onClick={() => setSelectedQuota('all')}
           style={{
-            padding: '10px 20px',
-            marginRight: '10px',
+            padding: isMobile ? '0.75rem 1rem' : '10px 20px',
+            marginRight: isMobile ? '0' : '10px',
             borderRadius: '4px',
             border: '1px solid #e2e8f0',
             backgroundColor: selectedQuota === 'all' ? '#076B37' : 'white',
             color: selectedQuota === 'all' ? 'white' : '#1e293b',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            width: isMobile ? '100%' : 'auto',
+            fontSize: isMobile ? '0.875rem' : 'inherit',
+            textAlign: isMobile ? 'center' : 'left'
           }}
         >
           MBBS All India Quota
@@ -1763,13 +1788,16 @@ const CollegeSearch = () => {
           className={`quota-button ${selectedQuota === 'state' ? 'active' : ''}`}
           onClick={() => setSelectedQuota('state')}
           style={{
-            padding: '10px 20px',
-            marginRight: '10px',
+            padding: isMobile ? '0.75rem 1rem' : '10px 20px',
+            marginRight: isMobile ? '0' : '10px',
             borderRadius: '4px',
             border: '1px solid #e2e8f0',
             backgroundColor: selectedQuota === 'state' ? '#076B37' : 'white',
             color: selectedQuota === 'state' ? 'white' : '#1e293b',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            width: isMobile ? '100%' : 'auto',
+            fontSize: isMobile ? '0.875rem' : 'inherit',
+            textAlign: isMobile ? 'center' : 'left'
           }}
         >
           Rajasthan State Counselling (Govt Seat)
@@ -1778,13 +1806,16 @@ const CollegeSearch = () => {
           className={`quota-button ${selectedQuota === 'bds' ? 'active' : ''}`}
           onClick={() => setSelectedQuota('bds')}
           style={{
-            padding: '10px 20px',
-            marginRight: '10px',
+            padding: isMobile ? '0.75rem 1rem' : '10px 20px',
+            marginRight: isMobile ? '0' : '10px',
             borderRadius: '4px',
             border: '1px solid #e2e8f0',
             backgroundColor: selectedQuota === 'bds' ? '#076B37' : 'white',
             color: selectedQuota === 'bds' ? 'white' : '#1e293b',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            width: isMobile ? '100%' : 'auto',
+            fontSize: isMobile ? '0.875rem' : 'inherit',
+            textAlign: isMobile ? 'center' : 'left'
           }}
         >
           BDS All India
@@ -1793,15 +1824,18 @@ const CollegeSearch = () => {
           className={`quota-button ${selectedQuota === 'mgmt' ? 'active' : ''}`}
           onClick={() => setSelectedQuota('mgmt')}
           style={{
-            padding: '10px 20px',
+            padding: isMobile ? '0.75rem 1rem' : '10px 20px',
             borderRadius: '4px',
             border: '1px solid #e2e8f0',
             backgroundColor: selectedQuota === 'mgmt' ? '#076B37' : 'white',
             color: selectedQuota === 'mgmt' ? 'white' : '#1e293b',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            width: isMobile ? '100%' : 'auto',
+            fontSize: isMobile ? '0.875rem' : 'inherit',
+            textAlign: isMobile ? 'center' : 'left'
           }}
         >
-          Rajasthan State Counceling (Management Seat)
+          Rajasthan State counseling (Semi Govt Seat)
         </button>
       </div>
     );
@@ -1862,20 +1896,20 @@ const CollegeSearch = () => {
     return (
       <div className="filters-grid" style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '16px',
-        padding: '16px',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr',
+        gap: isMobile ? '16px' : '16px',
+        padding: isMobile ? '16px' : '16px',
         alignItems: 'start',
         backgroundColor: '#fff',
         borderRadius: '8px',
         boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
       }}>
         {/* Search Input */}
-        <div style={{ gridColumn: 'span 2' }}>
+        <div style={{ gridColumn: isMobile ? '1' : 'span 2' }}>
           <label className="filter-label" style={{
             display: 'block',
             marginBottom: '6px',
-            fontSize: '14px',
+            fontSize: isMobile ? '14px' : '14px',
             fontWeight: '500',
             color: '#1e293b'
           }}>Search Colleges</label>
@@ -1887,11 +1921,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleInputChange('searchQuery', e.target.value)}
             style={{
               width: '100%',
-              padding: '8px 12px',
+              padding: isMobile ? '8px 12px' : '8px 12px',
               borderRadius: '6px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '40px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '40px',
               backgroundColor: '#fff',
               transition: 'all 0.2s ease',
               outline: 'none'
@@ -1904,7 +1938,7 @@ const CollegeSearch = () => {
           <label className="filter-label" style={{
             display: 'block',
             marginBottom: '6px',
-            fontSize: '14px',
+            fontSize: isMobile ? '14px' : '14px',
             fontWeight: '500',
             color: '#1e293b'
           }}>Course</label>
@@ -1914,11 +1948,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleFilterChange('course', e.target.value)}
             style={{
               width: '100%',
-              padding: '8px 12px',
+              padding: isMobile ? '8px 12px' : '8px 12px',
               borderRadius: '6px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '40px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '40px',
               backgroundColor: '#fff',
               transition: 'all 0.2s ease',
               outline: 'none',
@@ -1936,7 +1970,7 @@ const CollegeSearch = () => {
           <label className="filter-label" style={{
             display: 'block',
             marginBottom: '6px',
-            fontSize: '14px',
+            fontSize: isMobile ? '14px' : '14px',
             fontWeight: '500',
             color: '#1e293b'
           }}>Year</label>
@@ -1946,11 +1980,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleFilterChange('year', e.target.value)}
             style={{
               width: '100%',
-              padding: '8px 12px',
+              padding: isMobile ? '8px 12px' : '8px 12px',
               borderRadius: '6px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '40px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '40px',
               backgroundColor: '#fff',
               transition: 'all 0.2s ease',
               outline: 'none',
@@ -1968,7 +2002,7 @@ const CollegeSearch = () => {
           <label className="filter-label" style={{
             display: 'block',
             marginBottom: '6px',
-            fontSize: '14px',
+            fontSize: isMobile ? '14px' : '14px',
             fontWeight: '500',
             color: '#1e293b'
           }}>Category</label>
@@ -1978,11 +2012,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleFilterChange('category', e.target.value)}
             style={{
               width: '100%',
-              padding: '8px 12px',
+              padding: isMobile ? '8px 12px' : '8px 12px',
               borderRadius: '6px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '40px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '40px',
               backgroundColor: '#fff',
               transition: 'all 0.2s ease',
               outline: 'none',
@@ -2004,7 +2038,7 @@ const CollegeSearch = () => {
           <label className="filter-label" style={{
             display: 'block',
             marginBottom: '6px',
-            fontSize: '14px',
+            fontSize: isMobile ? '14px' : '14px',
             fontWeight: '500',
             color: '#1e293b'
           }}>Gender</label>
@@ -2014,11 +2048,11 @@ const CollegeSearch = () => {
             onChange={(e) => handleFilterChange('gender', e.target.value)}
             style={{
               width: '100%',
-              padding: '8px 12px',
+              padding: isMobile ? '8px 12px' : '8px 12px',
               borderRadius: '6px',
               border: '1px solid #e2e8f0',
-              fontSize: '14px',
-              minHeight: '40px',
+              fontSize: isMobile ? '16px' : '14px',
+              minHeight: isMobile ? '44px' : '40px',
               backgroundColor: '#fff',
               transition: 'all 0.2s ease',
               outline: 'none',
@@ -2044,27 +2078,27 @@ const CollegeSearch = () => {
           flexDirection: 'column', 
           alignItems: 'center', 
           justifyContent: 'center',
-          padding: '2rem',
+          padding: isMobile ? '1rem' : '2rem',
           background: '#f8fafc'
         }}>
           <div style={{
             background: 'white',
-            padding: '3rem',
+            padding: isMobile ? '2rem' : '3rem',
             borderRadius: '16px',
             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
             width: '100%',
-            maxWidth: '600px',
+            maxWidth: isMobile ? '100%' : '600px',
             textAlign: 'center'
           }}>
             <h1 style={{
-              fontSize: '2.5rem',
+              fontSize: isMobile ? '2rem' : '2.5rem',
               color: '#1e293b',
               marginBottom: '1rem',
               fontWeight: '600'
             }}>Select Exam Type</h1>
             
             <p style={{
-              fontSize: '1.1rem',
+              fontSize: isMobile ? '1rem' : '1.1rem',
               color: '#64748b',
               marginBottom: '2rem',
               lineHeight: '1.5'
@@ -2074,22 +2108,23 @@ const CollegeSearch = () => {
 
             <div style={{ 
               display: 'flex', 
-              gap: '1.5rem',
+              gap: isMobile ? '1rem' : '1.5rem',
               flexWrap: 'wrap',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              flexDirection: isMobile ? 'column' : 'row'
             }}>
               <button 
                 onClick={() => handleExamSelect('IIT')}
                 style={{
-                  padding: '1.25rem 2.5rem',
-                  fontSize: '1.25rem',
+                  padding: isMobile ? '1rem 2rem' : '1.25rem 2.5rem',
+                  fontSize: isMobile ? '1.1rem' : '1.25rem',
                   borderRadius: '12px',
                   border: 'none',
                   backgroundColor: '#076B37',
                   color: 'white',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  minWidth: '200px',
+                  minWidth: isMobile ? '100%' : '200px',
                   fontWeight: '500',
                   display: 'flex',
                   alignItems: 'center',
@@ -2115,15 +2150,15 @@ const CollegeSearch = () => {
               <button 
                 onClick={() => handleExamSelect('NEET')}
                 style={{
-                  padding: '1.25rem 2.5rem',
-                  fontSize: '1.25rem',
+                  padding: isMobile ? '1rem 2rem' : '1.25rem 2.5rem',
+                  fontSize: isMobile ? '1.1rem' : '1.25rem',
                   borderRadius: '12px',
                   border: 'none',
                   backgroundColor: '#076B37',
                   color: 'white',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  minWidth: '200px',
+                  minWidth: isMobile ? '100%' : '200px',
                   fontWeight: '500',
                   display: 'flex',
                   alignItems: 'center',
@@ -2161,16 +2196,51 @@ const CollegeSearch = () => {
         <Layout>
           <Navigation />
           <div className="college-search-container">
-            <div className="exam-selector">
+            <div className="exam-selector" style={{
+              display: 'flex',
+              gap: isMobile ? '0.5rem' : '1rem',
+              marginBottom: isMobile ? '1rem' : '2rem',
+              flexDirection: isMobile ? 'column' : 'row'
+            }}>
               <button
                 className={`exam-button ${selectedExam === 'NEET' ? 'active' : ''}`}
                 onClick={() => handleExamSelect('NEET')}
+                style={{
+                  padding: isMobile ? '0.75rem 1rem' : '10px',
+                  fontSize: isMobile ? '0.875rem' : '13px',
+                  fontWeight: '600',
+                  border: '2px solid #1B5431',
+                  borderRadius: '8px',
+                  backgroundColor: selectedExam === 'NEET' ? '#1B5431' : 'transparent',
+                  color: selectedExam === 'NEET' ? 'white' : '#1B5431',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  minWidth: isMobile ? '100%' : '80px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  width: isMobile ? '100%' : 'auto'
+                }}
               >
                 NEET
               </button>
               <button
                 className={`exam-button ${selectedExam === 'IIT' ? 'active' : ''}`}
                 onClick={() => handleExamSelect('IIT')}
+                style={{
+                  padding: isMobile ? '0.75rem 1rem' : '10px',
+                  fontSize: isMobile ? '0.875rem' : '13px',
+                  fontWeight: '600',
+                  border: '2px solid #1B5431',
+                  borderRadius: '8px',
+                  backgroundColor: selectedExam === 'IIT' ? '#1B5431' : 'transparent',
+                  color: selectedExam === 'IIT' ? 'white' : '#1B5431',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  minWidth: isMobile ? '100%' : '80px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  width: isMobile ? '100%' : 'auto'
+                }}
               >
                 IIT JEE
               </button>
@@ -2180,8 +2250,19 @@ const CollegeSearch = () => {
 
             {renderQuotaSelection()}
 
-            <div className="search-card">
-              <h2 className="card-title">Search & Filters</h2>
+            <div className="search-card" style={{
+              background: 'white',
+              borderRadius: '8px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              padding: isMobile ? '1rem' : '1.5rem',
+              marginBottom: isMobile ? '1rem' : '2rem'
+            }}>
+              <h2 className="card-title" style={{
+                fontSize: isMobile ? '1.1rem' : '1.25rem',
+                fontWeight: '600',
+                color: '#2d3748',
+                marginBottom: isMobile ? '0.75rem' : '1rem'
+              }}>Search & Filters</h2>
               {selectedExam === 'NEET' && selectedQuota === 'state' ? (
                 <>
                 <StateWiseDashboard title="Rajasthan Medical Colleges And MBBS Seats" />
@@ -2190,16 +2271,15 @@ const CollegeSearch = () => {
               ) : selectedQuota === 'mgmt' ? (
                 <>
                 <StateWiseDashboard title="Rajasthan Medical Colleges And MBBS Seats" />
-
-                renderManagementFilters()
+                {renderManagementFilters()}
                 </>
               ) : selectedQuota === 'bds' ? (
                 // Special layout for BDS view
                 <div className="filters-grid" style={{
                   display: 'grid',
-                  gridTemplateColumns: '2fr 1fr 1fr',
-                  gap: '16px',
-                  padding: '16px',
+                  gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr',
+                  gap: isMobile ? '16px' : '16px',
+                  padding: isMobile ? '16px' : '16px',
                   alignItems: 'start',
                   backgroundColor: '#fff',
                   borderRadius: '8px',
@@ -2210,7 +2290,7 @@ const CollegeSearch = () => {
                     <label className="filter-label" style={{
                       display: 'block',
                       marginBottom: '6px',
-                      fontSize: '14px',
+                      fontSize: isMobile ? '14px' : '14px',
                       fontWeight: '500',
                       color: '#1e293b'
                     }}>Search Colleges/Location</label>
@@ -2222,18 +2302,14 @@ const CollegeSearch = () => {
                       onChange={(e) => handleInputChange('searchQuery', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '8px 12px',
+                        padding: isMobile ? '8px 12px' : '8px 12px',
                         borderRadius: '6px',
                         border: '1px solid #e2e8f0',
-                        fontSize: '14px',
-                        minHeight: '40px',
+                        fontSize: isMobile ? '16px' : '14px',
+                        minHeight: isMobile ? '44px' : '40px',
                         backgroundColor: '#fff',
                         transition: 'all 0.2s ease',
-                        outline: 'none',
-                        '&:focus': {
-                          borderColor: '#076B37',
-                          boxShadow: '0 0 0 1px #076B37'
-                        }
+                        outline: 'none'
                       }}
                     />
                   </div>
@@ -2243,7 +2319,7 @@ const CollegeSearch = () => {
                     <label className="filter-label" style={{
                       display: 'block',
                       marginBottom: '6px',
-                      fontSize: '14px',
+                      fontSize: isMobile ? '14px' : '14px',
                       fontWeight: '500',
                       color: '#1e293b'
                     }}>Category</label>
@@ -2253,19 +2329,15 @@ const CollegeSearch = () => {
                       onChange={(e) => handleFilterChange('category', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '8px 12px',
+                        padding: isMobile ? '8px 12px' : '8px 12px',
                         borderRadius: '6px',
                         border: '1px solid #e2e8f0',
-                        fontSize: '14px',
-                        minHeight: '40px',
+                        fontSize: isMobile ? '16px' : '14px',
+                        minHeight: isMobile ? '44px' : '40px',
                         backgroundColor: '#fff',
                         transition: 'all 0.2s ease',
                         outline: 'none',
-                        cursor: 'pointer',
-                        '&:focus': {
-                          borderColor: '#076B37',
-                          boxShadow: '0 0 0 1px #076B37'
-                        }
+                        cursor: 'pointer'
                       }}
                     >
                       <option value="all">All Categories</option>
@@ -2282,7 +2354,7 @@ const CollegeSearch = () => {
                     <label className="filter-label" style={{
                       display: 'block',
                       marginBottom: '6px',
-                      fontSize: '14px',
+                      fontSize: isMobile ? '14px' : '14px',
                       fontWeight: '500',
                       color: '#1e293b'
                     }}>Year</label>
@@ -2292,19 +2364,15 @@ const CollegeSearch = () => {
                       onChange={(e) => handleFilterChange('year', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '8px 12px',
+                        padding: isMobile ? '8px 12px' : '8px 12px',
                         borderRadius: '6px',
                         border: '1px solid #e2e8f0',
-                        fontSize: '14px',
-                        minHeight: '40px',
+                        fontSize: isMobile ? '16px' : '14px',
+                        minHeight: isMobile ? '44px' : '40px',
                         backgroundColor: '#fff',
                         transition: 'all 0.2s ease',
                         outline: 'none',
-                        cursor: 'pointer',
-                        '&:focus': {
-                          borderColor: '#076B37',
-                          boxShadow: '0 0 0 1px #076B37'
-                        }
+                        cursor: 'pointer'
                       }}
                     >
                       <option value="2024">2024</option>
@@ -2319,12 +2387,12 @@ const CollegeSearch = () => {
                 <MedicalCollegesDashboard title="Medical Colleges And MBBS Seats" />
                 <div className="filters-grid" style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '24px',
-                  padding: '20px'
+                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                  gap: isMobile ? '16px' : '24px',
+                  padding: isMobile ? '16px' : '20px'
                 }}>
                   {/* Search Input */}
-                  <div style={{ gridColumn: '1' }}>
+                  <div style={{ gridColumn: isMobile ? '1' : '1' }}>
                     <label className="filter-label">Search Colleges/Location</label>
                     <input
                       type="text"
@@ -2334,18 +2402,18 @@ const CollegeSearch = () => {
                       onChange={(e) => handleInputChange('searchQuery', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '10px',
+                        padding: isMobile ? '8px 12px' : '10px',
                         borderRadius: '4px',
                         border: '1px solid #e2e8f0',
-                        fontSize: '14px',
-                        minHeight: '42px'
+                        fontSize: isMobile ? '16px' : '14px',
+                        minHeight: isMobile ? '44px' : '42px'
                       }}
                     />
                   </div>
 
                   {/* State Filter - Only show for All India MBBS quota */}
                   {selectedQuota === 'all' && (
-                    <div style={{ gridColumn: '2' }}>
+                    <div style={{ gridColumn: isMobile ? '1' : '2' }}>
                       <label className="filter-label">States</label>
                       <Select
                         isMulti
@@ -2367,7 +2435,7 @@ const CollegeSearch = () => {
                   )}
 
                   {/* Category Filter */}
-                  <div style={{ gridColumn: '3' }}>
+                  <div style={{ gridColumn: isMobile ? '1' : '3' }}>
                     <label className="filter-label">Category</label>
                     <select
                       className="filter-select"
@@ -2375,11 +2443,11 @@ const CollegeSearch = () => {
                       onChange={(e) => handleFilterChange('category', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '10px',
+                        padding: isMobile ? '8px 12px' : '10px',
                         borderRadius: '4px',
                         border: '1px solid #e2e8f0',
-                        fontSize: '14px',
-                        minHeight: '42px',
+                        fontSize: isMobile ? '16px' : '14px',
+                        minHeight: isMobile ? '44px' : '42px',
                         backgroundColor: 'white'
                       }}
                     >
@@ -2393,7 +2461,7 @@ const CollegeSearch = () => {
                   </div>
 
                   {/* PG Availability Filter */}
-                  <div style={{ gridColumn: '1' }}>
+                  <div style={{ gridColumn: isMobile ? '1' : '1' }}>
                     <label className="filter-label">PG Availability</label>
                     <select
                       className="filter-select"
@@ -2401,11 +2469,11 @@ const CollegeSearch = () => {
                       onChange={(e) => handleFilterChange('pgAvailability', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '10px',
+                        padding: isMobile ? '8px 12px' : '10px',
                         borderRadius: '4px',
                         border: '1px solid #e2e8f0',
-                        fontSize: '14px',
-                        minHeight: '42px',
+                        fontSize: isMobile ? '16px' : '14px',
+                        minHeight: isMobile ? '44px' : '42px',
                         backgroundColor: 'white'
                       }}
                     >
@@ -2416,7 +2484,7 @@ const CollegeSearch = () => {
                   </div>
 
                   {/* Bond Filter */}
-                  <div style={{ gridColumn: '2' }}>
+                  <div style={{ gridColumn: isMobile ? '1' : '2' }}>
                     <label className="filter-label">Bond</label>
                     <select
                       className="filter-select"
@@ -2424,11 +2492,11 @@ const CollegeSearch = () => {
                       onChange={(e) => handleFilterChange('bond', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '10px',
+                        padding: isMobile ? '8px 12px' : '10px',
                         borderRadius: '4px',
                         border: '1px solid #e2e8f0',
-                        fontSize: '14px',
-                        minHeight: '42px',
+                        fontSize: isMobile ? '16px' : '14px',
+                        minHeight: isMobile ? '44px' : '42px',
                         backgroundColor: 'white'
                       }}
                     >
@@ -2439,7 +2507,7 @@ const CollegeSearch = () => {
                   </div>
 
                   {/* Year Filter */}
-                  <div style={{ gridColumn: '3' }}>
+                  <div style={{ gridColumn: isMobile ? '1' : '3' }}>
                     <label className="filter-label">Year</label>
                     <select
                       className="filter-select"
@@ -2447,11 +2515,11 @@ const CollegeSearch = () => {
                       onChange={(e) => handleFilterChange('year', e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '10px',
+                        padding: isMobile ? '8px 12px' : '10px',
                         borderRadius: '4px',
                         border: '1px solid #e2e8f0',
-                        fontSize: '14px',
-                        minHeight: '42px',
+                        fontSize: isMobile ? '16px' : '14px',
+                        minHeight: isMobile ? '44px' : '42px',
                         backgroundColor: 'white'
                       }}
                     >
@@ -2462,7 +2530,7 @@ const CollegeSearch = () => {
                   </div>
 
                   {/* College Type Filter */}
-                  <div style={{ gridColumn: '1' }}>
+                  <div style={{ gridColumn: isMobile ? '1' : '1' }}>
                     <label className="filter-label">College Type</label>
                     <Select
                       isMulti
@@ -2486,34 +2554,66 @@ const CollegeSearch = () => {
               )}
             </div>
 
-            {/* Add print button before the results table */}
-            {/* <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 20px' }}>
-              {renderPrintButton()}
-            </div> */}
-
             {/* Results Section */}
             <div className="table-container">
               {/* Disclaimer */}
-              <div className="disclaimer-container" style={{ borderBottom: '1px solid #e2e8f0', borderTop: 'none', marginTop: 0 }}>
-                <p className="disclaimer-text">
+              <div className="disclaimer-container" style={{ 
+                borderBottom: '1px solid #e2e8f0', 
+                borderTop: 'none', 
+                marginTop: 0,
+                padding: isMobile ? '0.75rem' : '1rem'
+              }}>
+                <p className="disclaimer-text" style={{
+                  color: '#64748b',
+                  fontStyle: 'italic',
+                  fontSize: isMobile ? '9px' : '10px',
+                  textAlign: 'center',
+                  margin: 0,
+                  lineHeight: '1.5'
+                }}>
                   Disclaimer: This data has been sourced from various institutions and public records. Concept does not guarantee the accuracy of this information and bears no responsibility for any decisions made based on this data.
                 </p>
               </div>
 
               {/* Results Header */}
-              <div className="pagination-container" style={{ borderTop: 'none', backgroundColor: '#1B5431' }}>
-                <div className="page-info">
+              <div className="pagination-container" style={{ 
+                borderTop: 'none', 
+                backgroundColor: '#1B5431',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '1rem' : '1rem',
+                padding: isMobile ? '1rem' : '1rem'
+              }}>
+                <div className="page-info" style={{
+                  fontSize: isMobile ? '0.75rem' : '0.875rem',
+                  color: '#fff',
+                  textAlign: isMobile ? 'center' : 'left'
+                }}>
                   Total Results: {isLoading ? '...' : getTotalResults()}
                 </div>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  gap: isMobile ? '0.5rem' : '1rem', 
+                  alignItems: 'center',
+                  justifyContent: isMobile ? 'center' : 'flex-end'
+                }}>
                   <div className="rows-per-page">
-                    <label htmlFor="pageSize" className="filter-label" style={{ margin: 0, color: '#fff' }}>Rows per page:</label>
+                    <label htmlFor="pageSize" className="filter-label" style={{ 
+                      margin: 0, 
+                      color: '#fff',
+                      fontSize: isMobile ? '0.75rem' : '0.875rem'
+                    }}>Rows per page:</label>
                     <select
                       id="pageSize"
                       className="rows-select"
                       value={pageSize}
                       onChange={handlePageSizeChange}
                       disabled={isLoading || isFiltering}
+                      style={{
+                        padding: isMobile ? '0.25rem' : '0.25rem 0.5rem',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '4px',
+                        fontSize: isMobile ? '0.75rem' : '0.875rem'
+                      }}
                     >
                       <option value="10">10</option>
                       <option value="25">25</option>
@@ -2525,20 +2625,59 @@ const CollegeSearch = () => {
               </div>
 
               {/* Table with Loading State */}
-              <div className="table-wrapper">
+              <div className="table-wrapper" style={{
+                position: 'relative',
+                minHeight: isMobile ? '300px' : '400px',
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch'
+              }}>
                 {/* Loading Overlay */}
                 {(isLoading || isFiltering) && (
-                  <div className="loading-overlay">
-                    <div className="loading-content">
-                      <div className="spinner"></div>
-                      <div className="loading-text">
+                  <div className="loading-overlay" style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1000,
+                    padding: isMobile ? '1rem' : '1rem'
+                  }}>
+                    <div className="loading-content" style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: isMobile ? '0.75rem' : '1rem'
+                    }}>
+                      <div className="spinner" style={{
+                        width: isMobile ? '40px' : '50px',
+                        height: isMobile ? '40px' : '50px',
+                        border: '4px solid #e2e8f0',
+                        borderTop: '4px solid #4299e1',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }}></div>
+                      <div className="loading-text" style={{
+                        textAlign: 'center',
+                        color: '#2d3748',
+                        fontSize: isMobile ? '12px' : '13px',
+                        fontWeight: '500'
+                      }}>
                         {isLoading ? 'Loading data...' : 'Updating results...'}
                       </div>
                     </div>
                   </div>
                 )}
                 
-                <table className="results-table">
+                <table className="results-table" style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  minWidth: isMobile ? '600px' : '800px',
+                  fontSize: isMobile ? '12px' : '13px'
+                }}>
                   <thead>
                     {selectedExam === 'NEET' && selectedQuota === 'state' ? (
                       renderStateQuotaHeaders()
@@ -2549,7 +2688,11 @@ const CollegeSearch = () => {
                   <tbody>
                     {!isLoading && !isFiltering && getCurrentPageData().length === 0 ? (
                       <tr>
-                        <td colSpan={selectedExam === 'NEET' ? 11 : 10} style={{ textAlign: 'center', padding: '2rem' }}>
+                        <td colSpan={selectedExam === 'NEET' ? 11 : 10} style={{ 
+                          textAlign: 'center', 
+                          padding: isMobile ? '1rem' : '2rem',
+                          fontSize: isMobile ? '12px' : '14px'
+                        }}>
                           No results found
                         </td>
                       </tr>
@@ -2565,19 +2708,48 @@ const CollegeSearch = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="pagination-container">
-                <div className="page-info">
+              <div className="pagination-container" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: isMobile ? '1rem' : '1rem',
+                backgroundColor: '#f7fafc',
+                borderTop: '1px solid #e2e8f0',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '1rem' : '1rem'
+              }}>
+                <div className="page-info" style={{
+                  fontSize: isMobile ? '0.75rem' : '0.875rem',
+                  color: '#4a5568',
+                  textAlign: isMobile ? 'center' : 'left'
+                }}>
                   {isLoading || isFiltering ? (
                     'Loading...'
                   ) : (
                     `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, getTotalResults())} of ${getTotalResults()} results`
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  gap: isMobile ? '0.25rem' : '0.5rem',
+                  flexWrap: 'wrap',
+                  justifyContent: isMobile ? 'center' : 'flex-end'
+                }}>
                   <button
                     onClick={() => handlePageChange(1)}
                     disabled={currentPage === 1 || isLoading || isFiltering}
                     className="pagination-button"
+                    style={{
+                      padding: isMobile ? '0.375rem 0.5rem' : '0.5rem 1rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      backgroundColor: 'white',
+                      color: '#4a5568',
+                      fontSize: isMobile ? '0.7rem' : '0.875rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
                   >
                     First
                   </button>
@@ -2585,16 +2757,47 @@ const CollegeSearch = () => {
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1 || isLoading || isFiltering}
                     className="pagination-button"
+                    style={{
+                      padding: isMobile ? '0.375rem 0.5rem' : '0.5rem 1rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      backgroundColor: 'white',
+                      color: '#4a5568',
+                      fontSize: isMobile ? '0.7rem' : '0.875rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
                   >
                     Previous
                   </button>
-                  <span className="pagination-button" style={{ cursor: 'default' }}>
+                  <span className="pagination-button" style={{ 
+                    cursor: 'default',
+                    padding: isMobile ? '0.375rem 0.5rem' : '0.5rem 1rem',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    backgroundColor: 'white',
+                    color: '#4a5568',
+                    fontSize: isMobile ? '0.7rem' : '0.875rem',
+                    fontWeight: '500'
+                  }}>
                     Page {currentPage} of {totalPages}
                   </span>
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages || isLoading || isFiltering}
                     className="pagination-button"
+                    style={{
+                      padding: isMobile ? '0.375rem 0.5rem' : '0.5rem 1rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      backgroundColor: 'white',
+                      color: '#4a5568',
+                      fontSize: isMobile ? '0.7rem' : '0.875rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
                   >
                     Next
                   </button>
@@ -2602,6 +2805,17 @@ const CollegeSearch = () => {
                     onClick={() => handlePageChange(totalPages)}
                     disabled={currentPage === totalPages || isLoading || isFiltering}
                     className="pagination-button"
+                    style={{
+                      padding: isMobile ? '0.375rem 0.5rem' : '0.5rem 1rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '6px',
+                      backgroundColor: 'white',
+                      color: '#4a5568',
+                      fontSize: isMobile ? '0.7rem' : '0.875rem',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
                   >
                     Last
                   </button>

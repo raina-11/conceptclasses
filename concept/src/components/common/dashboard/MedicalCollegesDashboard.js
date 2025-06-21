@@ -15,7 +15,7 @@ const StatCard = ({ icon, title, value, subValue, subText, mainColor, hasBorder 
     }}>
         {icon && <div style={{ width: '30px', height: '30px' }}>{icon}</div>}
         <h3 style={{ fontSize: '16px', fontWeight: '600', margin: 0 }}>{title}</h3>
-        <div style={{ fontSize: '60px', fontWeight: '700', lineHeight: 1 }}>{value}</div>
+        <div style={{ fontSize: '40px', fontWeight: '700', lineHeight: 1 }}>{value}</div>
         {subValue && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div style={{ fontSize: '20px', fontWeight: '600' }}>{subValue}</div>
@@ -30,7 +30,7 @@ const SmallStatCard = ({ title, value, subText, mainColor }) => (
         textAlign: 'center',
         padding: '12px',
     }}>
-        <div style={{ fontSize: '24px', fontWeight: '700' }}>
+        <div style={{ fontSize: '22px', fontWeight: '700' }}>
             {title} <span style={{ color: mainColor, fontSize: '18px' }}>{value} Colleges</span>
         </div>
         <div style={{ fontSize: '16px', color: '#4A5568' }}>{subText}</div>
@@ -72,7 +72,7 @@ const MedicalCollegesDashboard = ({title}) => {
             </h1>
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
                 gap: '24px',
                 marginBottom: '32px'
             }}>
@@ -148,14 +148,14 @@ export const StateWiseDashboard = ({title}) => {
     };
 
     return (
-        <div style={{ padding: '18px', backgroundColor: '#f3f4f6' }}>
-            <h1 style={{ textAlign: 'center', fontSize: '28px', fontWeight: 'bold', color: '#111827', marginBottom: '18px' }}>
+        <div style={{ padding: '12px', backgroundColor: '#f3f4f6' }}>
+            <h1 style={{ textAlign: 'center', fontSize: '24px', fontWeight: 'bold', color: '#111827', marginBottom: '18px' }}>
                 {title}
             </h1>
             <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                gap: '24px',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gap: '20px',
                 marginBottom: '32px'
             }}>
                 <StatCard 
