@@ -1596,7 +1596,7 @@ const CollegeSearch = () => {
             )
           ) :<></>}
         </tr>
-        {isExpanded && selectedQuota!= 'bds' && (
+        {isExpanded && selectedQuota!= 'bds' && selectedQuota!= 'mgmt' && (
           <tr>
             <td colSpan={getColSpan()}>
               {renderExpandedContent(item)}
