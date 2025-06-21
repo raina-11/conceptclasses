@@ -68,6 +68,7 @@ const TrophyIcon = (props) => (
         </>
       }
     </div>
+    <div>↕</div>
   </div>
 );
 
@@ -152,9 +153,7 @@ const CollegeSearch = () => {
       if (filters.searchQuery) {
         const query = filters.searchQuery.toLowerCase().trim();
         const collegeName = (item['College Name'] || '').toLowerCase();
-        const words = query.split(/\s+/); // Split search query into words
-        
-        // Check if all words in the query are present in the college name
+        const words = query.split(/\s+/);
         return words.every(word => collegeName.includes(word));
       }
       
@@ -167,9 +166,24 @@ const CollegeSearch = () => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
 
-        // Handle special cases like "--" or empty values
-        if (aValue === "--" || aValue === "" || aValue === undefined) aValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
-        if (bValue === "--" || bValue === "" || bValue === undefined) bValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        // Special handling for NIRF Rankings
+        if (sortConfig.key === 'NIRF Ranking') {
+          // Convert rankings to numbers, treating non-numeric, "-", "--", "NA" values as infinity
+          const isInvalidRank = (val) => !val || val === '--' || val === 'NA' || val === '-' || val.toString().trim() === '';
+          aValue = isInvalidRank(aValue) ? Infinity : parseInt(aValue);
+          bValue = isInvalidRank(bValue) ? Infinity : parseInt(bValue);
+          
+          // For NIRF rankings, lower numbers are better
+          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+
+        // Handle special cases for other fields
+        if (aValue === "--" || aValue === "-" || aValue === "" || aValue === undefined) {
+          aValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        }
+        if (bValue === "--" || bValue === "-" || bValue === "" || bValue === undefined) {
+          bValue = sortConfig.direction === 'asc' ? Infinity : -Infinity;
+        }
 
         // Convert to numbers if they're numeric strings
         if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
@@ -177,15 +191,11 @@ const CollegeSearch = () => {
 
         // If both values are strings (like college names), use string comparison
         if (typeof aValue === 'string' && typeof bValue === 'string') {
-          return sortConfig.direction === 'asc' 
-            ? aValue.localeCompare(bValue)
-            : bValue.localeCompare(aValue);
+          return sortConfig.direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
         }
 
         // Numeric comparison
-        return sortConfig.direction === 'asc' 
-          ? aValue - bValue
-          : bValue - aValue;
+        return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
       });
     }
 
@@ -833,7 +843,7 @@ const CollegeSearch = () => {
               <span style={infoValueStyle}>{item['Penalty if Service Bond Broken']}</span>
             </div>
             <div style={infoItemStyle}>
-              <span style={infoLabelStyle}>Discontinuation Bond Penalty</span>
+              <span style={infoLabelStyle}>MBBS Discontinuation Bond Penalty</span>
               <span style={infoValueStyle}>{item['MBBS Discontinuation Bond Penalty']}</span>
             </div>
             <div style={infoItemStyle}>
@@ -905,7 +915,15 @@ const CollegeSearch = () => {
             <th>College Name</th>
             <th>City, State</th>
             {shouldShowCategoryColumn() && <th>Category</th>}
-            <th style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <th 
+              onClick={() => handleSort('BDS College Ranking')}
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
               <TrophyIcon selectedQuota={selectedQuota} />
             </th>
             <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
@@ -951,11 +969,15 @@ const CollegeSearch = () => {
               Est. Year ↕
             </th>
             <th style={{ padding: '16px 10px' }}>City, State</th>
-            <th style={{ 
-              padding: '0',
-              textAlign: 'center',
-              minWidth: '120px'
-            }}>
+            <th 
+              onClick={() => handleSort('NIRF Ranking')}
+              style={{ 
+                padding: '0',
+                textAlign: 'center',
+                minWidth: '120px',
+                cursor: 'pointer'
+              }}
+            >
               <TrophyIcon selectedQuota={selectedQuota} />
             </th>
             <th style={{ padding: '16px 10px' }}>Raj. Rank</th>
@@ -1001,11 +1023,15 @@ const CollegeSearch = () => {
             </th>
             <th>City, State</th>
             {shouldShowCategoryColumn() && <th>Category</th>}
-            <th style={{ 
-              padding: '0',
-              minWidth: '120px',
-              textAlign: 'center'
-            }}>
+            <th 
+              onClick={() => handleSort('NIRF Ranking')}
+              style={{ 
+                padding: '0',
+                minWidth: '120px',
+                textAlign: 'center',
+                cursor: 'pointer'
+              }}
+            >
               <TrophyIcon selectedQuota={selectedQuota} />
             </th>
             <th style={{ whiteSpace: 'pre-line', textAlign: 'center' }}>
@@ -1108,10 +1134,13 @@ const CollegeSearch = () => {
           Est. Year ↕
         </th>
         <th style={{ padding: '16px 10px' }}>City, State</th>
-        <th style={{ 
+        <th 
+        onClick={() => handleSort('NIRF Ranking')}
+        style={{ 
           padding: '0',
           textAlign: 'center',
-          minWidth: '120px'
+          minWidth: '120px',
+          cursor: 'pointer'
         }}>
           <TrophyIcon selectedQuota={selectedQuota} />
         </th>
@@ -1193,8 +1222,12 @@ const CollegeSearch = () => {
     }
     setSortConfig({ key, direction });
 
-    // For state quota, the sorting is handled in filterStateQuotaData
+    // For state quota, trigger a re-render which will use the new sortConfig in filterStateQuotaData
     if (selectedExam === 'NEET' && selectedQuota === 'state') {
+      setIsFiltering(true); // Show loading state
+      setTimeout(() => {
+        setIsFiltering(false);
+      }, 100);
       return;
     }
 
@@ -1203,52 +1236,28 @@ const CollegeSearch = () => {
       let aValue = a[key];
       let bValue = b[key];
 
+      // Special handling for NIRF and BDS College Rankings
+      if (key === 'NIRF Ranking' || key === 'BDS College Ranking') {
+        aValue = !aValue || aValue === '--' || aValue === 'NA' ? Infinity : parseInt(aValue);
+        bValue = !bValue || bValue === '--' || bValue === 'NA' ? Infinity : parseInt(bValue);
+        return direction === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+
       // Handle special cases like "--" or empty values
       if (aValue === "--" || aValue === "" || aValue === undefined) aValue = direction === 'asc' ? Infinity : -Infinity;
       if (bValue === "--" || bValue === "" || bValue === undefined) bValue = direction === 'asc' ? Infinity : -Infinity;
 
-      // For Est. Year, convert to numbers and handle special cases
-      if (key === 'Est. Year') {
-        // Convert to numbers if they're numeric strings
-        aValue = parseInt(aValue) || (direction === 'asc' ? Infinity : -Infinity);
-        bValue = parseInt(bValue) || (direction === 'asc' ? Infinity : -Infinity);
-        
-        return direction === 'asc' 
-          ? aValue - bValue
-          : bValue - aValue;
-      }
-
-      // For NIRF Ranking, lower is better
-      if (key === 'NIRF Ranking') {
-        if (typeof aValue === 'number' && typeof bValue === 'number') {
-          return direction === 'asc' 
-            ? aValue - bValue
-            : bValue - aValue;
-        }
-      }
-
-      // For closing ranks, handle the new format
-      if (key.includes('Closing')) {
-        // Convert to numbers if they're numeric strings
-        if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
-        if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
-
-        return direction === 'asc' 
-          ? aValue - bValue
-          : bValue - aValue;
-      }
+      // Convert to numbers if they're numeric strings
+      if (typeof aValue === 'string' && !isNaN(aValue)) aValue = parseInt(aValue);
+      if (typeof bValue === 'string' && !isNaN(bValue)) bValue = parseInt(bValue);
 
       // If both values are strings (like college names), use string comparison
       if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return direction === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+        return direction === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
       }
 
-      // Default numeric comparison
-      return direction === 'asc' 
-        ? aValue - bValue
-        : bValue - aValue;
+      // Numeric comparison
+      return direction === 'asc' ? aValue - bValue : bValue - aValue;
     });
 
     setFilteredData(sortedData);
@@ -1346,7 +1355,7 @@ const CollegeSearch = () => {
   }, [selectedExam, selectedQuota, filters, filteredData, filterStateQuotaData]);
 
   // Update renderCollegeNameCell to handle both AIQ and state quota
-  const renderCollegeNameCell = (item) => {
+  const renderCollegeNameCell = (item, hideDetails = false) => {
     const hasPG = item['PG Specializations'] && item['PG Specializations'].trim() !== '';
     const hasBond = item['After MBBS Service Bond'] && 
                    !(item['After MBBS Service Bond'].toLowerCase().includes('no') || 
@@ -1368,7 +1377,8 @@ const CollegeSearch = () => {
           lineHeight: '1.4'
         }}>
           {item['College Name']}
-                  </div>
+        </div>
+        {!hideDetails && (
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
@@ -1393,6 +1403,9 @@ const CollegeSearch = () => {
             )}
           </div>
         </div>
+          )}
+        {!hideDetails && (
+
         <div style={{ 
           position: 'absolute',
           right: '12px',
@@ -1407,6 +1420,7 @@ const CollegeSearch = () => {
         }}>
           view details
         </div>
+        )}
       </div>
     );
   };
@@ -1433,16 +1447,16 @@ const CollegeSearch = () => {
     
     return (
       <React.Fragment key={index}>
-        <tr 
-          className={isExpanded ? 'expanded-row' : ''} 
+        <tr
           onClick={() => toggleRowExpansion(index)}
-          style={{ cursor: 'pointer', padding:'0px 10px' }}
+          className={isExpanded && selectedQuota!= 'bds' ? 'expanded-row' : ''} 
+          style={{ padding:'0px 10px', cursor: 'pointer' }}
         >
           {selectedExam === 'NEET' ? (
             selectedQuota === 'bds' ? (
               <>
                 <td style={{ textAlign: 'center' }}>{serialNumber}</td>
-                <td style={{ position: 'relative', maxWidth: '400px' }}>{renderCollegeNameCell(item)}</td>
+                <td style={{ position: 'relative', maxWidth: '400px' }}>{renderCollegeNameCell(item, true)}</td>
                 <td>{item['City, State']}</td>
                 {shouldShowCategoryColumn() && <td>{item.Category}</td>}
                 <td style={{ textAlign: 'center' }}>{item['BDS College Ranking']}</td>
@@ -1488,7 +1502,7 @@ const CollegeSearch = () => {
             </>
           )}
         </tr>
-        {isExpanded && (
+        {isExpanded && selectedQuota!= 'bds' && (
           <tr>
             <td colSpan={getColSpan()}>
               {renderExpandedContent(item)}
