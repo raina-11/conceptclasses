@@ -8,6 +8,7 @@ import neetRajData from '../data/neet_raj_state.json';
 import IITSearch from './iitSerach';
 import neetBdsData from '../data/neet_bds_data.json';
 import neetMgmtData from '../data/neet_mgmt_data.json';
+import MedicalCollegesDashboard, { StateWiseDashboard } from '../components/common/dashboard/MedicalCollegesDashboard';
 
 // Debounce helper function
 const useDebounce = (value, delay) => {
@@ -2175,14 +2176,23 @@ const CollegeSearch = () => {
               </button>
             </div>
 
+            {selectedExam === 'NEET'}
+
             {renderQuotaSelection()}
 
             <div className="search-card">
               <h2 className="card-title">Search & Filters</h2>
               {selectedExam === 'NEET' && selectedQuota === 'state' ? (
-                renderStateQuotaFilters()
+                <>
+                <StateWiseDashboard title="Rajasthan Medical Colleges And MBBS Seats" />
+                {renderStateQuotaFilters()}
+                </>
               ) : selectedQuota === 'mgmt' ? (
+                <>
+                <StateWiseDashboard title="Rajasthan Medical Colleges And MBBS Seats" />
+
                 renderManagementFilters()
+                </>
               ) : selectedQuota === 'bds' ? (
                 // Special layout for BDS view
                 <div className="filters-grid" style={{
@@ -2305,6 +2315,8 @@ const CollegeSearch = () => {
                 </div>
               ) : (
                 // Regular layout for MBBS views
+                <>
+                <MedicalCollegesDashboard title="Medical Colleges And MBBS Seats" />
                 <div className="filters-grid" style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
@@ -2470,6 +2482,7 @@ const CollegeSearch = () => {
                     />
                   </div>
                 </div>
+                </>
               )}
             </div>
 
