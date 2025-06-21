@@ -1524,7 +1524,7 @@ const CollegeSearch = () => {
       <React.Fragment key={index}>
         <tr
           onClick={() => toggleRowExpansion(index)}
-          className={isExpanded && selectedQuota!= 'bds' ? 'expanded-row' : ''} 
+          className={isExpanded && selectedQuota!= 'bds' && selectedQuota!= 'mgmt' ? 'expanded-row' : ''} 
           style={{ padding:'0px 10px', cursor: 'pointer' }}
         >
           {selectedExam === 'NEET' ? (
