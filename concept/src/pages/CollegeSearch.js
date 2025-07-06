@@ -9,6 +9,9 @@ import IITSearch from './iitSerach';
 import neetBdsData from '../data/neet_bds_data.json';
 import neetMgmtData from '../data/neet_mgmt_data.json';
 import MedicalCollegesDashboard, { StateWiseDashboard } from '../components/common/dashboard/MedicalCollegesDashboard';
+import { ReactComponent as IndiaMap } from '../images/india-map.svg';
+import statesData from '../data/states_hover.json';
+import * as XLSX from 'xlsx';
 
 // Debounce helper function
 const useDebounce = (value, delay) => {
@@ -134,6 +137,265 @@ const CollegeSearch = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [hoveredState, setHoveredState] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [selectedStateId, setSelectedStateId] = useState(null);
+  const [excelData, setExcelData] = useState(null);
+
+  const handleStateHover = (e, stateId) => {
+    setHoveredState(stateId);
+    setMousePosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleStateLeave = () => {
+    setHoveredState(null);
+  };
+
+  const handleStateClick = (stateId) => {
+    setSelectedStateId(stateId);
+    loadExcelFile(stateId);
+  };
+
+  const loadExcelFile = async (stateId) => {
+    try {
+      const response = await fetch(`/data/${stateId}.xlsx`);
+      if (!response.ok) {
+        throw new Error('File not found');
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+      setExcelData(data);
+    } catch (error) {
+      console.error('Error loading Excel file:', error);
+      setExcelData(null);
+    }
+  };
+
+  const renderExcelTable = () => {
+    if (!excelData) {
+      return (
+        <div style={{
+          padding: '2rem',
+          textAlign: 'center',
+          backgroundColor: '#f8fafc',
+          borderRadius: '8px',
+          border: '1px solid #e2e8f0',
+          color: '#64748b',
+          fontSize: '1rem'
+        }}>
+          No data available for this state
+        </div>
+      );
+    }
+
+    return (
+      <div style={{
+        marginTop: '1rem',
+        padding: '1rem',
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+        overflowX: 'auto'
+      }}>
+        <table style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          fontSize: '14px'
+        }}>
+          <thead>
+            <tr>
+              {excelData[0]?.map((header, index) => (
+                <th key={index} style={{
+                  padding: '12px',
+                  backgroundColor: '#f8fafc',
+                  borderBottom: '2px solid #e2e8f0',
+                  color: '#1e293b',
+                  textAlign: 'left',
+                  fontWeight: '600',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {excelData.slice(1).map((row, rowIndex) => (
+              <tr key={rowIndex} style={{
+                borderBottom: '1px solid #e2e8f0',
+                backgroundColor: rowIndex % 2 === 0 ? '#ffffff' : '#f8fafc'
+              }}>
+                {row.map((cell, cellIndex) => (
+                  <td key={cellIndex} style={{
+                    padding: '12px',
+                    color: '#4a5568',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  const renderStateDetails = () => {
+    if (!selectedStateId) {
+      return (
+        <div style={{
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#718096',
+          fontSize: '16px',
+          padding: '20px',
+          textAlign: 'center'
+        }}>
+          Click on any state to view detailed information
+        </div>
+      );
+    }
+
+    const stateInfo = statesData.find(state => state.StateId === selectedStateId);
+    if (!stateInfo) return null;
+
+    return (
+      <div style={{
+        padding: '25px',
+        height: '100%'
+      }}>
+        <h2 style={{ 
+          color: '#076B37', 
+          marginBottom: '20px',
+          fontSize: '24px',
+          fontWeight: '600',
+          borderBottom: '2px solid #076B37',
+          paddingBottom: '10px'
+        }}>
+          {stateInfo.State}
+        </h2>
+        <div style={{ 
+          display: 'grid', 
+          gap: '15px',
+          fontSize: '16px'
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            <div style={{ 
+              backgroundColor: '#f7fafc', 
+              padding: '15px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ color: '#076B37', marginBottom: '10px', fontSize: '18px' }}>Status</h3>
+              <span style={{ color: '#4A5568' }}>{stateInfo.Status}</span>
+            </div>
+            <div style={{ 
+              backgroundColor: '#f7fafc', 
+              padding: '15px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ color: '#076B37', marginBottom: '10px', fontSize: '18px' }}>Total Seats</h3>
+              <span style={{ color: '#4A5568' }}>{stateInfo["Total Seats"]}</span>
+            </div>
+          </div>
+          
+          <div style={{ 
+            backgroundColor: '#f7fafc', 
+            padding: '20px',
+            borderRadius: '8px',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{ color: '#076B37', marginBottom: '15px', fontSize: '18px' }}>College Distribution</h3>
+            <div style={{ display: 'grid', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Government Colleges:</span>
+                <span style={{ color: '#4A5568' }}>{stateInfo["Govt. Colleges"]}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Private Colleges:</span>
+                <span style={{ color: '#4A5568' }}>{stateInfo["Private Colleges"]}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Deemed Colleges:</span>
+                <span style={{ color: '#4A5568' }}>{stateInfo["Deemed Colleges"]}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ 
+            backgroundColor: '#f7fafc', 
+            padding: '20px',
+            borderRadius: '8px',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{ color: '#076B37', marginBottom: '15px', fontSize: '18px' }}>Seat Distribution</h3>
+            <div style={{ display: 'grid', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Government Seats:</span>
+                <span style={{ color: '#4A5568' }}>{stateInfo["Govt. Seats"]}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Private Seats:</span>
+                <span style={{ color: '#4A5568' }}>{stateInfo["Private Seats"]}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Deemed Seats:</span>
+                <span style={{ color: '#4A5568' }}>{stateInfo["Deemed Seats"]}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ 
+            backgroundColor: '#f7fafc', 
+            padding: '20px',
+            borderRadius: '8px',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{ color: '#076B37', marginBottom: '15px', fontSize: '18px' }}>Financial Information</h3>
+            <div style={{ display: 'grid', gap: '10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Average Fees/Year:</span>
+                <span style={{ color: '#4A5568' }}>{stateInfo["Avg fees per year"]}</span>
+              </div>
+              {stateInfo["Security Deposit"] !== "-" && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Security Deposit:</span>
+                  <span style={{ color: '#4A5568' }}>{stateInfo["Security Deposit"]}</span>
+                </div>
+              )}
+              {stateInfo["Total Budget"] !== "-" && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Total Budget:</span>
+                  <span style={{ color: '#4A5568' }}>{stateInfo["Total Budget"]}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {stateInfo["Open Seats"] && stateInfo["Open Seats"] !== "0" && (
+            <div style={{ 
+              backgroundColor: '#f7fafc', 
+              padding: '20px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ color: '#076B37', marginBottom: '15px', fontSize: '18px' }}>Open Seats Information</h3>
+              <div style={{ color: '#4A5568' }}>{stateInfo["Open Seats"]}</div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   // Move filterStateQuotaData before its usage
   // Update filterStateQuotaData to include search functionality
@@ -1825,6 +2087,7 @@ const CollegeSearch = () => {
           onClick={() => setSelectedQuota('mgmt')}
           style={{
             padding: isMobile ? '0.75rem 1rem' : '10px 20px',
+            marginRight: isMobile ? '0' : '10px',
             borderRadius: '4px',
             border: '1px solid #e2e8f0',
             backgroundColor: selectedQuota === 'mgmt' ? '#076B37' : 'white',
@@ -1836,6 +2099,23 @@ const CollegeSearch = () => {
           }}
         >
           Rajasthan State counseling (Semi Govt Seat)
+        </button>
+        <button
+          className={`quota-button ${selectedQuota === 'private' ? 'active' : ''}`}
+          onClick={() => setSelectedQuota('private')}
+          style={{
+            padding: isMobile ? '0.75rem 1rem' : '10px 20px',
+            borderRadius: '4px',
+            border: '1px solid #e2e8f0',
+            backgroundColor: selectedQuota === 'private' ? '#076B37' : 'white',
+            color: selectedQuota === 'private' ? 'white' : '#1e293b',
+            cursor: 'pointer',
+            width: isMobile ? '100%' : 'auto',
+            fontSize: isMobile ? '0.875rem' : 'inherit',
+            textAlign: isMobile ? 'center' : 'left'
+          }}
+        >
+          Private Colleges
         </button>
       </div>
     );
@@ -2068,6 +2348,148 @@ const CollegeSearch = () => {
     );
   };
 
+  // Add this new function
+  const renderIndiaMap = () => {
+    if (selectedExam !== 'NEET' || selectedQuota !== 'private') return null;
+
+    return (
+      <div style={{ 
+        maxWidth: '1200px', 
+        margin: '2rem auto',
+        padding: '1rem'
+      }}>
+        <h2 style={{ 
+          textAlign: 'center', 
+          marginBottom: '2rem',
+          color: '#076B37'
+        }}>
+          Select a State to View Private Medical Colleges
+        </h2>
+        <div style={{ 
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '2rem',
+          alignItems: 'start',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ width: '100%' }}>
+            <IndiaMap 
+              style={{ width: '100%', height: 'auto' }}
+              onMouseMove={(e) => {
+                const path = e.target;
+                if (path.tagName === 'path') {
+                  const stateId = path.parentElement.id;
+                  path.style.fill = '#808080';
+                  handleStateHover(e, stateId);
+                }
+              }}
+              onMouseOut={(e) => {
+                const path = e.target;
+                if (path.tagName === 'path') {
+                  path.style.fill = '';
+                  handleStateLeave();
+                }
+              }}
+              onClick={(e) => {
+                const path = e.target;
+                if (path.tagName === 'path') {
+                  const stateId = path.parentElement.id;
+                  handleStateClick(stateId);
+                }
+              }}
+            />
+            {renderStateInfoBox()}
+          </div>
+          <div style={{ 
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            height: '100%',
+            minHeight: '500px',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
+          }}>
+            {renderStateDetails()}
+          </div>
+        </div>
+        {selectedStateId && (
+          <div>
+            <h3 style={{
+              color: '#076B37',
+              marginBottom: '1rem',
+              fontSize: '1.5rem',
+              fontWeight: '600'
+            }}>
+              Medical Colleges and MBBS Seats
+            </h3>
+            {renderExcelTable()}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Add state data mapping
+  const stateData = {
+    'AP': {
+      name: 'Andhra Pradesh',
+      privateColleges: 28,
+      totalSeats: 4200
+    },
+    'KA': {
+      name: 'Karnataka',
+      privateColleges: 35,
+      totalSeats: 5250
+    },
+    'TN': {
+      name: 'Tamil Nadu',
+      privateColleges: 25,
+      totalSeats: 3750
+    },
+    // Add data for other states similarly
+  };
+
+  const renderStateInfoBox = () => {
+    if (!hoveredState) return null;
+    
+    const stateInfo = statesData.find(state => state.StateId === hoveredState);
+    if (!stateInfo) return null;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        left: mousePosition.x + 20,
+        top: mousePosition.y + 20,
+        backgroundColor: 'white',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+        padding: '15px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+        zIndex: 1000,
+        maxWidth: '300px',
+        fontSize: '14px'
+      }}>
+        <h3 style={{ 
+          color: '#076B37', 
+          marginBottom: '10px',
+          fontSize: '16px',
+          fontWeight: '600'
+        }}>
+          {stateInfo.State}
+        </h3>
+        <div style={{ display: 'grid', gap: '8px' }}>
+          <div>Status: <span style={{ color: '#4A5568' }}>{stateInfo.Status}</span></div>
+          <div>Total Colleges: <span style={{ color: '#4A5568' }}>{stateInfo["Total Colleges"]}</span></div>
+          <div>Private Colleges: <span style={{ color: '#4A5568' }}>{stateInfo["Private Colleges"]}</span></div>
+          <div>Private Seats: <span style={{ color: '#4A5568' }}>{stateInfo["Private Seats"]}</span></div>
+          <div>Avg fees/year: <span style={{ color: '#4A5568' }}>{stateInfo["Avg fees per year"]}</span></div>
+          {stateInfo["Security Deposit"] !== "-" && (
+            <div>Security Deposit: <span style={{ color: '#4A5568' }}>{stateInfo["Security Deposit"]}</span></div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (!selectedExam) {
     return (
       <Layout>
@@ -2249,6 +2671,8 @@ const CollegeSearch = () => {
             {selectedExam === 'NEET'}
 
             {renderQuotaSelection()}
+
+            {renderIndiaMap()}
 
             <div className="search-card" style={{
               background: 'white',
