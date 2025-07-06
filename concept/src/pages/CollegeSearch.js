@@ -9,9 +9,10 @@ import IITSearch from './iitSerach';
 import neetBdsData from '../data/neet_bds_data.json';
 import neetMgmtData from '../data/neet_mgmt_data.json';
 import MedicalCollegesDashboard, { StateWiseDashboard } from '../components/common/dashboard/MedicalCollegesDashboard';
-import { ReactComponent as IndiaMap } from '../images/india-map.svg';
+// import { ReactComponent as IndiaMap } from '../images/india-map.svg';
 import statesData from '../data/states_hover.json';
 import * as XLSX from 'xlsx';
+import IndiaMap from './IndiaMap';
 
 // Debounce helper function
 const useDebounce = (value, delay) => {
