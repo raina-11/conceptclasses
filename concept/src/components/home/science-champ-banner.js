@@ -42,7 +42,7 @@ const BannerSection = styled.section`
   overflow: hidden;
   
   @media (max-width: 768px) {
-    padding: 30px 0;
+    padding: 10px 0;
   }
 `;
 

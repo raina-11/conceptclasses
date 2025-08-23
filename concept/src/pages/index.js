@@ -15,8 +15,8 @@ import ScienceChampBanner from '../components/home/science-champ-banner';
 import DirectorQuote from '../components/home/director-quote';
 import Footer from '../components/common/footer';
 import Form from '../components/common/contact-form';
-import Carousel from "react-caroussel";
-import "react-caroussel/dist/index.css";
+import { Carousel } from "react-responsive-carousel";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import Popup from 'reactjs-popup';
 import { PrimaryButton } from '../components/style';
 import { useNavigate } from 'react-router-dom';
@@ -60,13 +60,12 @@ const navigate = useNavigate();
   
     <StyledDiv>
     <Carousel 
-    infinite={true}
-    autoplay={true}
-    speed={4} 
-    display={{
-      dots: true,
-      arrows: false
-    }}
+    infiniteLoop={true}
+    autoPlay={true}
+    interval={4000}
+    showThumbs={false}
+    showStatus={false}
+    showArrows={false}
     >
 
     
