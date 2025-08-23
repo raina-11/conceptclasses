@@ -140,8 +140,54 @@ const CollegeSearch = () => {
   const [isFiltering, setIsFiltering] = useState(false);
   const [hoveredState, setHoveredState] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [selectedStateId, setSelectedStateId] = useState(null);
+  const [selectedStateId, setSelectedStateId] = useState('IN-RJ'); // Set default to Rajasthan
   const [excelData, setExcelData] = useState(null);
+
+  // Add state mapping object
+  const stateNameToId = {
+    'madhya pradesh': 'IN-MP',
+    'rajasthan': 'IN-RJ',
+    'ladakh': 'IN-LA',
+    'lakshadweep': 'IN-LD',
+    'gujarat': 'IN-GJ',
+    'punjab': 'IN-PB',
+    'odisha': 'IN-OR',
+    'jammu and kashmir': 'IN-JK',
+    'delhi': 'IN-DL',
+    'chandigarh': 'IN-CH',
+    'assam': 'IN-AS',
+    'arunachal pradesh': 'IN-AR',
+    'nagaland': 'IN-NL',
+    'mizoram': 'IN-MZ',
+    'dadra & nagar haveli': 'IN-DN',
+    'andaman & nicobar': 'IN-AN',
+    'goa': 'IN-GA',
+    'uttar pradesh': 'IN-UP',
+    'karnataka': 'IN-KA',
+    'telangana': 'IN-TG',
+    'tamil nadu': 'IN-TN',
+    'maharashtra': 'IN-MH',
+    'kerala': 'IN-KL',
+    'andhra pradesh': 'IN-AP',
+    'west bengal': 'IN-WB',
+    'bihar': 'IN-BR',
+    'haryana': 'IN-HR',
+    'chhattisgarh': 'IN-CT',
+    'pondicherry': 'IN-PY',
+    'uttarakhand': 'IN-UT',
+    'tripura': 'IN-TR',
+    'himachal pradesh': 'IN-HP',
+    'sikkim': 'IN-SK',
+    'meghalaya': 'IN-ML',
+    'manipur': 'IN-MN',
+    'jharkhand': 'IN-JH'
+  };
+
+  // Create state options for dropdown
+  const STATE_SELECT_OPTIONS = Object.entries(stateNameToId).map(([name, id]) => ({
+    value: id,
+    label: name.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  }));
 
   const handleStateHover = (e, stateId) => {
     setHoveredState(stateId);
@@ -1431,23 +1477,28 @@ const CollegeSearch = () => {
   // Add state filter component
   const renderStateFilter = () => {
     return (
-      <div>
-        <label className="filter-label">States</label>
+      <div style={{ marginBottom: '20px' }}>
         <Select
-          isMulti
-          options={STATE_OPTIONS}
-          value={STATE_OPTIONS.filter(option => filters.states.includes(option.value))}
-          onChange={(selectedOptions) => {
-            const selectedStates = selectedOptions ? selectedOptions.map(option => option.value) : [];
-            handleFilterChange('states', selectedStates);
+          value={STATE_SELECT_OPTIONS.find(option => option.value === selectedStateId)}
+          onChange={(selectedOption) => setSelectedStateId(selectedOption.value)}
+          options={STATE_SELECT_OPTIONS}
+          placeholder="Select a state"
+          className="state-filter-select"
+          styles={{
+            control: (base) => ({
+              ...base,
+              minWidth: '250px',
+              borderColor: '#ccc',
+              '&:hover': {
+                borderColor: '#076B37'
+              }
+            }),
+            option: (base, { isFocused, isSelected }) => ({
+              ...base,
+              backgroundColor: isSelected ? '#076B37' : isFocused ? '#e6f0eb' : null,
+              color: isSelected ? 'white' : 'black'
+            })
           }}
-          styles={selectStyles}
-          components={{ Option, MultiValue }}
-          placeholder="Select states..."
-          className="basic-multi-select"
-          classNamePrefix="select"
-          closeMenuOnSelect={false}
-          hideSelectedOptions={false}
         />
       </div>
     );
@@ -2351,80 +2402,72 @@ const CollegeSearch = () => {
 
   // Add this new function
   const renderIndiaMap = () => {
-    if (selectedExam !== 'NEET' || selectedQuota !== 'private') return null;
-
     return (
-      <div style={{ 
-        maxWidth: '1200px', 
-        margin: '2rem auto',
-        padding: '1rem'
-      }}>
-        <h2 style={{ 
-          textAlign: 'center', 
-          marginBottom: '2rem',
-          color: '#076B37'
-        }}>
-          Select a State to View Private Medical Colleges
-        </h2>
-        <div style={{ 
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '2rem',
-          alignItems: 'start',
-          marginBottom: '2rem'
-        }}>
-          <div style={{ width: '100%' }}>
-            <IndiaMap 
-              style={{ width: '100%', height: 'auto' }}
-              onMouseMove={(e) => {
-                const path = e.target;
-                if (path.tagName === 'path') {
-                  const stateId = path.parentElement.id;
-                  path.style.fill = '#808080';
-                  handleStateHover(e, stateId);
+      <div className="map-container">
+        {/* Add state filter dropdown */}
+        <div className="state-filter-container">
+          <Select
+            value={STATE_SELECT_OPTIONS.find(option => option.value === selectedStateId)}
+            onChange={(selectedOption) => {
+              setSelectedStateId(selectedOption.value);
+              loadExcelFile(selectedOption.value);
+            }}
+            options={STATE_SELECT_OPTIONS}
+            placeholder="Select a state"
+            className="state-filter-select"
+            styles={{
+              control: (base) => ({
+                ...base,
+                minWidth: '250px',
+                borderColor: '#ccc',
+                '&:hover': {
+                  borderColor: '#076B37'
                 }
-              }}
-              onMouseOut={(e) => {
-                const path = e.target;
-                if (path.tagName === 'path') {
-                  path.style.fill = '';
-                  handleStateLeave();
+              }),
+              option: (base, { isFocused, isSelected }) => ({
+                ...base,
+                backgroundColor: isSelected ? '#076B37' : isFocused ? '#e6f0eb' : base.backgroundColor,
+                color: isSelected ? 'white' : base.color,
+                '&:active': {
+                  backgroundColor: '#076B37'
                 }
-              }}
-              onClick={(e) => {
-                const path = e.target;
-                if (path.tagName === 'path') {
-                  const stateId = path.parentElement.id;
-                  handleStateClick(stateId);
-                }
-              }}
-            />
-            {renderStateInfoBox()}
-          </div>
-          <div style={{ 
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            border: '1px solid #e2e8f0',
-            height: '100%',
-            minHeight: '500px',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)'
-          }}>
-            {renderStateDetails()}
-          </div>
+              })
+            }}
+          />
         </div>
-        {selectedStateId && (
-          <div>
-            <h3 style={{
-              color: '#076B37',
-              marginBottom: '1rem',
-              fontSize: '1.5rem',
-              fontWeight: '600'
-            }}>
-              Medical Colleges and MBBS Seats
-            </h3>
-            {renderExcelTable()}
+        
+        <div className="map-section">
+          <div className="map-wrapper">
+            <IndiaMap
+              onMouseMove={(e, stateId) => handleStateHover(e, stateId)}
+              onMouseOut={handleStateLeave}
+              onClick={(stateId) => {
+                setSelectedStateId(stateId);
+                loadExcelFile(stateId);
+              }}
+              selectedStateId={selectedStateId}
+            />
+            {hoveredState && (
+              <div
+                className="tooltip"
+                style={{
+                  position: 'fixed',
+                  left: mousePosition.x + 10,
+                  top: mousePosition.y + 10,
+                  backgroundColor: 'white',
+                  padding: '8px',
+                  borderRadius: '4px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  zIndex: 1000
+                }}
+              >
+                {statesData[hoveredState]?.name || hoveredState}
+              </div>
+            )}
           </div>
-        )}
+          {renderStateDetails()}
+        </div>
+        {excelData && renderExcelTable()}
       </div>
     );
   };

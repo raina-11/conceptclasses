@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Google Sheets Integration</title>
+</head>
+<body>
+    <h1>Test Google Sheets Form</h1>
+    <form id="testForm">
+        <input type="text" name="studentName" placeholder="Student Name" value="Test Student" required><br>
+        <input type="text" name="fatherName" placeholder="Father Name" value="Test Father" required><br>
+        <button type="submit">Submit Test</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const urlParams = new URLSearchParams(formData);
+            
+            // Replace with your Google Apps Script URL
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_pSSguRBM52Fz5FBOnLXB1ZtCl-7x4FK5DTA_LfW641dM9NBAGVvK9afMyzZKnG6Epw/exec';
+            
+            document.getElementById('result').innerHTML = 'Sending...';
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: urlParams
+                });
+                
+                document.getElementById('result').innerHTML = 'Sent! Check your Google Sheet. Status: ' + response.status;
+            } catch (error) {
+                document.getElementById('result').innerHTML = 'Error: ' + error;
+            }
+        });
+    </script>
+</body>
+</html>

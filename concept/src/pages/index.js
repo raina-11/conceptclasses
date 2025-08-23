@@ -11,6 +11,7 @@ import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import ScrollSmooth from '../components/home/smooth-scroll';
 import StackCards from '../components/home/legacy';
+import ScienceChampBanner from '../components/home/science-champ-banner';
 import DirectorQuote from '../components/home/director-quote';
 import Footer from '../components/common/footer';
 import Form from '../components/common/contact-form';
@@ -25,7 +26,7 @@ const Home= () =>  {
 const navigate = useNavigate();
 
   const handleButtonClick3 = () => {
-    navigate('/college-search');
+    navigate('/science-champ-2025-2026/');
   };
 
   return (
@@ -44,14 +45,14 @@ const navigate = useNavigate();
           >
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
               <PopupHeading>
-                Find the right college for you!
+                Concept Science Champ 2026
               </PopupHeading>
               <PopupDescription>
-              Explore opening and closing ranks, transport connectivity, courses information, and more of MBBS, and BDS colleges — all in one place.
+              Register now for the Science Champ competition! Test your knowledge, compete with the best, and win exciting prizes.
               </PopupDescription>
               <TempStyledDiv>
               <PrimaryButton onClick={handleButtonClick3} >
-                Click here
+                Register Now
               </PrimaryButton>
               </TempStyledDiv>
             </KeyPopup>
@@ -102,6 +103,7 @@ const navigate = useNavigate();
   </Carousel>
   </StyledDiv>
 
+   <ScienceChampBanner/>
    <StackCards/>
    <ScrollSmooth/>
  

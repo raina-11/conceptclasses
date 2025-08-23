@@ -8,18 +8,17 @@ import Footer from './footer';
 
 const App = () => {
   const [formData, setFormData] = useState({
-    schoolName: '',
     studentName: '',
     fatherName: '',
-    dateOfBirth: '',
+    motherName: '',
     currentClass: '',
-    pcbOrPcm: '',
+    schoolName: '',
+    cityOrVillageName: '',
+    dateOfBirth: '',
+    boardName: '',
     medium: '',
-    presentBoard: '',
-    address: '',
-    cityOrVillageName: '', // New field
-    studentMobileNo: '', // Changed field
-    parentsMobileNo: '', // New field
+    studentMobileNo: '',
+    parentsMobileNo: '',
     whatsappNo: ''
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -34,10 +33,42 @@ const App = () => {
     setIsLoading(true);
 
     try {
-      setIsLoading(false);
+      // Google Apps Script Web App URL (you'll need to replace this with your actual URL)
+      const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxgLljdWVIp_Dmx5Zee6xnhin8vzaTp9TtmJCS8VTei4smxiOM1-WWE9wEiv-OBd20L-Q/exec';
+      
+      // Add timestamp to the data
+      const dataWithTimestamp = {
+        ...formData,
+        timestamp: new Date().toISOString()
+      };
+
+      // Use Image pixel tracking (most reliable for CORS)
+      const params = new URLSearchParams(dataWithTimestamp);
+      const img = new Image();
+      img.src = `${GOOGLE_SCRIPT_URL}?${params.toString()}`;
+
+      // Since we're using no-cors, we won't get response data
+      // Assume success if no error is thrown
       setFormSubmitted(true);
+      
+      // Reset form
+      setFormData({
+        studentName: '',
+        fatherName: '',
+        motherName: '',
+        currentClass: '',
+        schoolName: '',
+        cityOrVillageName: '',
+        dateOfBirth: '',
+        boardName: '',
+        medium: '',
+        studentMobileNo: '',
+        parentsMobileNo: '',
+        whatsappNo: ''
+      });
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error submitting form:', error);
+      alert('There was an error submitting the form. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -60,142 +91,167 @@ const App = () => {
       <Section style={{ background: 'ivory' }}>
         <StyledDiv isHidden={formSubmitted} className='form-container'>
           <form className="styled-form" onSubmit={handleSubmit}>
-            <h2>Science Champ Registration Form</h2>
+            <h2>Science Champ Registration Form 2025-2026</h2>
 
-            {/* School/Coaching/Tutor Name */}
-            <input
-              type="text"
-              name="schoolName"
-              value={formData.schoolName}
-              onChange={handleChange}
-              placeholder="School/Coaching/Tutor Name"
-              required
-            />
+            <div className="form-group">
+              <label>Student Name <span className="required">*</span></label>
+              <input
+                type="text"
+                name="studentName"
+                value={formData.studentName}
+                onChange={handleChange}
+                placeholder="Enter student's full name"
+                required
+              />
+            </div>
 
-            {/* Student's Name */}
-            <input
-              type="text"
-              name="studentName"
-              value={formData.studentName}
-              onChange={handleChange}
-              placeholder="Student's Name"
-              required
-            />
+            <div className="form-group">
+              <label>Father's Name <span className="required">*</span></label>
+              <input
+                type="text"
+                name="fatherName"
+                value={formData.fatherName}
+                onChange={handleChange}
+                placeholder="Enter father's full name"
+                required
+              />
+            </div>
 
-            {/* Father's Name */}
-            <input
-              type="text"
-              name="fatherName"
-              value={formData.fatherName}
-              onChange={handleChange}
-              placeholder="Father's Name"
-              required
-            />
+            <div className="form-group">
+              <label>Mother's Name <span className="required">*</span></label>
+              <input
+                type="text"
+                name="motherName"
+                value={formData.motherName}
+                onChange={handleChange}
+                placeholder="Enter mother's full name"
+                required
+              />
+            </div>
 
-            {/* Date of Birth */}
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-              required
-            />
+            <div className="form-group">
+              <label>Current Class <span className="required">*</span></label>
+              <select
+                name="currentClass"
+                value={formData.currentClass}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Class</option>
+                <option value="VII">VII</option>
+                <option value="VIII">VIII</option>
+                <option value="IX">IX</option>
+                <option value="X">X</option>
+                <option value="XI (PCM)">XI (PCM)</option>
+                <option value="XI (PCB)">XI (PCB)</option>
+                <option value="XII (PCM)">XII (PCM)</option>
+                <option value="XII (PCB)">XII (PCB)</option>
+              </select>
+            </div>
 
-            {/* Current Class Dropdown */}
-            <select
-              name="currentClass"
-              value={formData.currentClass}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select Class</option>
-              <option value="VII">VII</option>
-              <option value="VIII">VIII</option>
-              <option value="IX">IX</option>
-              <option value="X">X</option>
-              <option value="XI (PCM)">XI (PCM)</option>
-              <option value="XI (PCB)">XI (PCB)</option>
-              <option value="XII (PCM)">XII (PCM)</option>
-              <option value="XII (PCB)">XII (PCB)</option>
-            </select>
+            <div className="form-group">
+              <label>School Name <span className="required">*</span></label>
+              <input
+                type="text"
+                name="schoolName"
+                value={formData.schoolName}
+                onChange={handleChange}
+                placeholder="Enter school name"
+                required
+              />
+            </div>
 
-            {/* Medium */}
-            <select
-              name="medium"
-              value={formData.medium}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select Medium</option>
-              <option value="English">English</option>
-              <option value="Hindi">Hindi</option>
-            </select>
+            <div className="form-group">
+              <label>City or Village Name</label>
+              <input
+                type="text"
+                name="cityOrVillageName"
+                value={formData.cityOrVillageName}
+                onChange={handleChange}
+                placeholder="Enter city or village name"
+              />
+            </div>
 
-            {/* Present Board */}
-            <select
-              name="presentBoard"
-              value={formData.presentBoard}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select Present Board</option>
-              <option value="CBSE">CBSE</option>
-              <option value="RBSE">RBSE</option>
-              <option value="Other">Other</option>
-            </select>
+            <div className="form-group">
+              <label>Date of Birth <span className="required">*</span></label>
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-            {/* Address */}
-            <textarea
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              placeholder="Address"
-              required
-            ></textarea>
+            <div className="form-group">
+              <label>Board Name <span className="required">*</span></label>
+              <select
+                name="boardName"
+                value={formData.boardName}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Board</option>
+                <option value="CBSE">CBSE</option>
+                <option value="RBSE">RBSE</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
 
-            {/* City or Village Name (optional) */}
-            <input
-              type="text"
-              name="cityOrVillageName"
-              value={formData.cityOrVillageName}
-              onChange={handleChange}
-              placeholder="City or Village Name"
-            />
+            <div className="form-group">
+              <label>Medium <span className="required">*</span></label>
+              <select
+                name="medium"
+                value={formData.medium}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Medium</option>
+                <option value="English">English</option>
+                <option value="Hindi">Hindi</option>
+              </select>
+            </div>
 
-            {/* Student Mobile No (optional) */}
-            <input
-              type="text"
-              name="studentMobileNo"
-              value={formData.studentMobileNo}
-              onChange={handleChange}
-              placeholder="Student Mobile No"
-              pattern="[0-9]{10}"
-              title="Mobile number must be 10 digits"
-            />
+            <div className="form-group">
+              <label>Student Mobile Number</label>
+              <input
+                type="text"
+                name="studentMobileNo"
+                value={formData.studentMobileNo}
+                onChange={handleChange}
+                placeholder="Enter 10-digit mobile number"
+                pattern="[0-9]{10}"
+                title="Mobile number must be 10 digits"
+              />
+            </div>
 
-            {/* Parents Mobile No (required) */}
-            <input
-              type="text"
-              name="parentsMobileNo"
-              value={formData.parentsMobileNo}
-              onChange={handleChange}
-              placeholder="Parents Mobile No"
-              pattern="[0-9]{10}"
-              title="Mobile number must be 10 digits"
-              required
-            />
+            <div className="form-group">
+              <label>Parent's Mobile Number <span className="required">*</span></label>
+              <input
+                type="text"
+                name="parentsMobileNo"
+                value={formData.parentsMobileNo}
+                onChange={handleChange}
+                placeholder="Enter 10-digit mobile number"
+                pattern="[0-9]{10}"
+                title="Mobile number must be 10 digits"
+                required
+              />
+            </div>
 
-            {/* WhatsApp No */}
-            <input
-              type="text"
-              name="whatsappNo"
-              value={formData.whatsappNo}
-              onChange={handleChange}
-              placeholder="WhatsApp No"
-              pattern="[0-9]{10}"
-              title="WhatsApp number must be 10 digits"
-              required
-            />
+            <div className="form-group">
+              <label>WhatsApp Number <span className="required">*</span></label>
+              <input
+                type="text"
+                name="whatsappNo"
+                value={formData.whatsappNo}
+                onChange={handleChange}
+                placeholder="Enter 10-digit WhatsApp number"
+                pattern="[0-9]{10}"
+                title="WhatsApp number must be 10 digits"
+                required
+              />
+            </div>
 
             <PrimaryButton disabled={isLoading}>
               {isLoading ? "Sending...." : "Submit"}

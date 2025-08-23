@@ -2,34 +2,86 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    /* height: 100vh; */
     background-color: ivory;
-    padding-top:100px;
+    padding: 60px 20px;
+    min-height: calc(100vh - 100px);
   }
   
   .styled-form {
     background-color: rgb(7, 107, 55);
     border: 2px solid rgb(7, 107, 55);
-    border-radius: 8px;
-    padding: 20px;
-    width: 85vw;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 600px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
   }
   
   .styled-form h2{
     text-align: center;
     color: #EFC800;
+    font-size: 28px;
+    margin-bottom: 30px;
+    font-weight: 600;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    color: #EFC800;
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-size: 16px;
+  }
+  
+  .form-group .required {
+    color: #ff6b6b;
+    font-weight: bold;
   }
   
   .styled-form input, 
   .styled-form select, 
   .styled-form textarea {
     width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid rgb(7, 107, 55);
-    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 0;
+    border: 2px solid transparent;
+    border-radius: 8px;
     box-sizing: border-box;
+    background-color: white;
+    color: #333;
+    font-size: 15px;
+    transition: all 0.3s ease;
+  }
+  
+  .styled-form input:focus,
+  .styled-form select:focus,
+  .styled-form textarea:focus {
+    outline: none;
+    border-color: #EFC800;
+    box-shadow: 0 0 0 3px rgba(239, 200, 0, 0.2);
+  }
+  
+  .styled-form input::placeholder {
+    color: #999;
+    font-size: 14px;
+  }
+  
+  .styled-form select {
+    cursor: pointer;
+  }
+  
+  .styled-form select option {
+    background-color: white;
+    color: #333;
+    padding: 10px;
+  }
+  
+  .styled-form input[type="date"] {
+    cursor: pointer;
   }
   
   .styled-form textarea {
@@ -37,25 +89,42 @@
     height: 100px;
   }
   
-  /* .styled-form button {
-    width: 100%;
-    padding: 10px;
-    background-color: rgb(7, 107, 55);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-  } */
-  
-  .styled-form button:hover {
-    background-color: rgb(5, 80, 40);
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .styled-form {
+      padding: 30px 20px;
+    }
+    
+    .styled-form h2 {
+      font-size: 24px;
+    }
+    
+    .form-group label {
+      font-size: 15px;
+    }
+    
+    .styled-form input,
+    .styled-form select {
+      font-size: 14px;
+      padding: 10px 14px;
+    }
   }
   
-  .styled-form input:focus, 
-  .styled-form select:focus, 
-  .styled-form textarea:focus {
-    outline: none;
-    border-color: rgb(5, 80, 40);
+  /* Success animation styles */
+  .form-success {
+    text-align: center;
+    padding: 40px;
+    color: #EFC800;
+  }
+  
+  .form-success h3 {
+    font-size: 32px;
+    margin-bottom: 20px;
+  }
+  
+  /* Loading state */
+  .styled-form button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
   }
   
