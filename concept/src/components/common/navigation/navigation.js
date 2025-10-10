@@ -139,9 +139,9 @@ export default class Navigation extends Component {
                 <span>New</span>
               </Anchor>
                 </NavItem>
-                <NavItem>
+                {/* <NavItem>
                 <a href="/science-champ-2025-2026/">Science Champ</a>
-                </NavItem>
+                </NavItem> */}
 
                 {/* <Company /> */}
                
@@ -411,11 +411,11 @@ export default class Navigation extends Component {
                       College Search
                     </a>
                   </NavItemMobile>
-                  <NavItemMobile>
+                  {/* <NavItemMobile>
                     <a href="/science-champ-2025-2026/" onClick={this.closeMobileMenu}>
                       Science Champ
                     </a>
-                  </NavItemMobile>
+                  </NavItemMobile> */}
                 {/* </ul> */}
               </NavListWrapperMobile>
              

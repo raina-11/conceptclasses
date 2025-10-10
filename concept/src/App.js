@@ -10,7 +10,8 @@ import ResultsEngineering from "./pages/results-engineering";
 import ResultsMedical from "./pages/results-medical";
 import ResultsPreFoundation from "./pages/results-prefoundation";
 import CollegeSearch from "./pages/CollegeSearch";
-import RegistrationForm from "./components/common/RegistrationForm";
+// import RegistrationForm from "./components/common/RegistrationForm";
+import ResultLookup from "./pages/scienceChampResult";
 
 export default function App() {
   return (
@@ -26,8 +27,8 @@ export default function App() {
       <Route path="results/engineering" element={< ResultsEngineering/>} />
       <Route path="results/medical" element={< ResultsMedical/>} />
       <Route path="results/pre-foundation" element={< ResultsPreFoundation/>} />
-      {/* <Route path="science-champ-result" element={< ResultLookup/>} /> */}
-      <Route path="science-champ-2025-2026" element={< RegistrationForm/>} />
+      <Route path="science-champ-result-2026" element={< ResultLookup/>} />
+      {/* <Route path="science-champ-2025-2026" element={< RegistrationForm/>} /> */}
 
 
       {/* <Route path="courses" element={<Courses />} /> */}

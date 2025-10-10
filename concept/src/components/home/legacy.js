@@ -3,7 +3,8 @@ import styled from "styled-components"
 import "./stack-cards.css"
 import { ScrollObserver, valueAtPercentage } from "./aat.js";
 import { useInView } from 'react-intersection-observer';
-import { Container } from '../style.js';
+import { Container, PrimaryButton } from '../style.js';
+import { useNavigate } from 'react-router-dom';
 import i1 from "../../images/building-cover.png"
 import i2 from "../../images/sc-2.png"
 import i3 from "../../images/sc-3.svg"
@@ -15,6 +16,11 @@ const StackCards = ({ cardsData, title }) => {
   console.log('useEffect triggered');
     const cardsContainerRef = useRef(null);
     const [containerRef, containerInView] = useInView({ triggerOnce: false });
+    const navigate = useNavigate();
+
+    const handleResultsClick = () => {
+      navigate('/science-champ-result-2026/');
+    };
 
    useEffect(() => {
     if (containerInView){
@@ -68,14 +74,17 @@ const StackCards = ({ cardsData, title }) => {
     // <Section>
     <Wrap>
     <Container>
-      {/* <div style={{backgroundColor:'#076B37', padding:'20px', borderRadius:'20px'}}>
-      <KeyPopup style={{width:'100%', display:'flex', justifyContent:'center', alignItems:'center'}}>
-      Concept NEET UG 2025 Answer Key is Out now
-            <PrimaryButton onClick={handleButtonClick1} style={{height:'48px', padding:'0px'}}> 
-            Click Here
-            </PrimaryButton>
-            </KeyPopup>
-      </div> */}
+      <div style={{backgroundColor:'#076B37', padding:'20px', borderRadius:'20px', marginBottom:'30px', position:'relative', overflow:'visible'}}>
+      <ScienceChampBanner style={{width:'100%', display:'flex', justifyContent:'center', alignItems:'center', flexDirection:'column', gap:'15px'}}>
+        <NewLabel>NEW</NewLabel>
+        <BannerText>
+          🎉 Science Champ 2025-2026 Results are OUT!
+        </BannerText>
+        <PrimaryButton onClick={handleResultsClick} style={{height:'48px', padding:'12px 24px', backgroundColor:'white', color:'#076B37', fontWeight:'600'}}> 
+          Check Your Results
+        </PrimaryButton>
+      </ScienceChampBanner>
+      </div>
     <Text>
                 <h2>
                 25+ years of Legacy
@@ -226,6 +235,93 @@ img{
   }
 }
 `
+const ScienceChampBanner = styled.div`
+  text-align: center;
+  color: white;
+`
+
+const NewLabel = styled.div`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 25px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
+  animation: pulse 2s infinite, bounce 3s infinite;
+  z-index: 10;
+  border: 3px solid #fff;
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+  }
+  
+  &::before {
+    content: '✨';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    animation: sparkle 1.5s infinite;
+    font-size: 16px;
+  }
+  
+  &::after {
+    content: '✨';
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    animation: sparkle 1.5s infinite 0.5s;
+    font-size: 16px;
+  }
+  
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: translateY(-50%) scale(0.5); }
+    50% { opacity: 1; transform: translateY(-50%) scale(1); }
+  }
+  
+  @media (max-width: ${props => props.theme.screen.sm}) {
+    font-size: 10px;
+    padding: 6px 12px;
+    top: -3px;
+    right: -3px;
+  }
+  
+  @media (max-width: ${props => props.theme.screen.xs}) {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+`
+
+const BannerText = styled.div`
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+  font-family: 'Lexend Medium';
+  
+  @media (max-width: ${props => props.theme.screen.sm}) {
+    font-size: 18px;
+  }
+  
+  @media (max-width: ${props => props.theme.screen.xs}) {
+    font-size: 16px;
+  }
+`
+
 const Text = styled.div`
 position:sticky;
 top:16vh;

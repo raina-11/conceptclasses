@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Navigation from "../components/common/navigation/navigation";
 import Layout from "../components/common/layout/layout";
-import { Container, PrimaryButton, Section } from "../components/style";
+import { Container, Section } from "../components/style";
 import Footer from "../components/common/footer";
 
 function ResultLookup() {
@@ -12,10 +12,16 @@ function ResultLookup() {
   const [showNote, setShowNote] = useState(true);  // State to control the note visibility
 
   useEffect(() => {
-    // Fetch the JSON data when the component mounts
-    fetch("/omrResults.json")
-      .then((response) => response.json())
-      .then((data) => setData(data))
+    // Fetch both JSON files when the component mounts
+    const fetch11th12th = fetch("/data/11th-12th.json").then(res => res.json());
+    const fetch7th9th10th = fetch("/data/7th-9th-10th.json").then(res => res.json());
+    
+    Promise.all([fetch11th12th, fetch7th9th10th])
+      .then(([data11th12th, data7th9th10th]) => {
+        // Combine both datasets
+        const combinedData = [...data11th12th, ...data7th9th10th];
+        setData(combinedData);
+      })
       .catch((error) => {
         console.error("Error loading JSON data:", error);
         setError("Failed to load data. Please try again later.");
@@ -24,7 +30,7 @@ function ResultLookup() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    const foundResult = data.find((item) => item.rollNumber === rollNumber);
+    const foundResult = data.find((item) => item["Roll No."] === parseInt(rollNumber));
 
     if (foundResult) {
       setResult(foundResult);
@@ -33,6 +39,46 @@ function ResultLookup() {
     } else {
       setResult(null);
       setError("Roll number not found. Please check and try again. Contact Concept Institute for more info");
+    }
+  };
+
+  const formatMarksDisplay = (result) => {
+    const studentClass = result["Class"];
+    
+    // Check if it's 11th or 12th class (PCM format)
+    if (studentClass.includes("11th") || studentClass.includes("12th")) {
+      return (
+        <div style={styles.marksSection}>
+          <h4 style={styles.marksSectionTitle}>Subject-wise Marks:</h4>
+          <div style={styles.marksRow}>
+            <span style={styles.subjectLabel}>Physics (80):</span>
+            <span style={styles.marksValue}>{result["Physics (80)"]}</span>
+          </div>
+          <div style={styles.marksRow}>
+            <span style={styles.subjectLabel}>Chemistry (80):</span>
+            <span style={styles.marksValue}>{result["Chemistry (80)"]}</span>
+          </div>
+          <div style={styles.marksRow}>
+            <span style={styles.subjectLabel}>Mathematics (80):</span>
+            <span style={styles.marksValue}>{result["Maths (80)"]}</span>
+          </div>
+        </div>
+      );
+    } else {
+      // 7th, 9th, 10th format
+      return (
+        <div style={styles.marksSection}>
+          <h4 style={styles.marksSectionTitle}>Subject-wise Marks:</h4>
+          <div style={styles.marksRow}>
+            <span style={styles.subjectLabel}>Science (120):</span>
+            <span style={styles.marksValue}>{result["Science (120)"]}</span>
+          </div>
+          <div style={styles.marksRow}>
+            <span style={styles.subjectLabel}>Mathematics (120):</span>
+            <span style={styles.marksValue}>{result["Maths (120)"]}</span>
+          </div>
+        </div>
+      );
     }
   };
 
@@ -45,7 +91,12 @@ function ResultLookup() {
     <div style={styles.container}>
           <h2 style={styles.title}>Science Champ Result 2025</h2>
           
-          
+          <div style={styles.banner}>
+              <div style={styles.bannerIcon}>📢</div>
+              <div style={styles.bannerContent}>
+                  <strong>Class 8th Result Update:</strong> Class 8th results are still being processed and will be available soon. Stay tuned for updates!
+              </div>
+          </div>
 
           <form onSubmit={handleSearch} style={styles.form}>
               <label style={styles.label}>
@@ -64,16 +115,54 @@ function ResultLookup() {
 
           {result && (
               <div style={styles.resultContainer}>
-                  <h3 style={styles.resultTitle}>Hi {result.name}! Please Find your Result below  </h3>
-                  <p style={styles.resultText}>Name: {result.name}</p>
-                  <p style={styles.resultText}>Class: {result.class}</p>
-                  <p style={styles.resultText}>Marks: {result.marks}/240</p>
-                  <PrimaryButton
-                    onClick={() => window.open(result.omrLink, '_blank', 'noopener,noreferrer')}
-                    style={{background:'#005B38',border: '2px solid #005B38', padding:'8px 16px', height:'45px', marginTop:'10px', borderRadius:'8px'}}
-                  >
-                    Download your OMR sheet
-                  </PrimaryButton>
+                  <div style={styles.reportCardHeader}>
+                      <h3 style={styles.resultTitle}>Science Champ 2025 - Result Card</h3>
+                      <div style={styles.studentInfo}>
+                          <h4 style={styles.studentName}>{result["Student Name"]}</h4>
+                      </div>
+                  </div>
+                  
+                  <div style={styles.basicInfo}>
+                      <div style={styles.infoRow}>
+                          <span style={styles.infoLabel}>Roll Number:</span>
+                          <span style={styles.infoValue}>{result["Roll No."]}</span>
+                      </div>
+                      <div style={styles.infoRow}>
+                          <span style={styles.infoLabel}>Class:</span>
+                          <span style={styles.infoValue}>{result["Class"]}</span>
+                      </div>
+                      <div style={styles.infoRow}>
+                          <span style={styles.infoLabel}>Board:</span>
+                          <span style={styles.infoValue}>{result["BOARD"]}</span>
+                      </div>
+                      <div style={styles.infoRow}>
+                          <span style={styles.infoLabel}>School:</span>
+                          <span style={styles.infoValue}>{result["School"]}</span>
+                      </div>
+                      <div style={styles.infoRow}>
+                          <span style={styles.infoLabel}>Centre:</span>
+                          <span style={styles.infoValue}>{result["Centre"]}</span>
+                      </div>
+                      {result["Place"] && (
+                          <div style={styles.infoRow}>
+                              <span style={styles.infoLabel}>Place:</span>
+                              <span style={styles.infoValue}>{result["Place"]}</span>
+                          </div>
+                      )}
+                  </div>
+
+                  {formatMarksDisplay(result)}
+
+                  <div style={styles.totalSection}>
+                      <div style={styles.totalRow}>
+                          <span style={styles.totalLabel}>Grand Total:</span>
+                          <span style={styles.totalValue}>{result["G.Total  (240)"]}/240</span>
+                      </div>
+                      <div style={styles.percentageRow}>
+                          <span style={styles.percentageLabel}>Percentage:</span>
+                          <span style={styles.percentageValue}>{result["percentage"]}%</span>
+                      </div>
+                  </div>
               </div>
           )}
           
@@ -100,12 +189,33 @@ const styles = {
     boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
     backgroundColor: "#ffffff",
     fontFamily: "'Roboto', sans-serif",
+    marginTop:"14vh"
   },
   title: {
     textAlign: "center",
     color: "#333",
     fontSize: "24px",
     marginBottom: "16px",
+  },
+  banner: {
+    display: "flex",
+    alignItems: "center",
+    backgroundColor: "#fff3cd",
+    border: "1px solid #ffeaa7",
+    borderRadius: "8px",
+    padding: "12px 16px",
+    marginBottom: "20px",
+    boxShadow: "0px 2px 8px rgba(0, 0, 0, 0.1)",
+  },
+  bannerIcon: {
+    fontSize: "20px",
+    marginRight: "12px",
+    flexShrink: 0,
+  },
+  bannerContent: {
+    fontSize: "14px",
+    color: "#856404",
+    lineHeight: "1.4",
   },
   form: {
     display: "flex",
@@ -146,26 +256,124 @@ const styles = {
   },
   resultContainer: {
     marginTop: "20px",
-    padding: "15px",
-    borderRadius: "6px",
-    backgroundColor: "#f9f9f9",
-    boxShadow: "0px 2px 6px rgba(0, 0, 0, 0.05)",
+    padding: "25px",
+    borderRadius: "10px",
+    backgroundColor: "#ffffff",
+    boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.1)",
+    border: "2px solid #005B38",
+  },
+  reportCardHeader: {
+    textAlign: "center",
+    borderBottom: "2px solid #005B38",
+    paddingBottom: "15px",
+    marginBottom: "20px",
   },
   resultTitle: {
-    fontSize: "18px",
+    fontSize: "22px",
+    color: "#005B38",
+    marginBottom: "10px",
+    fontWeight: "bold",
+  },
+  studentInfo: {
+    marginTop: "10px",
+  },
+  studentName: {
+    fontSize: "20px",
     color: "#333",
+    margin: "0",
+    fontWeight: "600",
+  },
+  basicInfo: {
+    marginBottom: "20px",
+  },
+  infoRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "8px 0",
+    borderBottom: "1px solid #eee",
+  },
+  infoLabel: {
+    fontSize: "16px",
+    color: "#666",
+    fontWeight: "500",
+    minWidth: "120px",
+  },
+  infoValue: {
+    fontSize: "16px",
+    color: "#333",
+    fontWeight: "400",
+    textAlign: "right",
+    flex: 1,
+  },
+  marksSection: {
+    backgroundColor: "#f8f9fa",
+    padding: "15px",
+    borderRadius: "8px",
+    marginBottom: "20px",
+    border: "1px solid #dee2e6",
+  },
+  marksSectionTitle: {
+    fontSize: "18px",
+    color: "#005B38",
+    marginBottom: "12px",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  marksRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "8px 12px",
+    marginBottom: "8px",
+    backgroundColor: "#ffffff",
+    borderRadius: "5px",
+    border: "1px solid #e9ecef",
+  },
+  subjectLabel: {
+    fontSize: "15px",
+    color: "#495057",
+    fontWeight: "500",
+  },
+  marksValue: {
+    fontSize: "15px",
+    color: "#007bff",
+    fontWeight: "600",
+  },
+  totalSection: {
+    backgroundColor: "#005B38",
+    color: "white",
+    padding: "15px",
+    borderRadius: "8px",
+    textAlign: "center",
+  },
+  totalRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: "10px",
   },
-  resultText: {
-    fontSize: "16px",
-    color: "#555",
-    marginBottom: "8px",
+  totalLabel: {
+    fontSize: "18px",
+    fontWeight: "600",
   },
-  omrLink: {
+  totalValue: {
+    fontSize: "18px",
+    fontWeight: "700",
+  },
+  percentageRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  percentageLabel: {
     fontSize: "16px",
-    color: "#4CAF50",
-    textDecoration: "none",
-    fontWeight: "bold",
+    fontWeight: "500",
+  },
+  percentageValue: {
+    fontSize: "20px",
+    fontWeight: "700",
+    color: "#ffd700",
   },
   note: {
     backgroundColor: "#fffbcc",

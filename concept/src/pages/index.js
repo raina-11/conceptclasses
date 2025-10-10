@@ -11,7 +11,7 @@ import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import ScrollSmooth from '../components/home/smooth-scroll';
 import StackCards from '../components/home/legacy';
-import ScienceChampBanner from '../components/home/science-champ-banner';
+// import ScienceChampBanner from '../components/home/science-champ-banner';
 import DirectorQuote from '../components/home/director-quote';
 import Footer from '../components/common/footer';
 import Form from '../components/common/contact-form';
@@ -27,6 +27,10 @@ const navigate = useNavigate();
 
   const handleButtonClick3 = () => {
     navigate('/science-champ-2025-2026/');
+  };
+
+  const handleResultsClick = () => {
+    navigate('/science-champ-result-2026/');
   };
 
   return (
@@ -48,11 +52,11 @@ const navigate = useNavigate();
                 Concept Science Champ 2026
               </PopupHeading>
               <PopupDescription>
-              Register now for the Science Champ competition! Test your knowledge, compete with the best, and win exciting prizes.
+              🎉 Science Champ 2025-2026 Results are now OUT! Check your results below.
               </PopupDescription>
               <TempStyledDiv>
-              <PrimaryButton onClick={handleButtonClick3} >
-                Register Now
+              <PrimaryButton onClick={handleResultsClick} >
+                Check Results
               </PrimaryButton>
               </TempStyledDiv>
             </KeyPopup>
@@ -102,7 +106,7 @@ const navigate = useNavigate();
   </Carousel>
   </StyledDiv>
 
-   <ScienceChampBanner/>
+   {/* <ScienceChampBanner/> */}
    <StackCards/>
    <ScrollSmooth/>
  
