@@ -91,12 +91,12 @@ function ResultLookup() {
     <div style={styles.container}>
           <h2 style={styles.title}>Science Champ Result 2025</h2>
           
-          <div style={styles.banner}>
+          {/* <div style={styles.banner}>
               <div style={styles.bannerIcon}>📢</div>
               <div style={styles.bannerContent}>
                   <strong>Class 8th Result Update:</strong> Class 8th results are still being processed and will be available soon. Stay tuned for updates!
               </div>
-          </div>
+          </div> */}
 
           <form onSubmit={handleSearch} style={styles.form}>
               <label style={styles.label}>
