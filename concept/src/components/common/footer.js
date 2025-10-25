@@ -22,7 +22,7 @@ const Footer = () => {
              <img style={{height:'60px'}} src={logo} alt="concept"/>
             </div>
             <AddressSubtitle>
-              Patel nagar, near polytechnique college, Bikaner Rajasthan
+            Concept Heights', Vyas colony, E-4, Police Thana Road, near Heeralal Hotal, Kanta Khaturia Colony, Bikaner, Rajasthan 334003
             </AddressSubtitle>
           </Address>
           <Social>

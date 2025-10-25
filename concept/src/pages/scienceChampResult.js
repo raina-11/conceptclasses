@@ -14,7 +14,7 @@ function ResultLookup() {
   useEffect(() => {
     // Fetch both JSON files when the component mounts
     const fetch11th12th = fetch("/data/11th-12th.json").then(res => res.json());
-    const fetch7th9th10th = fetch("/data/7th-9th-10th.json").then(res => res.json());
+    const fetch7th9th10th = fetch("/data/7th-8th-9th-10th.json").then(res => res.json());
     
     Promise.all([fetch11th12th, fetch7th9th10th])
       .then(([data11th12th, data7th9th10th]) => {
@@ -163,6 +163,28 @@ function ResultLookup() {
                           <span style={styles.percentageValue}>{result["percentage"]}%</span>
                       </div>
                   </div>
+
+                  {result["Link"] && (
+                      <div style={styles.actions}>
+                          <a
+                              href={result["Link"]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={styles.omrButton}
+                              aria-label="View your OMR in a new tab"
+                          >
+                              <span style={styles.omrIcon} aria-hidden>
+                                  {/* external link icon */}
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M14 3H21V10" stroke="#005B38" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <path d="M10 14L21 3" stroke="#005B38" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <path d="M21 14V21H3V3H10" stroke="#005B38" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                              </span>
+                              View OMR
+                          </a>
+                      </div>
+                  )}
               </div>
           )}
           
@@ -374,6 +396,28 @@ const styles = {
     fontSize: "20px",
     fontWeight: "700",
     color: "#ffd700",
+  },
+  actions: {
+    textAlign: "center",
+    marginTop: "14px",
+  },
+  omrButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "8px",
+    padding: "10px 16px",
+    fontSize: "15px",
+    fontWeight: "600",
+    color: "#005B38",
+    backgroundColor: "#ffffff",
+    border: "2px solid #005B38",
+    borderRadius: "9999px",
+    textDecoration: "none",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+    transition: "transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease",
+  },
+  omrIcon: {
+    display: "inline-flex",
   },
   note: {
     backgroundColor: "#fffbcc",
