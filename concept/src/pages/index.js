@@ -2,6 +2,7 @@ import React from 'react';
 import styled from "styled-components"
 import b1 from "../images/1.webp"
 import b2 from "../images/2.webp"
+import b21 from "../images/bn4.jpg"
 import b3 from "../images/3.webp"
 import b4 from "../images/4.webp"
 import b5 from "../images/5.webp"
@@ -77,6 +78,9 @@ const navigate = useNavigate();
     <link rel="preload" href={b1} as="image"/>
     <StyledImage src={b1} alt="concept institute bikaner"></StyledImage> 
 
+    </SDiv>
+    <SDiv>
+    <StyledImage src={b21} alt="concept institute bikaner"></StyledImage> 
     </SDiv>
     <SDiv>
     <StyledImage src={b2} alt="concept institute bikaner"></StyledImage> 
