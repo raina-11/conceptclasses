@@ -89,7 +89,7 @@ function ResultLookup() {
     <Section style={{display:'flex', flexDirection:'column',paddingTop:'1vh', justifyContent:'center' , minHeight:'100vh', background:'ivory'}}>
         <Container>
     <div style={styles.container}>
-          <h2 style={styles.title}>Science Champ Result 2025</h2>
+          <h2 style={styles.title}>Science Champ Result 2026</h2>
           
           {/* <div style={styles.banner}>
               <div style={styles.bannerIcon}>📢</div>
@@ -116,7 +116,7 @@ function ResultLookup() {
           {result && (
               <div style={styles.resultContainer}>
                   <div style={styles.reportCardHeader}>
-                      <h3 style={styles.resultTitle}>Science Champ 2025 - Result Card</h3>
+                      <h3 style={styles.resultTitle}>Science Champ 2026 - Result Card</h3>
                       <div style={styles.studentInfo}>
                           <h4 style={styles.studentName}>{result["Student Name"]}</h4>
                       </div>

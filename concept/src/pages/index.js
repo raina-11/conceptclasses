@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from "styled-components"
 import b1 from "../images/1.webp"
 import b2 from "../images/2.webp"
@@ -25,13 +25,23 @@ import { useNavigate } from 'react-router-dom';
 const Home= () =>  {
 
 const navigate = useNavigate();
+const [isPopupOpen, setIsPopupOpen] = useState(true);
+const [carouselKey, setCarouselKey] = useState(Date.now());
 
-  const handleButtonClick3 = () => {
-    navigate('/science-champ-2025-2026/');
-  };
+useEffect(() => {
+  // Force carousel to re-render when popup closes
+  if (!isPopupOpen) {
+    setCarouselKey(Date.now());
+  }
+}, [isPopupOpen]);
 
   const handleResultsClick = () => {
+    setIsPopupOpen(false);
     navigate('/science-champ-result-2026/');
+  };
+
+  const closePopup = () => {
+    setIsPopupOpen(false);
   };
 
   return (
@@ -40,15 +50,17 @@ const navigate = useNavigate();
 
   
     <Popup
-            open={true}
+            open={isPopupOpen}
             position="center"
             modal
             overlayStyle={{ background: "transparent", backdropFilter:"blur(5px)" }}
             contentStyle={{ width:'90%',borderRadius:'20px', maxHeight:"700px", background:'#076B37',padding:"0", zIndex:"-2"}}
             style={{ borderRadius: "22px" }}
-            closeOnDocumentClick
+            closeOnDocumentClick={true}
+            onClose={closePopup}
           >
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
+              <CloseButton onClick={closePopup}>×</CloseButton>
               <PopupHeading>
                 Concept Science Champ 2026
               </PopupHeading>
@@ -56,21 +68,26 @@ const navigate = useNavigate();
               🎉 Science Champ 2025-2026 Results are now OUT! Check your results below.
               </PopupDescription>
               <TempStyledDiv>
-              <PrimaryButton onClick={handleResultsClick} >
+              <PrimaryButton onClick={handleResultsClick}>
                 Check Results
               </PrimaryButton>
+              {/* <PrimaryButton onClick={closePopup}>
+                Close
+              </PrimaryButton> */}
               </TempStyledDiv>
             </KeyPopup>
             </Popup>
   
     <StyledDiv>
     <Carousel 
+    key={carouselKey}
     infiniteLoop={true}
     autoPlay={true}
     interval={4000}
     showThumbs={false}
     showStatus={false}
     showArrows={false}
+    stopOnHover={false}
     >
 
     
@@ -197,5 +214,25 @@ const PopupDescription = styled.div`
   line-height: 1.4;
   @media (max-width: 500px) {
     font-size: 16px;
+  }
+`
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
 `
