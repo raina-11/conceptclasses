@@ -1,15 +1,17 @@
 import React, { useRef, useState, useEffect } from "react"
 import styled, { keyframes } from "styled-components"
-import s1 from"../../images/s1.webp"
-import s2 from"../../images/s2.webp"
-import s3 from"../../images/s3.webp"
-import s5 from"../../images/s5.webp"
-import s6 from"../../images/s6.webp"
+import { useSuccessStories } from '../../hooks/useFirestore'
+// import s1 from"../../images/s1.webp"
+// import s2 from"../../images/s2.webp"
+// import s3 from"../../images/s3.webp"
+// import s5 from"../../images/s5.webp"
+// import s6 from"../../images/s6.webp"
 
 const ScrollSmooth = (props) => {
-  
+
   const [isElementVisible, setIsElementVisible] = useState(false)
   const elementRef = useRef(null)
+  const { stories } = useSuccessStories()
 
 
   useEffect(() => {
@@ -145,49 +147,68 @@ const ScrollSmooth = (props) => {
             </h3>
            
             <div style={{padding:'15px'}}>
+            {(() => {
+              const rows = {};
+              stories.forEach(s => {
+                const r = s.row || 1;
+                if (!rows[r]) rows[r] = [];
+                rows[r].push(s);
+              });
+              return Object.keys(rows).sort((a, b) => a - b).map(r => (
+                <Grid key={r} className={r !== '1' ? 'second' : ''}>
+                  {rows[r].sort((a, b) => (a.order || 0) - (b.order || 0)).map(story => (
+                    <Flex key={story.id}>
+                      <Profile bg={story.photoUrl}></Profile>
+                      <ProfileText>
+                        <h5>{story.name}</h5>
+                        <p>{story.position}</p>
+                      </ProfileText>
+                    </Flex>
+                  ))}
+                </Grid>
+              ));
+            })()}
+            {/* Hardcoded profiles (commented out - now using Firestore data)
             <Grid>
               <Flex>
-                <Profile bg={s2}>
-                </Profile>
+                <Profile bg={s2}></Profile>
                 <ProfileText>
                   <h5>Rakshit Dhalla</h5>
                   <p>BizOps @Amazon Web Services</p>
                 </ProfileText>
-                </Flex>
-                <Flex>
-                <Profile bg={s5}>
-               
-                </Profile>
+              </Flex>
+              <Flex>
+                <Profile bg={s5}></Profile>
                 <ProfileText>
                   <h5>Arihant Sethia</h5>
                   <p>Senior Tech. @Microsoft</p>
                 </ProfileText>
-                </Flex>
-                <Flex>
+              </Flex>
+              <Flex>
                 <Profile bg={s1}></Profile>
                 <ProfileText>
                   <h5>Yash Gaur</h5>
                   <p>Associate @Goldman Sachs, Texas</p>
                 </ProfileText>
-                </Flex>
+              </Flex>
             </Grid>
             <Grid className="second">
-            <Flex>
-            <Profile bg={s6}></Profile>
-            <ProfileText>
-            <h5>Atma Godara</h5>
-               <p>Business partner @Netflix</p>
-            </ProfileText>
-            </Flex>
               <Flex>
-            <Profile bg={s3}></Profile>
-            <ProfileText>
-            <h5>Ritesh Kumar</h5>
-               <p>Senior Software Eng. @Google</p>
-            </ProfileText>
-            </Flex>
-           
+                <Profile bg={s6}></Profile>
+                <ProfileText>
+                  <h5>Atma Godara</h5>
+                  <p>Business partner @Netflix</p>
+                </ProfileText>
+              </Flex>
+              <Flex>
+                <Profile bg={s3}></Profile>
+                <ProfileText>
+                  <h5>Ritesh Kumar</h5>
+                  <p>Senior Software Eng. @Google</p>
+                </ProfileText>
+              </Flex>
             </Grid>
+            */}
             </div>
             <MobileDiv>
             </MobileDiv>

@@ -3,6 +3,9 @@ import Navigation from "../components/common/navigation/navigation";
 import Layout from "../components/common/layout/layout";
 import { Container, Section } from "../components/style";
 import Footer from "../components/common/footer";
+import SEO from '../components/common/SEO';
+import seoConfig from '../seo/seoConfig';
+import { createBreadcrumbSchema } from '../seo/schemas';
 
 function ResultLookup() {
   const [rollNumber, setRollNumber] = useState("");
@@ -85,11 +88,13 @@ function ResultLookup() {
   return (
     <>
     <Layout>
+    <SEO {...seoConfig.scienceChampResult} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Science Champ Result', path: '/science-champ-result-2026' }])} />
     <Navigation />
+    <main>
     <Section style={{display:'flex', flexDirection:'column',paddingTop:'1vh', justifyContent:'center' , minHeight:'100vh', background:'ivory'}}>
         <Container>
     <div style={styles.container}>
-          <h2 style={styles.title}>Science Champ Result 2026</h2>
+          <h1 style={styles.title}>Science Champ Result 2026</h1>
           
           {/* <div style={styles.banner}>
               <div style={styles.bannerIcon}>📢</div>
@@ -196,6 +201,7 @@ function ResultLookup() {
           )}
       </Container>
       </Section>
+      </main>
       <Footer/>
       </Layout>
       </>

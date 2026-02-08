@@ -4,18 +4,44 @@ import { Container, Section } from "../style"
 import emailjs from '@emailjs/browser';
 import rocket from "../../images/rocket.svg"
 import "./form.css"
-const HiringForm = () => {
+
+const SUBJECTS = [
+  "Maths (IIT Mains)",
+  "Maths (IIT Advance)",
+  "Physics",
+  "Chemistry (Inorganic)",
+  "Chemistry (Organic)",
+  "Science (Pre Foundation)",
+  "Biology",
+  "Others"
+];
+
+const HiringForm = ({ onClose }) => {
     const form = useRef();
     const [formSubmitted, setFormSubmitted] = useState(false);
-  
+    const [selectedSubjects, setSelectedSubjects] = useState([]);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+
+    const toggleSubject = (subject) => {
+      setSelectedSubjects(prev =>
+        prev.includes(subject)
+          ? prev.filter(s => s !== subject)
+          : [...prev, subject]
+      );
+    };
+
     const sendEmail = (e) => {
       e.preventDefault();
-  
+
       const phoneInput = form.current.querySelector('input[name="phone"]');
       const phoneNumber = phoneInput.value.trim();
       if (!/^\d{10}$/.test(phoneNumber)) {
         alert('Please enter a 10-digit numeric phone number.');
-        return; // Exit the function without submitting the form
+        return;
+      }
+      if (selectedSubjects.length === 0) {
+        alert('Please select at least one subject.');
+        return;
       }
       emailjs.sendForm('service_whyqo9r', 'template_1671bw9', form.current, 'rtUkdaqoxnJQw-RrD')
         .then((result) => {
@@ -25,17 +51,20 @@ const HiringForm = () => {
         });
         setFormSubmitted(true);
     };
-  
+
     const handleSubmit = () => {
       // setFormSubmitted(true);
     };
-  
-   
+
+
       return (
         <>
-    
+
        <Section style={{background:'transparent'}}>
         <Container style={{position:'relative'}}>
+        {onClose && (
+          <CloseButton type="button" onClick={onClose}>&times;</CloseButton>
+        )}
 
        <Text>
 <h2 >Get in touch <img src={rocket} alt="grow"/> </h2>
@@ -43,8 +72,40 @@ const HiringForm = () => {
         <StyledForm isHidden={formSubmitted} ref={form} onSubmit={sendEmail}>
         <label>Name</label>
         <input type="text" name="from_name" />
-        <label>Subject</label>
-        <input type="text" name="subject" />
+        <label>Subject(s)</label>
+        <input type="hidden" name="subject" value={selectedSubjects.join(", ")} />
+        <DropdownContainer>
+          <DropdownButton type="button" onClick={() => setDropdownOpen(!dropdownOpen)}>
+            {selectedSubjects.length === 0
+              ? "Select Subject(s)"
+              : `${selectedSubjects.length} selected`}
+            <Arrow isOpen={dropdownOpen}>▼</Arrow>
+          </DropdownButton>
+          {dropdownOpen && (
+            <DropdownMenu>
+              {SUBJECTS.map(subject => (
+                <DropdownItem
+                  key={subject}
+                  onClick={() => toggleSubject(subject)}
+                  isSelected={selectedSubjects.includes(subject)}
+                >
+                  <Checkbox checked={selectedSubjects.includes(subject)} readOnly />
+                  {subject}
+                </DropdownItem>
+              ))}
+            </DropdownMenu>
+          )}
+        </DropdownContainer>
+        {selectedSubjects.length > 0 && (
+          <SelectedTags>
+            {selectedSubjects.map(subject => (
+              <Tag key={subject}>
+                {subject}
+                <TagClose onClick={() => toggleSubject(subject)}>×</TagClose>
+              </Tag>
+            ))}
+          </SelectedTags>
+        )}
         <label>Experience</label>
         <input name="exp" />
         <label>Contact</label>
@@ -145,4 +206,109 @@ h2{
   font-size:24px;
 }
 }
+`
+const DropdownContainer = styled.div`
+  position: relative;
+  width: 100%;
+`
+const DropdownButton = styled.button`
+  width: 100%;
+  min-height: 40px;
+  padding: 0px 16px;
+  border-radius: 16px;
+  border: 1.5px solid black;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+`
+const Arrow = styled.span`
+  transition: transform 0.2s;
+  transform: ${props => props.isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
+  font-size: 10px;
+`
+const DropdownMenu = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1.5px solid black;
+  border-radius: 12px;
+  margin-top: 4px;
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+`
+const DropdownItem = styled.div`
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: ${props => props.isSelected ? '#e8f5e9' : 'white'};
+  &:hover {
+    background: #f5f5f5;
+  }
+  &:first-child {
+    border-radius: 10px 10px 0 0;
+  }
+  &:last-child {
+    border-radius: 0 0 10px 10px;
+  }
+`
+const Checkbox = styled.input.attrs({ type: 'checkbox' })`
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #005B38;
+`
+const SelectedTags = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -8px;
+`
+const Tag = styled.span`
+  background: #e8f5e9;
+  color: #005B38;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`
+const TagClose = styled.span`
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  &:hover {
+    color: #c62828;
+  }
+`
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 10;
+  &:hover {
+    background: rgba(0,0,0,0.1);
+    color: #000;
+  }
 `

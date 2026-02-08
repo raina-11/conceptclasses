@@ -98,7 +98,7 @@ export default class Navigation extends Component {
           {/* <NavBar> */}
          <a href="/">
           <Brand>
-          <img src={logo} alt="concept"/>
+          <img src={logo} alt="Concept Classes - Home"/>
 
           </Brand>
           </a>
@@ -151,7 +151,7 @@ export default class Navigation extends Component {
              <StyledLink >
               <a style={{display:'flex', alignItems:'center', textDecoration:'none', color:'#222',position:'relative', fontWeight:'500'}} href="tel:9928111865">
                     {/* <SecondaryButton style={{padding:'16px', minWidth:'93px',background:'transparent'}}> */}
-                   <img style={{height:'30px'}} src={call} alt="concept"/>
+                   <img style={{height:'30px'}} src={call} alt="Call Concept Classes"/>
                   9928111865
                     {/* </SecondaryButton> */}
                     </a>
@@ -367,7 +367,7 @@ export default class Navigation extends Component {
                               <DropdownItemZluri>
                                 <DropdownItemImg>
                                   {/* <StyledImage src={smp} /> */}
-                                  <img src={i1} alt="concept"/>
+                                  <img src={i1} alt="Engineering results"/>
                                 </DropdownItemImg>
                                 <DropdownItemTextMobile>
                                   <h4>Engineering (IIT JEE)</h4>
@@ -380,7 +380,7 @@ export default class Navigation extends Component {
                             >
                               <DropdownItemZluri>
                                 <DropdownItemImg>
-                                <img src={i2} alt="concept"/>
+                                <img src={i2} alt="Medical results"/>
 
                                 </DropdownItemImg>
                                 <DropdownItemTextMobile>

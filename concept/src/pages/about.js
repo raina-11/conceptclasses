@@ -13,6 +13,9 @@ import Layout from "../components/common/layout/layout";
 import Navigation from "../components/common/navigation/navigation";
 import Form from '../components/common/contact-form';
 import Footer from "../components/common/footer";
+import SEO from '../components/common/SEO';
+import seoConfig from '../seo/seoConfig';
+import { createBreadcrumbSchema } from '../seo/schemas';
 
 const Timeline = ({ setObserver, callback }) => {
   const [message1, setMessage1] = useState("");
@@ -86,9 +89,12 @@ export default function About() {
 
   return (
     <Layout>
+      <SEO {...seoConfig.about} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'About', path: '/about' }])} />
       <Navigation/>
+    <main>
     <StyledSection >
-      <Header className="stub1"> We beleive: </Header>
+      <h1 style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>About Concept Classes</h1>
+      <Header className="stub1"> We believe: </Header>
       <SContainer>
       <TimelineObserver
         initialColor="#e5e5e5"
@@ -111,7 +117,7 @@ export default function About() {
         <Grid>
 <Director>
   <div style={{textAlign:'center'}}>
-  <img src={bm} alt="concept"> 
+  <img src={bm} alt="Er. Bhupendra Middha, Managing Director of Concept Classes">
   </img>
   </div>
 
@@ -140,7 +146,7 @@ Over the years, Concept continued scaling heights, enabling more and more studen
 
 </div>
 <ImgDiv>
-<img src={building} alt="concept"/>
+<img src={building} alt="Concept Classes building in Bikaner"/>
 </ImgDiv>
       </Company>
 </Container>
@@ -149,6 +155,7 @@ Over the years, Concept continued scaling heights, enabling more and more studen
     <div id="contactus">
    <Form/>
    </div>
+   </main>
    <Footer/>
     </Layout>
   );

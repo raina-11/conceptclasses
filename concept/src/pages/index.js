@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import styled from "styled-components"
-import b1 from "../images/1.webp"
-import b2 from "../images/2.webp"
-import b21 from "../images/bn4.jpg"
-import b3 from "../images/3.webp"
-import b4 from "../images/4.webp"
-import b5 from "../images/5.webp"
-import b6 from "../images/6.webp"
-import b7 from "../images/7.webp"
 import Navigation from '../components/common/navigation/navigation';
 import Layout from '../components/common/layout/layout';
 import ScrollSmooth from '../components/home/smooth-scroll';
 import StackCards from '../components/home/legacy';
 // import ScienceChampBanner from '../components/home/science-champ-banner';
 import DirectorQuote from '../components/home/director-quote';
+import FAQ from '../components/home/FAQ';
 import Footer from '../components/common/footer';
 import Form from '../components/common/contact-form';
 import { Carousel } from "react-responsive-carousel";
@@ -21,34 +14,56 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import Popup from 'reactjs-popup';
 import { PrimaryButton } from '../components/style';
 import { useNavigate } from 'react-router-dom';
+import { useBanners, useAnnouncements } from '../hooks/useFirestore';
+import SEO from '../components/common/SEO';
+import seoConfig from '../seo/seoConfig';
+import { createBreadcrumbSchema, createFAQSchema } from '../seo/schemas';
+import { faqs } from '../components/home/FAQ';
 
 const Home= () =>  {
 
 const navigate = useNavigate();
 const [isPopupOpen, setIsPopupOpen] = useState(true);
 const [carouselKey, setCarouselKey] = useState(Date.now());
+const { banners, loading: bannersLoading } = useBanners();
+const { announcements } = useAnnouncements();
+
+const popupAnnouncement = announcements.find(a => a.isPopupEnabled);
 
 useEffect(() => {
-  // Force carousel to re-render when popup closes
-  if (!isPopupOpen) {
+  if (!isPopupOpen || !bannersLoading) {
     setCarouselKey(Date.now());
   }
-}, [isPopupOpen]);
+}, [isPopupOpen, bannersLoading]);
 
-  const handleResultsClick = () => {
+  const handleCtaClick = () => {
     setIsPopupOpen(false);
-    navigate('/science-champ-result-2026/');
+    if (popupAnnouncement?.ctaLink) {
+      if (popupAnnouncement.ctaLink.startsWith('tel:') || popupAnnouncement.ctaLink.startsWith('http')) {
+        window.location.href = popupAnnouncement.ctaLink;
+      } else {
+        navigate(popupAnnouncement.ctaLink);
+      }
+    }
   };
 
   const closePopup = () => {
     setIsPopupOpen(false);
   };
 
+  const schemaMarkup = [
+    createBreadcrumbSchema([{ name: 'Home', path: '/' }]),
+    createFAQSchema(faqs),
+  ];
+
   return (
     <Layout>
+    <SEO {...seoConfig.home} schemaMarkup={schemaMarkup} />
     <Navigation bgwhite={true}/>
 
-  
+    <main>
+    <H1>Best IIT-JEE & NEET Coaching in Bikaner Since 1999</H1>
+    {popupAnnouncement && (
     <Popup
             open={isPopupOpen}
             position="center"
@@ -62,24 +77,25 @@ useEffect(() => {
             <KeyPopup style={{width:'100%', height:'50vh', display:'flex', justifyContent:'center', alignItems:'center'}}>
               <CloseButton onClick={closePopup}>×</CloseButton>
               <PopupHeading>
-                Concept Science Champ 2026
+                {popupAnnouncement.title}
               </PopupHeading>
               <PopupDescription>
-              🎉 Science Champ 2025-2026 Results are now OUT! Check your results below.
+                {popupAnnouncement.subtitle || popupAnnouncement.description}
               </PopupDescription>
+              {popupAnnouncement.ctaText && (
               <TempStyledDiv>
-              <PrimaryButton onClick={handleResultsClick}>
-                Check Results
+              <PrimaryButton onClick={handleCtaClick}>
+                {popupAnnouncement.ctaText}
               </PrimaryButton>
-              {/* <PrimaryButton onClick={closePopup}>
-                Close
-              </PrimaryButton> */}
               </TempStyledDiv>
+              )}
             </KeyPopup>
             </Popup>
+    )}
   
+    {banners.length > 0 && (
     <StyledDiv>
-    <Carousel 
+    <Carousel
     key={carouselKey}
     infiniteLoop={true}
     autoPlay={true}
@@ -89,43 +105,14 @@ useEffect(() => {
     showArrows={false}
     stopOnHover={false}
     >
-
-    
-    <SDiv>
-    <link rel="preload" href={b1} as="image"/>
-    <StyledImage src={b1} alt="concept institute bikaner"></StyledImage> 
-
-    </SDiv>
-    <SDiv>
-    <StyledImage src={b21} alt="concept institute bikaner"></StyledImage> 
-    </SDiv>
-    <SDiv>
-    <StyledImage src={b2} alt="concept institute bikaner"></StyledImage> 
-    </SDiv>
-    <SDiv>
-    <StyledImage src={b3} alt="concept institute bikaner"></StyledImage> 
-    </SDiv>
-    <SDiv>
-    <StyledImage src={b4} alt="concept institute bikaner"></StyledImage> 
-    </SDiv>
-    <SDiv>
-    <StyledImage src={b5} alt="concept institute bikaner"></StyledImage> 
-    </SDiv>
-    <SDiv>
-    <StyledImage src={b6} alt="concept institute bikaner"></StyledImage> 
-    </SDiv>
-    <SDiv>
-    <StyledImage src={b7} alt="concept institute bikaner" ></StyledImage> 
-    </SDiv>
-    {/* <SDiv>
-    <StyledImage src={b2} alt="IIT JEE institute bikaner"></StyledImage> 
-    </SDiv> */}
-    {/* <SDiv>
-    <StyledImage src={b5} alt="Best IIT JEE institute bikaner"></StyledImage> 
-    </SDiv>
-    */}
+    {banners.map((banner, index) => (
+      <SDiv key={banner.id || index}>
+        <StyledImage src={banner.imageUrl} alt={banner.altText || 'concept institute bikaner'} />
+      </SDiv>
+    ))}
   </Carousel>
   </StyledDiv>
+    )}
 
    {/* <ScienceChampBanner/> */}
    <StackCards/>
@@ -133,9 +120,11 @@ useEffect(() => {
  
    <DirectorQuote/>
    
+<FAQ/>
 <div id="contactus">
    <Form/>
    </div>
+   </main>
    <Footer/>
    </Layout>
    
@@ -144,6 +133,17 @@ useEffect(() => {
 
 export default Home;
 
+const H1 = styled.h1`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+`
 const StyledImage = styled.img`
 width: 100%;
 

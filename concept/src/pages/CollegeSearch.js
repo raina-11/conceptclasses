@@ -13,6 +13,9 @@ import MedicalCollegesDashboard, { StateWiseDashboard } from '../components/comm
 import statesData from '../data/states_hover.json';
 import * as XLSX from 'xlsx';
 import IndiaMap from './IndiaMap';
+import SEO from '../components/common/SEO';
+import seoConfig from '../seo/seoConfig';
+import { createBreadcrumbSchema } from '../seo/schemas';
 
 // Debounce helper function
 const useDebounce = (value, delay) => {
@@ -2537,8 +2540,9 @@ const CollegeSearch = () => {
   if (!selectedExam) {
     return (
       <Layout>
+        <SEO {...seoConfig.collegeSearch} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'College Search', path: '/college-search' }])} />
         <Navigation/>
-        <div className="college-search-container" style={{ 
+        <div className="college-search-container" style={{
           minHeight: 'calc(100vh - 200px)',
           display: 'flex', 
           flexDirection: 'column', 
@@ -2561,7 +2565,7 @@ const CollegeSearch = () => {
               color: '#1e293b',
               marginBottom: '1rem',
               fontWeight: '600'
-            }}>Select Exam Type</h1>
+            }}>College Search Tool</h1>
             
             <p style={{
               fontSize: isMobile ? '1rem' : '1.1rem',
@@ -2660,6 +2664,7 @@ const CollegeSearch = () => {
         <IITSearch />
       ) : (
         <Layout>
+          <SEO {...seoConfig.collegeSearch} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'College Search', path: '/college-search' }])} />
           <Navigation />
           <div className="college-search-container">
             <div className="exam-selector" style={{

@@ -1,4 +1,4 @@
-import ReactDOM from "react-dom/client";
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import About from "./pages/about";
 import Images from "./pages/images";
@@ -12,6 +12,9 @@ import ResultsPreFoundation from "./pages/results-prefoundation";
 import CollegeSearch from "./pages/CollegeSearch";
 // import RegistrationForm from "./components/common/RegistrationForm";
 import ResultLookup from "./pages/scienceChampResult";
+
+// Lazy load admin panel
+const AdminApp = lazy(() => import("./admin/AdminApp"));
 
 export default function App() {
   return (
@@ -30,12 +33,15 @@ export default function App() {
       <Route path="science-champ-result-2026" element={< ResultLookup/>} />
       {/* <Route path="science-champ-2025-2026" element={< RegistrationForm/>} /> */}
 
+      {/* Admin Panel */}
+      <Route path="admin/*" element={
+        <Suspense fallback={<div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}>Loading...</div>}>
+          <AdminApp />
+        </Suspense>
+      } />
 
       {/* <Route path="courses" element={<Courses />} /> */}
     </Routes>
   </BrowserRouter>
   );
 }
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);

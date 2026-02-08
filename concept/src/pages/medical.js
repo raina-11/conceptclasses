@@ -5,81 +5,104 @@ import { Container, Section } from '../components/style';
 import Navigation from '../components/common/navigation/navigation';
 import bg from "../images/bg-courses.webp"
 import courses from "../images/courses.svg"
-import cm1 from "../images/cm1.svg"
-import cm2 from "../images/cm2.svg"
-import cm3 from "../images/cm3.svg"
-import cm4 from "../images/cm4.svg"
-import cm5 from "../images/cm5.svg"
+// import cm1 from "../images/cm1.svg"
+// import cm2 from "../images/cm2.svg"
+// import cm3 from "../images/cm3.svg"
+// import cm4 from "../images/cm4.svg"
+// import cm5 from "../images/cm5.svg"
 import Form from '../components/common/contact-form';
 import Footer from '../components/common/footer';
+import { useCourses } from '../hooks/useFirestore';
+import SEO from '../components/common/SEO';
+import seoConfig from '../seo/seoConfig';
+import { createBreadcrumbSchema } from '../seo/schemas';
 
 const Courses= () =>  {
+  const { courses: courseList, loading } = useCourses('medical');
+
   return (
-    
+
   <Layout>
+    <SEO {...seoConfig.medical} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'NEET Courses', path: '/medical' }])} />
     <Navigation bgwhite={true}/>
+    <main>
     <StyledSection >
         <Container>
-           
+
+<h1 style={{ textAlign: 'center', margin: '0 0 16px', fontSize: '28px', color: '#005B38' }}>NEET-UG Coaching Courses</h1>
 <div style={{textAlign:'center', width:'100%'}}>
-<img src={courses} style={{width:'100%'}} alt="concept" />
+<img src={courses} style={{width:'100%'}} alt="NEET coaching courses at Concept Classes" />
 </div>
+
+{loading ? (
+  <p style={{ textAlign: 'center', padding: '40px' }}>Loading courses...</p>
+) : courseList.length === 0 ? (
+  <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No courses available.</p>
+) : (
+  courseList.map((course, index) => (
+    <Section key={course.id} style={{background:'transparent'}}>
+      {index % 2 === 0 ? (
+        <Card>
+          <ImgDiv>
+            <img src={course.imageUrl} style={{width:'100%'}} alt={course.name} />
+          </ImgDiv>
+          <div>
+            <h2>{course.name}</h2>
+            <h4><span>Target</span>: {course.target}</h4>
+            <h4><span>Eligibility</span> : {course.eligibility}</h4>
+            <h4><span>Medium of Classes</span> : {course.medium}</h4>
+            <h4><span>Syllabus Covered</span> : {course.syllabus}</h4>
+            <h4>{course.status}</h4>
+          </div>
+        </Card>
+      ) : (
+        <AlternateCard>
+          <div>
+            <h2>{course.name}</h2>
+            <h4><span>Target</span>: {course.target}</h4>
+            <h4><span>Eligibility</span> : {course.eligibility}</h4>
+            <h4><span>Medium of Classes</span> : {course.medium}</h4>
+            <h4><span>Syllabus Covered</span> : {course.syllabus}</h4>
+            <h4>{course.status}</h4>
+          </div>
+          <ImgDiv>
+            <img src={course.imageUrl} style={{width:'100%'}} alt={course.name} />
+          </ImgDiv>
+        </AlternateCard>
+      )}
+    </Section>
+  ))
+)}
+
+{/* HARDCODED COURSES - commented out, now loaded from Firestore */}
+{/*
 <Section style={{background:'transparent'}}>
 <Card>
   <ImgDiv>
   <img src={cm1} style={{width:'100%'}} alt="concept" />
-
   </ImgDiv>
   <div>
-    <h2>
-        Genesis
-    </h2>
-    <h4>
-        <span>Target</span>: NEET-UG/AIIMS
-        </h4>
-        <h4>
-        <span>Eligibility</span> : For class 10th to 11th moving students
-        </h4>
-        <h4>
-        <span>Medium of Classes</span> : ENGLISH/HINDI
-        </h4>
-        <h4>
-        <span>Syllabus Covered</span> : Complete 11th + NEET-UG/AIIMS syllabus of Biology, Physics and Chemistry.
-    </h4>
-    <h4>
-      batch starting soon 
-      {/* <PrimaryButton>Contact us</PrimaryButton> */}
-    </h4>
+    <h2>Genesis</h2>
+    <h4><span>Target</span>: NEET-UG/AIIMS</h4>
+    <h4><span>Eligibility</span> : For class 10th to 11th moving students</h4>
+    <h4><span>Medium of Classes</span> : ENGLISH/HINDI</h4>
+    <h4><span>Syllabus Covered</span> : Complete 11th + NEET-UG/AIIMS syllabus of Biology, Physics and Chemistry.</h4>
+    <h4>batch starting soon</h4>
     </div>
 </Card>
 </Section>
 <Section style={{background:'transparent'}}>
 <AlternateCard>
-  
   <div>
-    <h2>
-        Orchid
-    </h2>
-    <h4>
-        <span>Target</span>: NEET-UG/AIIMS
-        </h4>
-        <h4>
-        <span>Eligibility</span> : For class 11th to 12th moving students
-        </h4>
-        <h4>
-        <span>Medium of Classes</span> : ENGLISH/HINDI
-        </h4>
-        <h4>
-        <span>Syllabus Covered</span> : Complete 12th + NEET-UG/AIIMS syllabus of Biology, Physics and Chemistry.
-    </h4>
-    <h4>
-      batch starting soon 
-      {/* <PrimaryButton>Contact us</PrimaryButton> */}
-    </h4>
+    <h2>Orchid</h2>
+    <h4><span>Target</span>: NEET-UG/AIIMS</h4>
+    <h4><span>Eligibility</span> : For class 11th to 12th moving students</h4>
+    <h4><span>Medium of Classes</span> : ENGLISH/HINDI</h4>
+    <h4><span>Syllabus Covered</span> : Complete 12th + NEET-UG/AIIMS syllabus of Biology, Physics and Chemistry.</h4>
+    <h4>batch starting soon</h4>
     </div>
     <ImgDiv>
   <img src={cm2} style={{width:'100%'}} alt="concept" />
-
   </ImgDiv>
 </AlternateCard>
 </Section>
@@ -87,58 +110,29 @@ const Courses= () =>  {
 <Card>
   <ImgDiv>
   <img src={cm3} style={{width:'100%'}} alt="concept" />
-
   </ImgDiv>
   <div>
-    <h2>
-        Synapse
-    </h2>
-    <h4>
-        <span>Target</span>: NEET-UG/AIIMS
-        </h4>
-        <h4>
-        <span>Eligibility</span> : For after 12th class droper students
-        </h4>
-        <h4>
-        <span>Medium of Classes</span> : ENGLISH/HINDI
-        </h4>
-        <h4>
-        <span>Syllabus Covered</span> : Complete NEET-UG/AIIMS syllabus of Biology, Physics and Chemistry.
-    </h4>
-    <h4>
-      batch starting soon 
-      {/* <PrimaryButton>Contact us</PrimaryButton> */}
-    </h4>
+    <h2>Synapse</h2>
+    <h4><span>Target</span>: NEET-UG/AIIMS</h4>
+    <h4><span>Eligibility</span> : For after 12th class droper students</h4>
+    <h4><span>Medium of Classes</span> : ENGLISH/HINDI</h4>
+    <h4><span>Syllabus Covered</span> : Complete NEET-UG/AIIMS syllabus of Biology, Physics and Chemistry.</h4>
+    <h4>batch starting soon</h4>
     </div>
 </Card>
 </Section>
 <Section style={{background:'transparent'}}>
 <AlternateCard>
-  
   <div>
-    <h2>
-        Sucess Elevator
-    </h2>
-    <h4>
-        <span>Target</span>: 12th Boards 
-        </h4>
-        <h4>
-        <span>Eligibility</span> : For class 12th appeared students
-        </h4>
-        <h4>
-        <span>Medium of Classes</span> : ENGLISH/HINDI
-        </h4>
-        <h4>
-        <span>Syllabus Covered</span> : Complete 12th Boards syllabus of Biology, Physics and Chemistry.
-    </h4>
-    <h4>
-      batch starting soon 
-      {/* <PrimaryButton>Contact us</PrimaryButton> */}
-    </h4>
+    <h2>Sucess Elevator</h2>
+    <h4><span>Target</span>: 12th Boards</h4>
+    <h4><span>Eligibility</span> : For class 12th appeared students</h4>
+    <h4><span>Medium of Classes</span> : ENGLISH/HINDI</h4>
+    <h4><span>Syllabus Covered</span> : Complete 12th Boards syllabus of Biology, Physics and Chemistry.</h4>
+    <h4>batch starting soon</h4>
     </div>
     <ImgDiv>
   <img src={cm4} style={{width:'100%'}} alt="concept" />
-
   </ImgDiv>
 </AlternateCard>
 </Section>
@@ -146,37 +140,27 @@ const Courses= () =>  {
 <Card>
   <ImgDiv>
   <img src={cm5} style={{width:'100%'}} alt="concept" />
-
   </ImgDiv>
   <div>
-    <h2>
-        Crash Course
-    </h2>
-    <h4>
-        <span>Target</span>: NEET-UG/AIIMS
-        </h4>
-        <h4>
-        <span>Eligibility</span> : For after students appearing for NEET-UG/AIIMS
-        </h4>
-        <h4>
-        <span>Medium of Classes</span> : ENGLISH/HINDI
-        </h4>
-        <h4>
-        <span>Syllabus Covered</span> : Complete NEET-UG/AIIMS syllabus of Biology, Physics and Chemistry.
-    </h4>
-    <h4>
-      batch starting soon 
-      {/* <PrimaryButton>Contact us</PrimaryButton> */}
-    </h4>
+    <h2>Crash Course</h2>
+    <h4><span>Target</span>: NEET-UG/AIIMS</h4>
+    <h4><span>Eligibility</span> : For after students appearing for NEET-UG/AIIMS</h4>
+    <h4><span>Medium of Classes</span> : ENGLISH/HINDI</h4>
+    <h4><span>Syllabus Covered</span> : Complete NEET-UG/AIIMS syllabus of Biology, Physics and Chemistry.</h4>
+    <h4>batch starting soon</h4>
     </div>
 </Card>
 </Section>
+*/}
+
 <div id="contactus">
    <Form/>
-   </div>
+</div>
+
 </Container>
 
 </StyledSection>
+</main>
 <Footer/>
   </Layout>
   );
@@ -248,6 +232,6 @@ background:aquamarine;
 grid-template-columns:1.5fr 1fr;
 @media (max-width: ${(props) => props.theme.screen.sm}) {
   grid-template-columns:1fr ;
-  
+
   }
 `

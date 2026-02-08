@@ -32,7 +32,7 @@ return(
 
 <FullImage>
 
-                                <img src={bm} alt="Monday Lior"  />
+                                <img src={bm} alt="Er. Bhupendra Middha, Director of Concept Classes"  />
                                 <PlayButton onClick={() => setOpenSMP(true)}>
         <svg xmlns="http://www.w3.org/2000/svg" width="108" height="108" viewBox="0 0 152 152" fill="none">
   <g >

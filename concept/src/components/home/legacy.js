@@ -5,22 +5,23 @@ import { ScrollObserver, valueAtPercentage } from "./aat.js";
 import { useInView } from 'react-intersection-observer';
 import { Container, PrimaryButton } from '../style.js';
 import { useNavigate } from 'react-router-dom';
-import i1 from "../../images/building-cover.png"
-import i2 from "../../images/sc-2.png"
-import i3 from "../../images/sc-3.svg"
-import i4 from "../../images/sc-4.svg"
-import i5 from "../../images/sc-5.svg"
+import { useAnnouncements, useLegacyCards } from '../../hooks/useFirestore';
+// Hardcoded images - commented out, now loaded from admin panel
+// import i1 from "../../images/building-cover.png"
+// import i2 from "../../images/sc-2.png"
+// import i3 from "../../images/sc-3.svg"
+// import i4 from "../../images/sc-4.svg"
+// import i5 from "../../images/sc-5.svg"
 
 const StackCards = ({ cardsData, title }) => {
     cardsData=["","","",""]
-  console.log('useEffect triggered');
     const cardsContainerRef = useRef(null);
     const [containerRef, containerInView] = useInView({ triggerOnce: false });
     const navigate = useNavigate();
+    const { announcements } = useAnnouncements();
+    const { cards: legacyCards } = useLegacyCards();
 
-    const handleResultsClick = () => {
-      navigate('/science-champ-result-2026/');
-    };
+    const bannerAnnouncement = announcements.find(a => a.isBannerEnabled);
 
    useEffect(() => {
     if (containerInView){
@@ -74,113 +75,122 @@ const StackCards = ({ cardsData, title }) => {
     // <Section>
     <Wrap>
     <Container>
+      {bannerAnnouncement && (
       <div style={{backgroundColor:'#076B37', padding:'20px', borderRadius:'20px', marginBottom:'30px', position:'relative', overflow:'visible'}}>
       <ScienceChampBanner style={{width:'100%', display:'flex', justifyContent:'center', alignItems:'center', flexDirection:'column', gap:'15px'}}>
         <NewLabel>NEW</NewLabel>
+        <BannerTitle>
+          {bannerAnnouncement.title}
+        </BannerTitle>
+        {(bannerAnnouncement.subtitle || bannerAnnouncement.description) && (
         <BannerText>
-          🎉 Science Champ 2025-2026 Results are OUT!
+          {bannerAnnouncement.subtitle || bannerAnnouncement.description}
         </BannerText>
-        <PrimaryButton onClick={handleResultsClick} style={{height:'48px', padding:'12px 24px', backgroundColor:'white', color:'#076B37', fontWeight:'600'}}> 
-          Check Your Results
+        )}
+        {bannerAnnouncement.ctaText && (
+        <PrimaryButton onClick={() => {
+          const link = bannerAnnouncement.ctaLink || '/';
+          if (link.startsWith('tel:') || link.startsWith('http')) {
+            window.location.href = link;
+          } else {
+            navigate(link);
+          }
+        }} style={{height:'48px', padding:'12px 24px', backgroundColor:'white', color:'#076B37', fontWeight:'600'}}>
+          {bannerAnnouncement.ctaText}
         </PrimaryButton>
+        )}
       </ScienceChampBanner>
       </div>
+      )}
     <Text>
                 <h2>
-                25+ years of Legacy
+                {Math.floor((new Date() - new Date(1999, 11, 1)) / (365.25 * 24 * 60 * 60 * 1000))}+ years of Legacy
                 </h2>
 
                 </Text>
              
     <div ref={containerRef} >
       <div  className="cards" ref={cardsContainerRef}>
-  
 
-       <div  class="feature-card"  data-index="0">
-    <div  style={{justifyContent:'space-between'}} class="card__inner">
-      <div style={{padding:'0px', position:'relative', background:'darkseagreen'}} class="card__image-container">
+    {legacyCards.map((card) => (
+      <div className="feature-card" data-index="0" key={card.id}>
+        <div className="card__inner">
+          <div style={{backgroundColor:'darkseagreen'}} className="card__image-container">
+            <FullImage style={{margin:'0px auto'}}>
+              <img src={card.imageUrl} alt={card.title} />
+            </FullImage>
+          </div>
+          <div className="card__content">
+            <h4 className="card__title">{card.title}</h4>
+            {card.description && (
+              <p className="card__description">{card.description}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    ))}
+
+    {/* COMMENTED OUT - Hardcoded cards, now loaded from admin panel (Legacy Cards)
+       <div  className="feature-card"  data-index="0">
+    <div  style={{justifyContent:'space-between'}} className="card__inner">
+      <div style={{padding:'0px', position:'relative', background:'darkseagreen'}} className="card__image-container">
          <FullImage className='a' style={{margin:'0px auto'}} >
                   <img  src={i1} alt="concept"/>
         </FullImage>
       </div>
-      <div style={{justifyContent:'space-between'}} class="card__content">
-        <div>
-        <h4 class="card__title">Biggest Infrastructure</h4>
-       
-        </div>
-        <div>
-        <h4 class="card__title">Highest No. of facilities</h4>
-       
-        </div>
-        <div>
-        <h4 class="card__title">Largest pool of faculties</h4>
-        
-        </div>
+      <div style={{justifyContent:'space-between'}} className="card__content">
+        <div><h4 className="card__title">Biggest Infrastructure</h4></div>
+        <div><h4 className="card__title">Highest No. of facilities</h4></div>
+        <div><h4 className="card__title">Largest pool of faculties</h4></div>
       </div>
     </div>
   </div>
-  
-  <div  class="feature-card"  data-index="0">
-    <div class="card__inner">
-      <div style={{backgroundColor:'darkseagreen'}} class="card__image-container">
-         <FullImage style={{margin:'0px auto'}} >
-          <img src={i2} alt="concept"/>
-        </FullImage>
+  <div className="feature-card" data-index="0">
+    <div className="card__inner">
+      <div style={{backgroundColor:'darkseagreen'}} className="card__image-container">
+         <FullImage style={{margin:'0px auto'}}><img src={i2} alt="concept"/></FullImage>
       </div>
-      <div class="card__content"> 
-        <h4 class="card__title">Greatest Selection Ratio</h4>
-        <p class="card__description">
-       in IIT JEE / NEET
-        </p>
+      <div className="card__content">
+        <h4 className="card__title">Greatest Selection Ratio</h4>
+        <p className="card__description">in IIT JEE / NEET</p>
       </div>
     </div>
   </div>
-  <div  class="feature-card"  data-index="0">
-    <div class="card__inner">
-      <div style={{backgroundColor:'darkseagreen'}} class="card__image-container">
-         <FullImage style={{margin:'0px auto'}} >
-          <img src={i3} alt="concept"/>
-        </FullImage>
+  <div className="feature-card" data-index="0">
+    <div className="card__inner">
+      <div style={{backgroundColor:'darkseagreen'}} className="card__image-container">
+         <FullImage style={{margin:'0px auto'}}><img src={i3} alt="concept"/></FullImage>
       </div>
-      <div class="card__content">
-        <h4 class="card__title">Parent's Teacher Meetings</h4>
-        <p class="card__description">
-       Regular meetings are organised to discuss student's progress
-        </p>
+      <div className="card__content">
+        <h4 className="card__title">Parent's Teacher Meetings</h4>
+        <p className="card__description">Regular meetings are organised to discuss student's progress</p>
       </div>
     </div>
   </div>
-  <div  class="feature-card"  data-index="0">
-    <div class="card__inner">
-      <div style={{backgroundColor:'darkseagreen'}} class="card__image-container">
-         <FullImage style={{margin:'0px auto'}} >
-          <img src={i4} alt="concept"/>
-        </FullImage>
+  <div className="feature-card" data-index="0">
+    <div className="card__inner">
+      <div style={{backgroundColor:'darkseagreen'}} className="card__image-container">
+         <FullImage style={{margin:'0px auto'}}><img src={i4} alt="concept"/></FullImage>
       </div>
-      <div class="card__content">
-        <h4 class="card__title">Motivational Sessions</h4>
-        <p class="card__description">
-        Motivation sessions keep the moral of the students up and keep them in a stress free state of mind.
+      <div className="card__content">
+        <h4 className="card__title">Motivational Sessions</h4>
+        <p className="card__description">Motivation sessions keep the moral of the students up and keep them in a stress free state of mind.</p>
+      </div>
+    </div>
+  </div>
+  <div className="feature-card" data-index="0">
+    <div className="card__inner">
+      <div style={{backgroundColor:'darkseagreen'}} className="card__image-container">
+         <FullImage style={{margin:'0px auto'}}><img src={i5} alt="concept"/></FullImage>
+      </div>
+      <div className="card__content">
+        <h4 className="card__title">Concept Library</h4>
+        <p className="card__description">A peaceful and conducive place to study</p>
+      </div>
+    </div>
+  </div>
+    END COMMENTED OUT */}
 
-        </p>
-      </div>
-  </div>
-  </div>
-  <div  class="feature-card"  data-index="0">
-    <div class="card__inner">
-      <div style={{backgroundColor:'darkseagreen'}} class="card__image-container">
-         <FullImage style={{margin:'0px auto'}} >
-          <img src={i5} alt="concept"/>
-        </FullImage>
-      </div>
-      <div class="card__content">
-        <h4 class="card__title">Concept Library</h4>
-        <p class="card__description">
-        A peaceful and conducive place to study
-        </p>
-      </div>
-  </div>
-  </div>
     </div>
     </div>
     <div class="space"></div>
@@ -307,18 +317,33 @@ const NewLabel = styled.div`
   }
 `
 
-const BannerText = styled.div`
-  font-size: 20px;
-  font-weight: 600;
-  color: white;
-  font-family: 'Lexend Medium';
-  
+const BannerTitle = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+  color: #EFC800;
+  font-family: 'Lexend Bold';
+
   @media (max-width: ${props => props.theme.screen.sm}) {
+    font-size: 20px;
+  }
+
+  @media (max-width: ${props => props.theme.screen.xs}) {
     font-size: 18px;
   }
-  
-  @media (max-width: ${props => props.theme.screen.xs}) {
+`
+
+const BannerText = styled.div`
+  font-size: 18px;
+  font-weight: 500;
+  color: #B4D9C3;
+  font-family: 'Lexend Medium';
+
+  @media (max-width: ${props => props.theme.screen.sm}) {
     font-size: 16px;
+  }
+
+  @media (max-width: ${props => props.theme.screen.xs}) {
+    font-size: 14px;
   }
 `
 

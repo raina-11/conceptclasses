@@ -5,80 +5,103 @@ import { Container, Section } from '../components/style';
 import Navigation from '../components/common/navigation/navigation';
 import bg from "../images/bg-courses.webp"
 import courses from "../images/courses.svg"
-import ce1 from "../images/ce1.svg"
-import ce2 from "../images/ce2.svg"
-import ce3 from "../images/ce3.svg"
-import ce4 from "../images/ce4.svg"
+// import ce1 from "../images/ce1.svg"
+// import ce2 from "../images/ce2.svg"
+// import ce3 from "../images/ce3.svg"
+// import ce4 from "../images/ce4.svg"
 import Form from '../components/common/contact-form';
 import Footer from '../components/common/footer';
+import { useCourses } from '../hooks/useFirestore';
+import SEO from '../components/common/SEO';
+import seoConfig from '../seo/seoConfig';
+import { createBreadcrumbSchema } from '../seo/schemas';
 
 const Courses= () =>  {
+  const { courses: courseList, loading } = useCourses('engineering');
+
   return (
-    
+
   <Layout>
+    <SEO {...seoConfig.engineering} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'IIT-JEE Courses', path: '/engineering' }])} />
     <Navigation bgwhite={true}/>
+    <main>
     <StyledSection >
         <Container>
-           
+
+<h1 style={{ textAlign: 'center', margin: '0 0 16px', fontSize: '28px', color: '#005B38' }}>IIT-JEE Coaching Courses</h1>
 <div style={{textAlign:'center', width:'100%'}}>
-<img src={courses} style={{width:'100%'}} alt="concept" />
+<img src={courses} style={{width:'100%'}} alt="IIT-JEE coaching courses at Concept Classes" />
 </div>
+
+{loading ? (
+  <p style={{ textAlign: 'center', padding: '40px' }}>Loading courses...</p>
+) : courseList.length === 0 ? (
+  <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No courses available.</p>
+) : (
+  courseList.map((course, index) => (
+    <Section key={course.id} style={{background:'transparent'}}>
+      {index % 2 === 0 ? (
+        <Card>
+          <ImgDiv>
+            <img src={course.imageUrl} style={{width:'100%'}} alt={course.name} />
+          </ImgDiv>
+          <div>
+            <h2>{course.name}</h2>
+            <h4><span>Target</span>: {course.target}</h4>
+            <h4><span>Eligibility</span> : {course.eligibility}</h4>
+            <h4><span>Medium of Classes</span> : {course.medium}</h4>
+            <h4><span>Syllabus Covered</span> : {course.syllabus}</h4>
+            <h4>{course.status}</h4>
+          </div>
+        </Card>
+      ) : (
+        <AlternateCard>
+          <div>
+            <h2>{course.name}</h2>
+            <h4><span>Target</span>: {course.target}</h4>
+            <h4><span>Eligibility</span> : {course.eligibility}</h4>
+            <h4><span>Medium of Classes</span> : {course.medium}</h4>
+            <h4><span>Syllabus Covered</span> : {course.syllabus}</h4>
+            <h4>{course.status}</h4>
+          </div>
+          <ImgDiv>
+            <img src={course.imageUrl} style={{width:'100%'}} alt={course.name} />
+          </ImgDiv>
+        </AlternateCard>
+      )}
+    </Section>
+  ))
+)}
+
+{/* HARDCODED COURSES - commented out, now loaded from Firestore */}
+{/*
 <Section style={{background:'transparent'}}>
 <Card>
   <ImgDiv>
   <img src={ce1} style={{width:'100%'}} alt="concept" />
-
   </ImgDiv>
   <div>
-    <h2>
-        Early Lead
-    </h2>
-    <h4>
-        <span>Target</span>: IIT JEE (Mains & Advanced)
-        </h4>
-        <h4>
-        <span>Eligibility</span> : For class 10th to 11th moving students
-        </h4>
-        <h4>
-        <span>Medium of Classes</span> : ENGLISH/HINDI
-        </h4>
-        <h4>
-        <span>Syllabus Covered</span> : Complete 11th + JEE (Main and Advanced) syllabus of Maths, Physics and Chemistry.
-    </h4>
-    <h4>
-      batch starting soon 
-      {/* <PrimaryButton>Contact us</PrimaryButton> */}
-    </h4>
+    <h2>Early Lead</h2>
+    <h4><span>Target</span>: IIT JEE (Mains & Advanced)</h4>
+    <h4><span>Eligibility</span> : For class 10th to 11th moving students</h4>
+    <h4><span>Medium of Classes</span> : ENGLISH/HINDI</h4>
+    <h4><span>Syllabus Covered</span> : Complete 11th + JEE (Main and Advanced) syllabus of Maths, Physics and Chemistry.</h4>
+    <h4>batch starting soon</h4>
     </div>
 </Card>
 </Section>
 <Section style={{background:'transparent'}}>
 <AlternateCard>
-  
   <div>
-    <h2>
-        Flight
-    </h2>
-    <h4>
-        <span>Target</span>: IIT JEE (Mains & Advanced)
-        </h4>
-        <h4>
-        <span>Eligibility</span> : For class 11th to 12th moving students
-        </h4>
-        <h4>
-        <span>Medium of Classes</span> : ENGLISH/HINDI
-        </h4>
-        <h4>
-        <span>Syllabus Covered</span> : Complete 12th + JEE (Main and Advanced) syllabus of Maths, Physics and Chemistry.
-    </h4>
-    <h4>
-      batch starting soon 
-      {/* <PrimaryButton>Contact us</PrimaryButton> */}
-    </h4>
+    <h2>Flight</h2>
+    <h4><span>Target</span>: IIT JEE (Mains & Advanced)</h4>
+    <h4><span>Eligibility</span> : For class 11th to 12th moving students</h4>
+    <h4><span>Medium of Classes</span> : ENGLISH/HINDI</h4>
+    <h4><span>Syllabus Covered</span> : Complete 12th + JEE (Main and Advanced) syllabus of Maths, Physics and Chemistry.</h4>
+    <h4>batch starting soon</h4>
     </div>
     <ImgDiv>
   <img src={ce2} style={{width:'100%'}} alt="concept"/>
-
   </ImgDiv>
 </AlternateCard>
 </Section>
@@ -86,67 +109,41 @@ const Courses= () =>  {
 <Card>
   <ImgDiv>
   <img src={ce3} style={{width:'100%'}} alt="concept"/>
-
   </ImgDiv>
   <div>
-    <h2>
-        Eagle's Eye
-    </h2>
-    <h4>
-        <span>Target</span>: IIT JEE (Mains & Advanced)
-        </h4>
-        <h4>
-        <span>Eligibility</span> : For after 12th class droper students
-        </h4>
-        <h4>
-        <span>Medium of Classes</span> : ENGLISH/HINDI
-        </h4>
-        <h4>
-        <span>Syllabus Covered</span> : Complete JEE (Main and Advanced) syllabus of Maths, Physics and Chemistry.
-    </h4>
-    <h4>
-      batch starting soon 
-      {/* <PrimaryButton>Contact us</PrimaryButton> */}
-    </h4>
+    <h2>Eagle's Eye</h2>
+    <h4><span>Target</span>: IIT JEE (Mains & Advanced)</h4>
+    <h4><span>Eligibility</span> : For after 12th class droper students</h4>
+    <h4><span>Medium of Classes</span> : ENGLISH/HINDI</h4>
+    <h4><span>Syllabus Covered</span> : Complete JEE (Main and Advanced) syllabus of Maths, Physics and Chemistry.</h4>
+    <h4>batch starting soon</h4>
     </div>
 </Card>
 </Section>
 <Section style={{background:'transparent'}}>
 <AlternateCard>
-  
   <div>
-    <h2>
-        Sucess Elevator
-    </h2>
-    <h4>
-        <span>Target</span>: 12th Boards + IIT JEE Mains
-        </h4>
-        <h4>
-        <span>Eligibility</span> : For class 12th appeared students
-        </h4>
-        <h4>
-        <span>Medium of Classes</span> : ENGLISH/HINDI
-        </h4>
-        <h4>
-        <span>Syllabus Covered</span> : Complete 12th + JEE Main syllabus of Maths, Physics and Chemistry.
-    </h4>
-    <h4>
-      batch starting soon 
-      {/* <PrimaryButton>Contact us</PrimaryButton> */}
-    </h4>
+    <h2>Sucess Elevator</h2>
+    <h4><span>Target</span>: 12th Boards + IIT JEE Mains</h4>
+    <h4><span>Eligibility</span> : For class 12th appeared students</h4>
+    <h4><span>Medium of Classes</span> : ENGLISH/HINDI</h4>
+    <h4><span>Syllabus Covered</span> : Complete 12th + JEE Main syllabus of Maths, Physics and Chemistry.</h4>
+    <h4>batch starting soon</h4>
     </div>
     <ImgDiv>
   <img src={ce4} style={{width:'100%'}} alt="concept"/>
-
   </ImgDiv>
 </AlternateCard>
+</Section>
+*/}
+
 <div id="contactus">
    <Form/>
-   </div>
-</Section>
+</div>
 
 </Container>
 </StyledSection>
+</main>
 <Footer/>
   </Layout>
   );
@@ -219,6 +216,6 @@ background:aquamarine;
 grid-template-columns:1.5fr 1fr;
 @media (max-width: ${(props) => props.theme.screen.sm}) {
   grid-template-columns:1fr ;
-  
+
   }
 `

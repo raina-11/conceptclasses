@@ -19,7 +19,7 @@ const Footer = () => {
         <FooterColumn className="concept">
           <Address>
             <div>
-             <img style={{height:'60px'}} src={logo} alt="concept"/>
+             <img style={{height:'60px'}} src={logo} alt="Concept Classes logo"/>
             </div>
             <AddressSubtitle>
             Concept Heights', Vyas colony, E-4, Police Thana Road, near Heeralal Hotal, Kanta Khaturia Colony, Bikaner, Rajasthan 334003
@@ -122,7 +122,7 @@ const Footer = () => {
             onClose={closePopup}
           >
         
-<HiringForm/>
+<HiringForm onClose={closePopup}/>
 </Popup>
             </li>
            
@@ -137,7 +137,7 @@ const Footer = () => {
         <MobileShow>
           <BrandContainerMobile>
             <Logo>
-              <img src={logo} alt="concept" />
+              <img src={logo} alt="Concept Classes logo" />
             </Logo>
           </BrandContainerMobile>
           <Address>
@@ -192,7 +192,7 @@ const Footer = () => {
           <ZluriLogo>
             <BrandContainer>
               <Logo>
-                <img style={{height:'40px'}} src={logo} alt="concept" />
+                <img style={{height:'40px'}} src={logo} alt="Concept Classes logo" />
               </Logo>
             </BrandContainer>
             <Copyright>
