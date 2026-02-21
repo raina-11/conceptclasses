@@ -70,9 +70,9 @@ const HiringForm = ({ onClose }) => {
 <h2 >Get in touch <img src={rocket} alt="grow"/> </h2>
        </Text>
         <StyledForm isHidden={formSubmitted} ref={form} onSubmit={sendEmail}>
-        <label>Name</label>
-        <input type="text" name="from_name" />
-        <label>Subject(s)</label>
+        <label htmlFor="hiring-name">Name</label>
+        <input type="text" name="from_name" id="hiring-name" required />
+        <label htmlFor="hiring-subject">Subject(s)</label>
         <input type="hidden" name="subject" value={selectedSubjects.join(", ")} />
         <DropdownContainer>
           <DropdownButton type="button" onClick={() => setDropdownOpen(!dropdownOpen)}>
@@ -106,15 +106,15 @@ const HiringForm = ({ onClose }) => {
             ))}
           </SelectedTags>
         )}
-        <label>Experience</label>
-        <input name="exp" />
-        <label>Contact</label>
-        <input type="tel" pattern="[0-9]{10}" name="phone" />
+        <label htmlFor="hiring-exp">Experience</label>
+        <input name="exp" id="hiring-exp" />
+        <label htmlFor="hiring-phone">Contact</label>
+        <input type="tel" pattern="[0-9]{10}" name="phone" id="hiring-phone" required />
         
         <Submit type="submit" value="Send" onClick={handleSubmit} />
       </StyledForm>
       
-      {formSubmitted && <Animation class="canvas"><div class="notepad">
+      {formSubmitted && <Animation className="canvas" role="status" aria-live="polite"><div className="notepad">
       <div class="cover">
       </div>
       <div class="page one">

@@ -17,6 +17,7 @@ export default function CloudImage({
   width,
   aspectRatio,
   loading = 'lazy',
+  fetchPriority,
   style,
   className,
 }) {
@@ -57,6 +58,8 @@ export default function CloudImage({
         src={optimizedSrc}
         alt={alt}
         loading={loading}
+        fetchPriority={fetchPriority}
+        decoding={loading === 'eager' ? 'sync' : 'async'}
         onLoad={() => setLoaded(true)}
         style={{
           display: 'block',

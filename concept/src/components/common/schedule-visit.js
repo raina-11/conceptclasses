@@ -39,19 +39,19 @@ const ScheduleForm = () => {
        <Text>
        </Text>
         <StyledForm isHidden={formSubmitted} ref={form} onSubmit={sendEmail}>
-        <label>Name</label>
-        <input type="text" name="from_name" />
-        <label>Phone no.</label>
-        <input type="tel" pattern="[0-9]{10}" name="phone" />
-        <label>Location</label>
-    <select name="location" id="product" >
-        <option value="Bikaner" >Bikaner</option>
+        <label htmlFor="visit-name">Name</label>
+        <input type="text" name="from_name" id="visit-name" required />
+        <label htmlFor="visit-phone">Phone no.</label>
+        <input type="tel" pattern="[0-9]{10}" name="phone" id="visit-phone" required />
+        <label htmlFor="visit-location">Location</label>
+    <select name="location" id="visit-location">
+        <option value="Bikaner">Bikaner</option>
   <option value="Hanumangarh">Hanumangarh</option>
   <option value="Nagaur">Nagaur</option>
   <option value="Suratgarh">Suratgarh</option>
   </select>
-        <label>Suitable slot for visit</label>
-    <select name="time_slot" id="product" >
+        <label htmlFor="visit-slot">Suitable slot for visit</label>
+    <select name="time_slot" id="visit-slot">
         <option value="10AM - 1PM" >10AM - 1PM</option>
   <option value="2PM - 5PM">2PM - 5PM</option>
   <option value="5PM - 8PM">5PM - 8PM</option>
@@ -59,7 +59,7 @@ const ScheduleForm = () => {
         <Submit type="submit" value="Book Now" onClick={handleSubmit} />
       </StyledForm>
       
-      {formSubmitted && <Animation class="canvas"><div class="notepad">
+      {formSubmitted && <Animation className="canvas" role="status" aria-live="polite"><div className="notepad">
       <div class="cover">
       </div>
       <div class="page one">

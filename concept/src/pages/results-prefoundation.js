@@ -19,7 +19,7 @@ const ResultsPreFoundation= () =>  {
     <Layout>
       <SEO {...seoConfig.resultsPreFoundation} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Results', path: '/results/pre-foundation' }, { name: 'Pre-Foundation Results', path: '/results/pre-foundation' }])} />
       <Navigation/>
-    <main>
+    <main id="main-content">
     <Section style={{overflow:'unset',  background:'darkseagreen'}}>
       <Container>
         <Stick>

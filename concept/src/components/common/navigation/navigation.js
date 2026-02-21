@@ -134,7 +134,7 @@ export default class Navigation extends Component {
     return (
      
      <div style={{width:'100vw'}}>
-      <Nav {...this.props} scrolled={this.state.hasScrolled}>
+      <Nav {...this.props} scrolled={this.state.hasScrolled} aria-label="Main navigation">
      
         <StyledContainer {...this.props} scrolled={this.state.hasScrolled} bgwhite={bgwhite}>
           {/* <NavBar> */}
@@ -148,11 +148,13 @@ export default class Navigation extends Component {
             <button
               onClick={this.toggleMobileMenu}
               style={{ color: "black", background: "none" }}
+              aria-label={this.state.mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={this.state.mobileMenuOpen}
             >
               {this.state.mobileMenuOpen ? (
-                <X size={24} alt="close menu" />
+                <X size={24} aria-hidden="true" />
               ) : (
-                <Menu size={24} alt="open menu" />
+                <Menu size={24} aria-hidden="true" />
               )}
             </button>
           </Mobile>

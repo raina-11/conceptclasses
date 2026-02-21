@@ -26,7 +26,7 @@ const Courses= () =>  {
   <Layout>
     <SEO {...seoConfig.engineering} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'IIT-JEE Courses', path: '/engineering' }])} />
     <Navigation bgwhite={true}/>
-    <main>
+    <main id="main-content">
     <StyledSection >
         <Container>
 

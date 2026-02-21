@@ -27,7 +27,7 @@ const Courses= () =>  {
   <Layout>
     <SEO {...seoConfig.medical} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'NEET Courses', path: '/medical' }])} />
     <Navigation bgwhite={true}/>
-    <main>
+    <main id="main-content">
     <StyledSection >
         <Container>
 

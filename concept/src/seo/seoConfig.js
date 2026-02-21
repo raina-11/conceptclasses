@@ -2,7 +2,7 @@ const seoConfig = {
   home: {
     title: 'Best IIT-JEE & NEET Coaching in Bikaner Since 1999',
     description:
-      'Concept Classes is the leading coaching institute in Bikaner for IIT-JEE, NEET-UG, and Pre-Foundation courses. 25+ years of excellence with top results. Founded by Er. Bhupendra Middha.',
+      'Concept Classes - leading coaching institute in Bikaner for IIT-JEE, NEET-UG & Pre-Foundation. 25+ years of excellence with top results.',
     keywords:
       'IIT JEE coaching Bikaner, NEET coaching Bikaner, best coaching institute Bikaner, Concept Classes, JEE Advanced preparation, NEET UG coaching, pre-foundation courses Bikaner, Bhupendra Middha',
     canonicalPath: '/',

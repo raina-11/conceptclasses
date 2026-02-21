@@ -27,7 +27,7 @@ const Images= () =>  {
    <Layout>
     <SEO {...seoConfig.images} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Gallery', path: '/images' }])} />
 	<Navigation/>
-   <main>
+   <main id="main-content">
    <Section style={{background:'darkseagreen'}}>
     <Container>
  <h1 style={{ textAlign: 'center', fontSize: '28px', color: '#005B38', marginBottom: '8px' }}>Concept Classes Photo Gallery</h1>

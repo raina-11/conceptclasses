@@ -19,7 +19,7 @@ const ResultsMedical= () =>  {
     <Layout>
       <SEO {...seoConfig.resultsMedical} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Results', path: '/results/medical' }, { name: 'NEET Results', path: '/results/medical' }])} />
       <Navigation/>
-    <main>
+    <main id="main-content">
     <Section style={{overflow:'unset', background:'darkseagreen'}}>
       <Container>
         <Stick>

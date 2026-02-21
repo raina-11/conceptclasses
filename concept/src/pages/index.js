@@ -62,7 +62,7 @@ useEffect(() => {
     <SEO {...seoConfig.home} schemaMarkup={schemaMarkup} />
     <Navigation bgwhite={true}/>
 
-    <main>
+    <main id="main-content">
     <H1>Best IIT-JEE & NEET Coaching in Bikaner Since 1999</H1>
     {popupAnnouncement && (
     <Popup
@@ -113,6 +113,7 @@ useEffect(() => {
           alt={banner.altText || 'concept institute bikaner'}
           width={1400}
           loading={index === 0 ? 'eager' : 'lazy'}
+          fetchPriority={index === 0 ? 'high' : undefined}
         />
       </SDiv>
     ))}

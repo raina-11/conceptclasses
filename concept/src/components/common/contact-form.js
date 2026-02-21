@@ -41,25 +41,25 @@ const Form = () => {
 <h2 >Get in touch <img src={rocket} alt="grow"/> </h2>
        </Text>
         <StyledForm isHidden={formSubmitted} ref={form} onSubmit={sendEmail}>
-        <label>Student's Name</label>
-        <input type="text" name="from_name" />
-        <label>Class</label>
-        <input type="text" name="class" />
-        <label>Phone no.</label>
-        <input type="tel" pattern="[0-9]{10}" name="phone" />
-        <label>Location</label>
-    <select name="location" id="product" >
-        <option value="Bikaner" >Bikaner</option>
+        <label htmlFor="contact-name">Student's Name</label>
+        <input type="text" name="from_name" id="contact-name" required />
+        <label htmlFor="contact-class">Class</label>
+        <input type="text" name="class" id="contact-class" />
+        <label htmlFor="contact-phone">Phone no.</label>
+        <input type="tel" pattern="[0-9]{10}" name="phone" id="contact-phone" required />
+        <label htmlFor="contact-location">Location</label>
+    <select name="location" id="contact-location">
+        <option value="Bikaner">Bikaner</option>
   <option value="Hanumangarh">Hanumangarh</option>
   <option value="Nagaur">Nagaur</option>
   <option value="Suratgarh">Suratgarh</option>
   </select>
-        <label>Message</label>
-        <input name="message" />
+        <label htmlFor="contact-message">Message</label>
+        <input name="message" id="contact-message" />
         <Submit type="submit" value="Send" onClick={handleSubmit} />
       </StyledForm>
       
-      {formSubmitted && <Animation class="canvas"><div class="notepad">
+      {formSubmitted && <Animation className="canvas" role="status" aria-live="polite"><div className="notepad">
       <div class="cover">
       </div>
       <div class="page one">

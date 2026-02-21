@@ -90,7 +90,7 @@ function ResultLookup() {
     <Layout>
     <SEO {...seoConfig.scienceChampResult} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Science Champ Result', path: '/science-champ-result-2026' }])} />
     <Navigation />
-    <main>
+    <main id="main-content">
     <Section style={{display:'flex', flexDirection:'column',paddingTop:'1vh', justifyContent:'center' , minHeight:'100vh', background:'ivory'}}>
         <Container>
     <div style={styles.container}>

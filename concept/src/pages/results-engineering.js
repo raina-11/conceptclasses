@@ -19,7 +19,7 @@ const ResultsEngineering= () =>  {
     <Layout>
       <SEO {...seoConfig.resultsEngineering} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Results', path: '/results/engineering' }, { name: 'IIT-JEE Results', path: '/results/engineering' }])} />
       <Navigation/>
-    <main>
+    <main id="main-content">
     <Section style={{overflow:'unset',  background:'darkseagreen'}}>
       <Container>
         <Stick>

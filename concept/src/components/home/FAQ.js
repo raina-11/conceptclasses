@@ -18,12 +18,19 @@ const FAQ = () => {
         <FAQList>
           {faqs.map((faq, index) => (
             <FAQItem key={index}>
-              <FAQQuestion onClick={() => toggle(index)} aria-expanded={openIndex === index}>
-                <span>{faq.question}</span>
-                <Arrow open={openIndex === index}>&#9660;</Arrow>
+              <FAQQuestion>
+                <FAQButton
+                  type="button"
+                  onClick={() => toggle(index)}
+                  aria-expanded={openIndex === index}
+                  aria-controls={`faq-answer-${index}`}
+                >
+                  <span>{faq.question}</span>
+                  <Arrow open={openIndex === index}>&#9660;</Arrow>
+                </FAQButton>
               </FAQQuestion>
               {openIndex === index && (
-                <FAQAnswer>{faq.answer}</FAQAnswer>
+                <FAQAnswer id={`faq-answer-${index}`}>{faq.answer}</FAQAnswer>
               )}
             </FAQItem>
           ))}
@@ -60,7 +67,10 @@ const FAQItem = styled.div`
   overflow: hidden;
 `;
 
-const FAQQuestion = styled.dt`
+const FAQQuestion = styled.dt``;
+
+const FAQButton = styled.button`
+  width: 100%;
   padding: 16px 20px;
   cursor: pointer;
   display: flex;
@@ -69,6 +79,9 @@ const FAQQuestion = styled.dt`
   font-family: 'Lexend Medium', sans-serif;
   font-size: 16px;
   color: #333;
+  background: none;
+  border: none;
+  text-align: left;
   user-select: none;
   &:hover {
     background: #f0f0f0;

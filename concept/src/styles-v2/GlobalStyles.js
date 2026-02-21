@@ -122,7 +122,6 @@ const GlobalStyles = createGlobalStyle`
   button {
     border: none;
     background: none;
-    outline: none;
     padding: 0;
     cursor: pointer;
   }
@@ -130,7 +129,28 @@ const GlobalStyles = createGlobalStyle`
   a {
     cursor: pointer;
   }
-  
+
+  /* Accessible focus indicators for keyboard users */
+  :focus {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid #005B38;
+    outline-offset: 2px;
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 
 `
 

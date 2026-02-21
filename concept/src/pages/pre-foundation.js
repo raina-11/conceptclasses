@@ -36,7 +36,7 @@ const Courses= () =>  {
   <Layout>
     <SEO {...seoConfig.preFoundation} schemaMarkup={createBreadcrumbSchema([{ name: 'Home', path: '/' }, { name: 'Pre-Foundation', path: '/pre-foundation' }])} />
     <Navigation bgwhite={true}/>
-    <main>
+    <main id="main-content">
     <StyledSection >
         <Container>
 
