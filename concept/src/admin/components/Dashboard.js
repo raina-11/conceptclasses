@@ -4,7 +4,8 @@ import {
   useAllBanners,
   useAllResults,
   useAllSuccessStories,
-  useAllAnnouncements
+  useAllAnnouncements,
+  useAllFaqs
 } from '../../hooks/useFirestore';
 import '../styles/admin.css';
 
@@ -13,6 +14,7 @@ export default function Dashboard() {
   const { results } = useAllResults();
   const { stories } = useAllSuccessStories();
   const { announcements } = useAllAnnouncements();
+  const { faqs } = useAllFaqs();
 
   return (
     <div>
@@ -42,6 +44,13 @@ export default function Dashboard() {
           <div className="stat-card">
             <h3>{announcements.length}</h3>
             <p>Announcements</p>
+          </div>
+        </Link>
+
+        <Link to="/admin/faq" style={{ textDecoration: 'none' }}>
+          <div className="stat-card">
+            <h3>{faqs.length}</h3>
+            <p>FAQs</p>
           </div>
         </Link>
       </div>

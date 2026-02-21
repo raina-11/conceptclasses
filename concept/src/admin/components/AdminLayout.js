@@ -66,6 +66,11 @@ export default function AdminLayout() {
                 <span>Courses</span>
               </NavLink>
             </li>
+            <li>
+              <NavLink to="/admin/faq">
+                <span>FAQs</span>
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </aside>

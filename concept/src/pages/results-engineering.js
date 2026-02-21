@@ -6,6 +6,8 @@ import Navigation from '../components/common/navigation/navigation';
 import Form from '../components/common/contact-form';
 import Footer from '../components/common/footer';
 import { useResults } from '../hooks/useFirestore';
+import CloudImage from '../components/common/CloudImage';
+import { ResultsSkeleton } from '../components/common/Skeleton';
 import SEO from '../components/common/SEO';
 import seoConfig from '../seo/seoConfig';
 import { createBreadcrumbSchema } from '../seo/schemas';
@@ -24,11 +26,11 @@ const ResultsEngineering= () =>  {
         <h1 style={{textAlign:'center'}}>IIT-JEE Results - Concept Roars!</h1>
         </Stick>
 
-        {loading && <p style={{textAlign:'center', padding:'40px', color:'#fff'}}>Loading results...</p>}
+        {loading && <ResultsSkeleton count={3} />}
 
         {results.map((result) => (
           <ImgDiv key={result.id}>
-            <img src={result.imageUrl} alt={result.title || 'Student results at Concept Classes'} />
+            <CloudImage src={result.imageUrl} alt={result.title || 'Student results at Concept Classes'} width={1200} />
           </ImgDiv>
         ))}
 

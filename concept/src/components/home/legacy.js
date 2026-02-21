@@ -6,6 +6,7 @@ import { useInView } from 'react-intersection-observer';
 import { Container, PrimaryButton } from '../style.js';
 import { useNavigate } from 'react-router-dom';
 import { useAnnouncements, useLegacyCards } from '../../hooks/useFirestore';
+import CloudImage from '../common/CloudImage';
 // Hardcoded images - commented out, now loaded from admin panel
 // import i1 from "../../images/building-cover.png"
 // import i2 from "../../images/sc-2.png"
@@ -117,7 +118,7 @@ const StackCards = ({ cardsData, title }) => {
         <div className="card__inner">
           <div style={{backgroundColor:'darkseagreen'}} className="card__image-container">
             <FullImage style={{margin:'0px auto'}}>
-              <img src={card.imageUrl} alt={card.title} />
+              <CloudImage src={card.imageUrl} alt={card.title} width={800} />
             </FullImage>
           </div>
           <div className="card__content">
@@ -209,6 +210,7 @@ padding-top:40px;
 padding-bottom:100px;
 .card__image-container {
 height:350px;
+overflow:hidden;
 }
 @media (max-width: ${props => props.theme.screen.sm}) {
     .card__image-container {
@@ -217,21 +219,22 @@ height:350px;
 }
 `
 const FullImage = styled.div`
-width:100%;
+width:90%;
+max-height:300px;
 align-self: center;
-margin:40px auto 0;
+margin:0px auto;
 text-align:center;
 img{
- width:90%;
- margin:0px auto;
+ width:100%;
  max-height: 300px;
+ object-fit: contain;
 }
 @media (max-width: ${props => props.theme.screen.sm}) {
     width:95%;
   }
   @media (max-width: ${props => props.theme.screen.xs}) {
     img{
-      width:90%;
+      width:100%;
      }
   }
 &.a{

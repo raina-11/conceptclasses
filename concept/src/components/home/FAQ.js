@@ -1,36 +1,10 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Container, Section } from '../style';
-
-export const faqs = [
-  {
-    question: 'What courses does Concept Classes offer?',
-    answer:
-      'Concept Classes offers coaching for IIT-JEE (Main & Advanced), NEET-UG, and Pre-Foundation programs for Class 9th and 10th students. Engineering courses include Early Lead, Flight, and Eagle\'s Eye. Medical courses include Genesis, Orchid, and Synapse.',
-  },
-  {
-    question: 'Where is Concept Classes located?',
-    answer:
-      'Our main campus is at Concept Heights, Vyas Colony, E-4, Police Thana Road, Bikaner, Rajasthan 334003. We also have branches in Nagaur, Hanumangarh, and Suratgarh.',
-  },
-  {
-    question: 'Who founded Concept Classes and when?',
-    answer:
-      'Concept Classes was founded in 1999 by Er. Bhupendra Middha, an experienced mathematics educator. The institute has over 25 years of coaching excellence in Bikaner.',
-  },
-  {
-    question: 'What is the medium of instruction at Concept Classes?',
-    answer:
-      'Classes are conducted in both English and Hindi medium to ensure students from all backgrounds can learn effectively.',
-  },
-  {
-    question: 'How can I contact Concept Classes for admission enquiry?',
-    answer:
-      'You can call us at 9928111865, visit our campus in Bikaner, or fill the contact form on our website. You can also schedule a campus visit through our website.',
-  },
-];
+import { useFaqs } from '../../hooks/useFirestore';
 
 const FAQ = () => {
+  const { faqs } = useFaqs();
   const [openIndex, setOpenIndex] = useState(null);
 
   const toggle = (index) => {

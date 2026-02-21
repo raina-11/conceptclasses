@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   collection,
   query,
   orderBy,
-  where,
   onSnapshot,
   doc,
   getDoc,
-  getDocs,
   addDoc,
   setDoc,
   updateDoc,
@@ -15,37 +13,15 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { useDataContext } from '../context/DataContext';
 
-// Hook to fetch banners
+// Hook to fetch banners (reads from cached DataContext)
 export function useBanners() {
-  const [banners, setBanners] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const q = query(
-      collection(db, 'banners'),
-      orderBy('order', 'asc')
-    );
-
-    const unsubscribe = onSnapshot(q,
-      (snapshot) => {
-        const data = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(banner => banner.isActive !== false);
-        setBanners(data);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching banners:', err);
-        setError(err);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
+  const { data, loading, error } = useDataContext();
+  const banners = useMemo(
+    () => data.banners.filter(b => b.isActive !== false),
+    [data.banners]
+  );
   return { banners, loading, error };
 }
 
@@ -82,62 +58,20 @@ export function useAllBanners() {
   return { banners, loading, error };
 }
 
-// Hook to fetch statistics
+// Hook to fetch statistics (reads from cached DataContext)
 export function useStatistics(type = 'india') {
-  const [statistics, setStatistics] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const docRef = doc(db, 'statistics', type);
-
-    const unsubscribe = onSnapshot(docRef,
-      (doc) => {
-        if (doc.exists()) {
-          setStatistics({ id: doc.id, ...doc.data() });
-        }
-        setLoading(false);
-      },
-      (err) => {
-        setError(err);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [type]);
-
+  const { data, loading, error } = useDataContext();
+  const statistics = type === 'rajasthan' ? data.statisticsRajasthan : data.statisticsIndia;
   return { statistics, loading, error };
 }
 
-// Hook to fetch results by category
+// Hook to fetch results by category (reads from cached DataContext)
 export function useResults(category) {
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const q = query(collection(db, 'results'));
-
-    const unsubscribe = onSnapshot(q,
-      (snapshot) => {
-        const data = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(r => r.category === category && r.isActive !== false)
-          .sort((a, b) => (a.order || 0) - (b.order || 0));
-        setResults(data);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching results:', err);
-        setError(err);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [category]);
-
+  const { data, loading, error } = useDataContext();
+  const results = useMemo(
+    () => data.results.filter(r => r.category === category && r.isActive !== false),
+    [data.results, category]
+  );
   return { results, loading, error };
 }
 
@@ -171,34 +105,13 @@ export function useAllResults() {
   return { results, loading, error };
 }
 
-// Hook to fetch success stories
+// Hook to fetch success stories (reads from cached DataContext)
 export function useSuccessStories() {
-  const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const q = query(collection(db, 'successStories'));
-
-    const unsubscribe = onSnapshot(q,
-      (snapshot) => {
-        const data = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(story => story.isActive !== false)
-          .sort((a, b) => (a.row || 0) - (b.row || 0) || (a.order || 0) - (b.order || 0));
-        setStories(data);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching success stories:', err);
-        setError(err);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
+  const { data, loading, error } = useDataContext();
+  const stories = useMemo(
+    () => data.successStories.filter(s => s.isActive !== false),
+    [data.successStories]
+  );
   return { stories, loading, error };
 }
 
@@ -232,33 +145,13 @@ export function useAllSuccessStories() {
   return { stories, loading, error };
 }
 
-// Hook to fetch announcements
+// Hook to fetch announcements (reads from cached DataContext)
 export function useAnnouncements() {
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const q = query(collection(db, 'announcements'));
-
-    const unsubscribe = onSnapshot(q,
-      (snapshot) => {
-        const data = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(a => a.isActive !== false);
-        setAnnouncements(data);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching announcements:', err);
-        setError(err);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
+  const { data, loading, error } = useDataContext();
+  const announcements = useMemo(
+    () => data.announcements.filter(a => a.isActive !== false),
+    [data.announcements]
+  );
   return { announcements, loading, error };
 }
 
@@ -487,34 +380,13 @@ export const successStoriesOperations = {
   }
 };
 
-// Hook to fetch legacy cards (public)
+// Hook to fetch legacy cards (reads from cached DataContext)
 export function useLegacyCards() {
-  const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const q = query(collection(db, 'legacyCards'));
-
-    const unsubscribe = onSnapshot(q,
-      (snapshot) => {
-        const data = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(c => c.isActive !== false)
-          .sort((a, b) => (a.order || 0) - (b.order || 0));
-        setCards(data);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching legacy cards:', err);
-        setError(err);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
+  const { data, loading, error } = useDataContext();
+  const cards = useMemo(
+    () => data.legacyCards.filter(c => c.isActive !== false),
+    [data.legacyCards]
+  );
   return { cards, loading, error };
 }
 
@@ -596,34 +468,13 @@ export const legacyCardsOperations = {
   }
 };
 
-// Hook to fetch courses by category (public)
+// Hook to fetch courses by category (reads from cached DataContext)
 export function useCourses(category) {
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const q = query(collection(db, 'courses'));
-
-    const unsubscribe = onSnapshot(q,
-      (snapshot) => {
-        const data = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(c => c.category === category && c.isActive !== false)
-          .sort((a, b) => (a.order || 0) - (b.order || 0));
-        setCourses(data);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching courses:', err);
-        setError(err);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [category]);
-
+  const { data, loading, error } = useDataContext();
+  const courses = useMemo(
+    () => data.courses.filter(c => c.category === category && c.isActive !== false),
+    [data.courses, category]
+  );
   return { courses, loading, error };
 }
 
@@ -702,6 +553,66 @@ export const coursesOperations = {
       }
     }
     return deleteDoc(docRef);
+  }
+};
+
+// Hook to fetch FAQs (reads from cached DataContext)
+export function useFaqs() {
+  const { data, loading, error } = useDataContext();
+  const faqs = useMemo(
+    () => data.faqs.filter(f => f.isActive !== false),
+    [data.faqs]
+  );
+  return { faqs, loading, error };
+}
+
+// Hook to fetch all FAQs (for admin)
+export function useAllFaqs() {
+  const [faqs, setFaqs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const q = query(collection(db, 'faqs'));
+
+    const unsubscribe = onSnapshot(q,
+      (snapshot) => {
+        const data = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
+        setFaqs(data);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error fetching FAQs:', err);
+        setError(err);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  return { faqs, loading, error };
+}
+
+// CRUD operations for FAQs
+export const faqOperations = {
+  async add(data) {
+    return addDoc(collection(db, 'faqs'), {
+      ...data,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  },
+
+  async update(id, data) {
+    const docRef = doc(db, 'faqs', id);
+    return updateDoc(docRef, { ...data, updatedAt: serverTimestamp() });
+  },
+
+  async delete(id) {
+    return deleteDoc(doc(db, 'faqs', id));
   }
 };
 

@@ -13,6 +13,8 @@ import courses from "../images/courses.svg"
 import Form from '../components/common/contact-form';
 import Footer from '../components/common/footer';
 import { useCourses } from '../hooks/useFirestore';
+import CloudImage from '../components/common/CloudImage';
+import { CourseSkeleton } from '../components/common/Skeleton';
 import SEO from '../components/common/SEO';
 import seoConfig from '../seo/seoConfig';
 import { createBreadcrumbSchema } from '../seo/schemas';
@@ -35,7 +37,7 @@ const Courses= () =>  {
 </div>
 
 {loading ? (
-  <p style={{ textAlign: 'center', padding: '40px' }}>Loading courses...</p>
+  <CourseSkeleton count={2} />
 ) : courseList.length === 0 ? (
   <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>No courses available.</p>
 ) : (
@@ -44,7 +46,7 @@ const Courses= () =>  {
       {index % 2 === 0 ? (
         <Card>
           <ImgDiv>
-            <img src={course.imageUrl} style={{width:'100%'}} alt={course.name} />
+            <CloudImage src={course.imageUrl} alt={course.name} width={400} />
           </ImgDiv>
           <div>
             <h2>{course.name}</h2>
@@ -66,7 +68,7 @@ const Courses= () =>  {
             <h4>{course.status}</h4>
           </div>
           <ImgDiv>
-            <img src={course.imageUrl} style={{width:'100%'}} alt={course.name} />
+            <CloudImage src={course.imageUrl} alt={course.name} width={400} />
           </ImgDiv>
         </AlternateCard>
       )}

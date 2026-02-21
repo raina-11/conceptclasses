@@ -38,6 +38,48 @@ import Popup from "reactjs-popup"
 import 'reactjs-popup/dist/index.css';
 import AnchorLink from 'react-anchor-link-smooth-scroll'
 import ScheduleForm from "../schedule-visit"
+import { useCourses } from '../../../hooks/useFirestore';
+
+const MOBILE_CATEGORIES = [
+  { key: 'engineering', label: 'IIT JEE', href: '/engineering', icon: i1 },
+  { key: 'medical', label: 'NEET/AIIMS', href: '/medical', icon: i2 },
+  { key: 'prefoundation', label: 'Pre Foundation', href: '/pre-foundation', icon: i3 },
+];
+
+function MobileCoursesList({ onClose }) {
+  const { courses: engineeringCourses } = useCourses('engineering');
+  const { courses: medicalCourses } = useCourses('medical');
+  const { courses: prefoundationCourses } = useCourses('prefoundation');
+
+  const coursesByCategory = {
+    engineering: engineeringCourses,
+    medical: medicalCourses,
+    prefoundation: prefoundationCourses,
+  };
+
+  return (
+    <DropdownColumn>
+      {MOBILE_CATEGORIES.map(cat => (
+        <React.Fragment key={cat.key}>
+          <DropdownItemTitle>
+            <StyledImage src={cat.icon} />
+            <h5>{cat.label}</h5>
+          </DropdownItemTitle>
+          {coursesByCategory[cat.key].map(course => (
+            <a key={course.id} href={cat.href} onClick={onClose}>
+              <DropdownItemZluri>
+                <DropdownItemTextMobile>
+                  <h4>{course.name}</h4>
+                  {course.eligibility && <span>{course.eligibility}</span>}
+                </DropdownItemTextMobile>
+              </DropdownItemZluri>
+            </a>
+          ))}
+        </React.Fragment>
+      ))}
+    </DropdownColumn>
+  );
+}
 export default class Navigation extends Component {
   
   state = {
@@ -195,148 +237,7 @@ export default class Navigation extends Component {
                           <AccordionItemButton>Courses </AccordionItemButton>
                         </AccordionItemHeading>
                         <AccordionItemPanel>
-                          <DropdownColumn>
-                            <DropdownItemTitle >
-                              <StyledImage src={i1} />
-                              <h5>
-                                IIT JEE
-                              </h5>
-                            </DropdownItemTitle>
-
-                            <a
-                              href="/engineering"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                               
-                                <DropdownItemTextMobile>
-                                  <h4>11th + IIT JEE (Early lead)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                            <a
-                              href="/engineering/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                            
-                                <DropdownItemTextMobile>
-                                  <h4>12th + IIT JEE (Flight)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                            <a
-                              href="/engineering/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                            
-                                <DropdownItemTextMobile>
-                                  <h4>Target (Eagle's eye)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                            <a
-                              href="/engineering/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                                
-                                <DropdownItemTextMobile>
-                                  <h4>12th + NCERT (Success Elevator)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                            
-                            <DropdownItemTitle>
-                              <StyledImage src={i2} />
-                              <h5>
-                                NEET/AIIMS
-                              </h5>
-                            </DropdownItemTitle>
-                            <a
-                              href="/medical/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                                
-                                <DropdownItemTextMobile>
-                                  <h4>11th + NEET (Genesis)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                            <a
-                              href="/medical/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                            
-                                <DropdownItemTextMobile>
-                                <h4>12th + NEET (Orchid)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                            <a
-                              href="/medical/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                               
-                                <DropdownItemTextMobile>
-                                  <h4>Target NEET (Synapse)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                            <a
-                              href="/medical/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                               
-                                <DropdownItemTextMobile>
-                                  <h4>12th + NCERT (Success Elevator)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a><a
-                              href="/medical/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                               
-                                <DropdownItemTextMobile>
-                                  <h4>NEET Crash Course</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                            <DropdownItemTitle>
-                              <StyledImage src={i3} />
-                              <h5>
-                                Pre Foundation
-                              </h5>
-                            </DropdownItemTitle>
-
-                            <a
-                              href="/pre-foundation/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                                <DropdownItemTextMobile>
-                                  <h4>9th (Focus)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                            <a
-                              href="/pre-foundation/"
-                              onClick={this.closeMobileMenu}
-                            >
-                              <DropdownItemZluri>
-                               
-                                <DropdownItemTextMobile>
-                                  <h4>10th (Laser)</h4>
-                                </DropdownItemTextMobile>
-                              </DropdownItemZluri>
-                            </a>
-                          </DropdownColumn>
+                          <MobileCoursesList onClose={this.closeMobileMenu} />
                         </AccordionItemPanel>
                       </AccordionItem>
                     </Accordion>

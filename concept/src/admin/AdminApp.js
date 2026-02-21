@@ -11,6 +11,7 @@ import SuccessStoriesManager from './components/SuccessStoriesManager';
 import AnnouncementsEditor from './components/AnnouncementsEditor';
 import LegacyCardsManager from './components/LegacyCardsManager';
 import CoursesManager from './components/CoursesManager';
+import FAQEditor from './components/FAQEditor';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -47,6 +48,7 @@ function AdminRoutes() {
         <Route path="announcements" element={<AnnouncementsEditor />} />
         <Route path="legacy-cards" element={<LegacyCardsManager />} />
         <Route path="courses" element={<CoursesManager />} />
+        <Route path="faq" element={<FAQEditor />} />
       </Route>
     </Routes>
   );

@@ -14,11 +14,11 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import Popup from 'reactjs-popup';
 import { PrimaryButton } from '../components/style';
 import { useNavigate } from 'react-router-dom';
-import { useBanners, useAnnouncements } from '../hooks/useFirestore';
+import { useBanners, useAnnouncements, useFaqs } from '../hooks/useFirestore';
+import CloudImage from '../components/common/CloudImage';
 import SEO from '../components/common/SEO';
 import seoConfig from '../seo/seoConfig';
 import { createBreadcrumbSchema, createFAQSchema } from '../seo/schemas';
-import { faqs } from '../components/home/FAQ';
 
 const Home= () =>  {
 
@@ -27,6 +27,7 @@ const [isPopupOpen, setIsPopupOpen] = useState(true);
 const [carouselKey, setCarouselKey] = useState(Date.now());
 const { banners, loading: bannersLoading } = useBanners();
 const { announcements } = useAnnouncements();
+const { faqs } = useFaqs();
 
 const popupAnnouncement = announcements.find(a => a.isPopupEnabled);
 
@@ -107,7 +108,12 @@ useEffect(() => {
     >
     {banners.map((banner, index) => (
       <SDiv key={banner.id || index}>
-        <StyledImage src={banner.imageUrl} alt={banner.altText || 'concept institute bikaner'} />
+        <CloudImage
+          src={banner.imageUrl}
+          alt={banner.altText || 'concept institute bikaner'}
+          width={1400}
+          loading={index === 0 ? 'eager' : 'lazy'}
+        />
       </SDiv>
     ))}
   </Carousel>
@@ -143,10 +149,6 @@ const H1 = styled.h1`
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-`
-const StyledImage = styled.img`
-width: 100%;
-
 `
 const StyledDiv = styled.div`
 padding-bottom: 60px;
