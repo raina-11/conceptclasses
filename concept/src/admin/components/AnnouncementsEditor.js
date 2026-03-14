@@ -14,6 +14,7 @@ const ROUTES = [
   { value: '/results/medical', label: 'Results - Medical' },
   { value: '/results/pre-foundation', label: 'Results - Pre-Foundation' },
   { value: '/science-champ-result-2026', label: 'Science Champ Results' },
+  { value: '/register', label: 'Register' },
   { value: 'tel:9928111865', label: 'Contact Us (Call)' },
 ];
 
