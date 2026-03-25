@@ -122,7 +122,7 @@ export default function About() {
   </div>
 
   <h4>Er. Bhupendra Middha</h4>
-  <p>Mathematics | 24 yrs Experience</p>
+  <p>Mathematics | 26+ yrs Experience</p>
   <p style={{marginTop:'4px'}}>Managing Director</p>
 </Director>
 <Text>

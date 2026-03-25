@@ -143,11 +143,7 @@ const Footer = () => {
           <Address>
             {/* <AddressTitle>Zluri Pte. Ltd.</AddressTitle> */}
             <AddressSubtitleMobile>
-              <br />
-              Patel nagar, near polytechnique college, Bikaner Rajasthan
-
-              <br />
-             Nagaur | Hanumangarh | Suratgarh
+              Concept Heights', Vyas colony, E-4, Police Thana Road, near Heeralal Hotal, Kanta Khaturia Colony, Bikaner, Rajasthan 334003
             </AddressSubtitleMobile>
           </Address>
           <SocialMobile>
