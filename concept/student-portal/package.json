@@ -12,6 +12,8 @@
     "generate:template": "node scripts/generate-qpt-template.mjs",
     "build": "tsc -b && vite build",
     "build:synthetic": "node scripts/build-e2e.mjs",
+    "verify:production-dist": "node scripts/production-artifact.mjs",
+    "deploy:production": "netlify build --context production && npm run verify:production-dist && netlify deploy --prod --no-build --dir dist",
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "lint": "oxlint --deny-warnings .",
