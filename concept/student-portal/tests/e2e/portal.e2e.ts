@@ -223,11 +223,77 @@ test('admin downloads template, reviews upload, and confirms publication', async
   await expect(page.getByRole('button', { name: 'Download Excel again' })).toBeVisible()
 
   expect(await events(page)).toEqual([
-    'workbook-queued',
+    'workbook-queued:synthetic-qpt.xlsx',
+    'workbook-reviewed:synthetic-qpt.xlsx',
     'revision-published',
     'credential-issued:synthetic-new-student',
     'credential-reset:synthetic-existing-student',
   ])
+  await expectNoAutomatedAccessibilityViolations(page)
+  await expectLightThemeWithoutPageOverflow(page)
+  expect(browserErrors).toEqual([])
+})
+
+test('admin uploads and reviews three workbooks in one parallel batch', async ({ page }) => {
+  const browserErrors = collectBrowserErrors(page)
+  const workbooks = [
+    {
+      fileName: 'synthetic-qpt-physics.xlsx',
+      displayTitle: 'QPT 6 Physics',
+    },
+    {
+      fileName: 'synthetic-qpt-chemistry.xlsx',
+      displayTitle: 'QPT 7 Chemistry',
+    },
+    {
+      fileName: 'synthetic-qpt-mathematics.xlsx',
+      displayTitle: 'QPT 8 Mathematics',
+    },
+  ]
+
+  await page.goto(harnessUrl('admin'))
+  await expect(page.getByRole('heading', { name: 'Admin portal' })).toBeVisible()
+
+  await page.getByLabel('Choose QPT workbook').setInputFiles(
+    workbooks.map(({ fileName }) => ({
+      name: fileName,
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      buffer: Buffer.from(`synthetic workbook bytes for ${fileName}`),
+    })),
+  )
+
+  const selectedWorkbooks = page.getByLabel('Selected workbook upload status')
+  for (const { fileName } of workbooks) {
+    await expect(selectedWorkbooks.getByText(fileName, { exact: true })).toBeVisible()
+  }
+
+  await page.getByRole('button', {
+    name: 'Upload 3 workbooks for server validation',
+  }).click()
+
+  await expect(selectedWorkbooks).toBeFocused()
+  await expect(page.getByText(/is queued for server validation/i)).toHaveCount(3)
+  await expect(page.getByText('Server validated', { exact: true })).toHaveCount(3)
+  for (const { displayTitle } of workbooks) {
+    await expect(page.getByRole('heading', { name: displayTitle, exact: true })).toBeVisible()
+  }
+
+  const reviewHeadingIds = await page.locator('.review-card').evaluateAll((cards) =>
+    cards.map((card) => card.getAttribute('aria-labelledby')),
+  )
+  expect(reviewHeadingIds).toHaveLength(3)
+  expect(new Set(reviewHeadingIds).size).toBe(3)
+
+  const expectedWorkbookEvents = workbooks
+    .flatMap(({ fileName }) => [
+      `workbook-queued:${fileName}`,
+      `workbook-reviewed:${fileName}`,
+    ])
+    .sort()
+  await expect.poll(async () =>
+    (await events(page)).filter((event) => event.startsWith('workbook-')).sort(),
+  ).toEqual(expectedWorkbookEvents)
+
   await expectNoAutomatedAccessibilityViolations(page)
   await expectLightThemeWithoutPageOverflow(page)
   expect(browserErrors).toEqual([])

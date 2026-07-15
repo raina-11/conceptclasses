@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(54);
+select plan(56);
 
 select has_schema('app_private', 'private application schema exists');
 select has_schema('api', 'API schema exists');
@@ -175,6 +175,18 @@ select is(
   has_function_privilege('authenticated', 'api.stage_qpt_import(uuid,jsonb,jsonb)', 'EXECUTE'),
   false,
   'browser callers cannot stage forged score rows'
+);
+
+select is(
+  has_function_privilege('service_role', 'api.stage_qpt_import(uuid,jsonb,jsonb)', 'EXECUTE'),
+  true,
+  'trusted parser may stage rows through the batch-locking API'
+);
+
+select is(
+  has_function_privilege('service_role', 'app_private.stage_qpt_import_unlocked(uuid,jsonb,jsonb)', 'EXECUTE'),
+  false,
+  'trusted parser cannot bypass the batch-locking staging API'
 );
 
 select * from finish();

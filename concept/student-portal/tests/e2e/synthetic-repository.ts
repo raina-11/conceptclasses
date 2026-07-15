@@ -150,6 +150,72 @@ const REVIEW: WorkbookReview = {
   revisionId: 'synthetic-revision',
 }
 
+const MULTI_WORKBOOK_REVIEWS: Record<string, WorkbookReview> = {
+  'synthetic-qpt-physics.xlsx': {
+    ...REVIEW,
+    importId: 'synthetic-import-physics',
+    fileName: 'synthetic-qpt-physics.xlsx',
+    assessmentCode: 'QPT-6-PHYSICS-SYNTHETIC',
+    displayTitle: 'QPT 6 Physics',
+    qptNumber: 6,
+    testDate: '2026-07-14',
+    rowCount: 20,
+    subjects: [{ code: 'PHYSICS', rowCount: 20, maximumMarks: '100' }],
+    statusCounts: { PRESENT: 19, ABSENT: 1 },
+    revisionId: 'synthetic-revision-physics',
+  },
+  'synthetic-qpt-chemistry.xlsx': {
+    ...REVIEW,
+    importId: 'synthetic-import-chemistry',
+    fileName: 'synthetic-qpt-chemistry.xlsx',
+    assessmentCode: 'QPT-7-CHEMISTRY-SYNTHETIC',
+    displayTitle: 'QPT 7 Chemistry',
+    qptNumber: 7,
+    testDate: '2026-07-15',
+    rowCount: 18,
+    studentCount: 18,
+    subjects: [{ code: 'CHEMISTRY', rowCount: 18, maximumMarks: '80' }],
+    statusCounts: { PRESENT: 18 },
+    revisionId: 'synthetic-revision-chemistry',
+  },
+  'synthetic-qpt-mathematics.xlsx': {
+    ...REVIEW,
+    importId: 'synthetic-import-mathematics',
+    fileName: 'synthetic-qpt-mathematics.xlsx',
+    assessmentCode: 'QPT-8-MATHEMATICS-SYNTHETIC',
+    displayTitle: 'QPT 8 Mathematics',
+    qptNumber: 8,
+    testDate: '2026-07-16',
+    rowCount: 22,
+    studentCount: 22,
+    subjects: [{ code: 'MATHEMATICS', rowCount: 22, maximumMarks: '120' }],
+    statusCounts: { PRESENT: 21, ABSENT: 1 },
+    revisionId: 'synthetic-revision-mathematics',
+  },
+}
+
+function deterministicFilenameKey(fileName: string): string {
+  return Array.from(fileName, (character) => character.codePointAt(0)?.toString(16) ?? '')
+    .join('-')
+}
+
+function reviewForFilename(fileName: string): WorkbookReview {
+  if (fileName === REVIEW.fileName) return REVIEW
+  const configured = MULTI_WORKBOOK_REVIEWS[fileName]
+  if (configured) return configured
+
+  const displayTitle = fileName.replace(/\.xlsx$/i, '')
+  const key = deterministicFilenameKey(fileName)
+  return {
+    ...REVIEW,
+    importId: `synthetic-import-${key}`,
+    fileName,
+    assessmentCode: `SYNTHETIC-${key}`,
+    displayTitle,
+    revisionId: `synthetic-revision-${key}`,
+  }
+}
+
 const PENDING_REVISION: PendingRevision = {
   revisionId: 'synthetic-revision',
   activeRevisionId: null,
@@ -195,6 +261,7 @@ function track(event: string) {
 
 export function createSyntheticRepository(state: HarnessState): PortalRepository {
   let session = state === 'guest' ? null : SESSION
+  const queuedReviews = new Map<string, WorkbookReview>()
   if (session) {
     window.localStorage.setItem(
       `concept-qpt:last-activity:${session.userId}`,
@@ -258,15 +325,20 @@ export function createSyntheticRepository(state: HarnessState): PortalRepository
       }
     },
     async queueWorkbook(file) {
-      track('workbook-queued')
+      const review = reviewForFilename(file.name)
+      queuedReviews.set(review.importId, review)
+      track(`workbook-queued:${file.name}`)
       return {
-        importId: REVIEW.importId,
+        importId: review.importId,
         fileName: file.name,
         state: 'queued',
       }
     },
-    async getImportReview() {
-      return REVIEW
+    async getImportReview(importId) {
+      const review = queuedReviews.get(importId)
+      if (!review) throw new Error(`Synthetic import was not queued: ${importId}`)
+      track(`workbook-reviewed:${review.fileName}`)
+      return review
     },
     async getPendingRevisions() {
       return [PENDING_REVISION]

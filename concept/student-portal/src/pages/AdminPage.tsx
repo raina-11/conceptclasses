@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 import {
   downloadTemporaryCredentialWorkbook,
   type TemporaryCredentialAction,
@@ -9,16 +9,18 @@ import {
   mapWithConcurrency,
   validateCredentialBatchTargets,
 } from '../admin/concurrent-batch'
+import {
+  WorkbookBatchUpload,
+  type WorkbookUploadProtectionState,
+} from '../admin/WorkbookBatchUpload'
 import { PageStatus } from '../components/PageStatus'
 import type {
   IssuedStudentCredential,
   PendingRevision,
   PortalRepository,
   PortalRole,
-  QueuedImport,
   ReviewIssue,
   StudentAccountRecord,
-  WorkbookReview,
 } from '../data/portal-repository'
 import { canPublishResults, canUploadResults } from '../data/portal-repository'
 
@@ -28,10 +30,14 @@ type AdminPageProps = {
   onCredentialProtectionChange?: (state: CredentialProtectionState) => void
 }
 
-export type CredentialProtectionState = 'clear' | 'busy' | 'ready'
+export type CredentialProtectionState =
+  | 'clear'
+  | 'busy'
+  | 'ready'
+  | 'import-busy'
+  | 'import-attention'
+  | 'ready-and-import-attention'
 
-const REVIEW_POLL_INTERVAL_MS = 2_000
-const REVIEW_MAX_AUTO_RETRIES = 3
 type AdminSection = 'workbooks' | 'student-access'
 
 type CredentialBatchProgress = {
@@ -87,79 +93,6 @@ function displayStatus(value: string): string {
     .join(' ')
 }
 
-function ReviewCard({ review }: { review: WorkbookReview }) {
-  const accepted = review.state === 'ready' && review.blockingIssues.length === 0
-  const duplicate = review.state === 'duplicate'
-  const stateClass = accepted
-    ? 'review-ready'
-    : duplicate
-      ? 'review-duplicate'
-      : 'review-blocked'
-  const stateLabel = accepted
-    ? 'Server validated'
-    : duplicate
-      ? 'Already imported'
-      : 'Needs correction'
-  return (
-    <section className="review-card" aria-labelledby="review-title">
-      <div className="review-header">
-        <div>
-          <p className="eyebrow">Server validation review</p>
-          <h3 id="review-title">{review.displayTitle}</h3>
-          <p>{review.assessmentCode}</p>
-        </div>
-        <span className={`review-state ${stateClass}`}>
-          {stateLabel}
-        </span>
-      </div>
-
-      <dl className="review-metrics">
-        <div><dt>Batch</dt><dd>{review.batchCode}</dd></div>
-        <div><dt>Test date</dt><dd>{displayDate(review.testDate)}</dd></div>
-        <div><dt>Students</dt><dd>{review.studentCount}</dd></div>
-        <div><dt>Rows</dt><dd>{review.rowCount}</dd></div>
-      </dl>
-      <p className="review-row-count">{review.rowCount} score rows</p>
-
-      <div className="subject-summary" aria-label="Workbook subject summary">
-        {review.subjects.map((subject) => (
-          <span key={subject.code}>
-            <strong>{subject.code}</strong>
-            {subject.rowCount} rows · max {subject.maximumMarks}
-          </span>
-        ))}
-      </div>
-
-      {duplicate && (
-        <p className="alert alert-warning" role="status">
-          These normalized results already exist. No new revision was created or queued for publication.
-        </p>
-      )}
-
-      {review.warnings.length > 0 && (
-        <div className="alert alert-warning">
-          <strong>{review.warnings.length} review warning{review.warnings.length === 1 ? '' : 's'}</strong>
-          <ul>
-            {review.warnings.map((warning, index) => (
-              <li key={`${warning.code}-${index}`}>{warning.message}{issueLocation(warning)}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {review.blockingIssues.length > 0 && (
-        <div className="alert alert-error" role="alert">
-          <strong>Correct these issues before upload</strong>
-          <ul>
-            {review.blockingIssues.map((issue, index) => (
-              <li key={`${issue.code}-${index}`}>{issue.message}{issueLocation(issue)}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </section>
-  )
-}
-
 export function AdminPage({
   repository,
   roles,
@@ -168,14 +101,6 @@ export function AdminPage({
   const canUpload = canUploadResults(roles)
   const canPublish = canPublishResults(roles)
   const isUnifiedAdmin = roles.includes('admin')
-  const [file, setFile] = useState<File | null>(null)
-  const [review, setReview] = useState<WorkbookReview | null>(null)
-  const [fileError, setFileError] = useState<string | null>(null)
-  const [reviewError, setReviewError] = useState<string | null>(null)
-  const [reviewReload, setReviewReload] = useState(0)
-  const [queueState, setQueueState] = useState<'idle' | 'uploading'>('idle')
-  const [queueError, setQueueError] = useState<string | null>(null)
-  const [queuedImport, setQueuedImport] = useState<QueuedImport | null>(null)
   const [pending, setPending] = useState<PendingRevision[]>([])
   const [pendingState, setPendingState] = useState<'loading' | 'ready' | 'error'>(canPublish ? 'loading' : 'ready')
   const [pendingReload, setPendingReload] = useState(0)
@@ -205,6 +130,7 @@ export function AdminPage({
   const [credentialDownloadState, setCredentialDownloadState] = useState<'idle' | 'preparing'>('idle')
   const [credentialDownloadError, setCredentialDownloadError] = useState<string | null>(null)
   const [credentialDownloadStarted, setCredentialDownloadStarted] = useState(false)
+  const [workbookProtection, setWorkbookProtection] = useState<WorkbookUploadProtectionState>('clear')
   const [activeSection, setActiveSection] = useState<AdminSection>('workbooks')
   const workbooksTabRef = useRef<HTMLButtonElement>(null)
   const studentAccessTabRef = useRef<HTMLButtonElement>(null)
@@ -220,11 +146,19 @@ export function AdminPage({
     (account) => Boolean(account.loginId),
   ).length
   const excludedCredentialAccountCount = studentAccounts.length - eligibleCredentialAccounts.length
+  const hasRecoverableCredentials = issuedCredentials.length > 0
+    || Boolean(credential?.temporaryPassword)
   const credentialProtectionState: CredentialProtectionState = batchProgress || accountActionStudentId
     ? 'busy'
-    : issuedCredentials.length > 0 || Boolean(credential?.temporaryPassword)
-      ? 'ready'
-      : 'clear'
+    : workbookProtection === 'busy'
+      ? 'import-busy'
+      : hasRecoverableCredentials && workbookProtection === 'attention'
+        ? 'ready-and-import-attention'
+        : hasRecoverableCredentials
+          ? 'ready'
+          : workbookProtection === 'attention'
+            ? 'import-attention'
+            : 'clear'
 
   useEffect(() => {
     if (activeSection !== 'student-access' || !credential?.temporaryPassword) return
@@ -261,50 +195,6 @@ export function AdminPage({
     if (!confirmCompleteCredentialFile) return
     completeCredentialConfirmationRef.current?.focus({ preventScroll: true })
   }, [confirmCompleteCredentialFile])
-
-  useEffect(() => {
-    if (!queuedImport) return
-    const activeImport = queuedImport
-    let active = true
-    let timer: ReturnType<typeof setTimeout> | undefined
-    let consecutiveFailures = 0
-
-    async function pollReview() {
-      try {
-        const nextReview = await repository.getImportReview(activeImport.importId)
-        if (!active) return
-        consecutiveFailures = 0
-        setReview(nextReview)
-        setReviewError(null)
-        if (nextReview.state === 'queued' || nextReview.state === 'processing') {
-          timer = setTimeout(() => void pollReview(), REVIEW_POLL_INTERVAL_MS)
-        } else if (nextReview.state === 'ready' && canPublish) {
-          setPendingReload((value) => value + 1)
-        }
-      } catch {
-        if (!active) return
-        consecutiveFailures += 1
-        const willRetry = consecutiveFailures <= REVIEW_MAX_AUTO_RETRIES
-        setReviewError(
-          willRetry
-            ? 'The latest server validation status could not be loaded. Retrying automatically.'
-            : 'The latest server validation status could not be loaded. Retry when the connection is available.',
-        )
-        if (willRetry) {
-          timer = setTimeout(
-            () => void pollReview(),
-            REVIEW_POLL_INTERVAL_MS * consecutiveFailures,
-          )
-        }
-      }
-    }
-
-    void pollReview()
-    return () => {
-      active = false
-      if (timer) clearTimeout(timer)
-    }
-  }, [canPublish, queuedImport, repository, reviewReload])
 
   useEffect(() => {
     if (!canPublish) return
@@ -356,38 +246,6 @@ export function AdminPage({
         />
       </main>
     )
-  }
-
-  function handleFile(event: ChangeEvent<HTMLInputElement>) {
-    const nextFile = event.target.files?.[0] ?? null
-    setFile(nextFile)
-    setReview(null)
-    setQueuedImport(null)
-    setQueueError(null)
-    setFileError(null)
-    setReviewError(null)
-    if (!nextFile) return
-
-    if (!nextFile.name.toLowerCase().endsWith('.xlsx')) {
-      setFileError('Choose an Excel workbook with the .xlsx extension.')
-      return
-    }
-    if (nextFile.size > 10 * 1024 * 1024) {
-      setFileError('The workbook is larger than the 10 MB upload limit.')
-    }
-  }
-
-  async function queueForValidation() {
-    if (!file || fileError) return
-    setQueueState('uploading')
-    setQueueError(null)
-    try {
-      setQueuedImport(await repository.queueWorkbook(file))
-    } catch (error) {
-      setQueueError(errorMessage(error))
-    } finally {
-      setQueueState('idle')
-    }
   }
 
   async function publish() {
@@ -699,76 +557,12 @@ export function AdminPage({
       >
         <div className="admin-grid">
           {canUpload && (
-            <section className="operations-card" aria-labelledby="upload-title">
-            <div className="step-heading">
-              <span>01</span>
-              <div><p className="eyebrow">Admin upload</p><h2 id="upload-title">Review a workbook</h2></div>
-            </div>
-            <p>
-              The workbook is uploaded to private storage and parsed by the server before publication is enabled.
-            </p>
-            <p className="alert alert-warning">
-              <strong>Prefer the official template.</strong> Legacy workbooks can contain unrelated personal data in other tabs. Upload them only when institute-approved: the private server handles the workbook transiently, stages only the Sheet1 result projection, and deletes the raw file after a terminal outcome.
-            </p>
-
-            <div className="file-field">
-              <label htmlFor="qpt-workbook">Choose QPT workbook</label>
-              <input
-                id="qpt-workbook"
-                type="file"
-                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                onChange={handleFile}
-                disabled={queueState === 'uploading'}
-              />
-              <small>Official template or supported legacy Sheet1 export · maximum 10 MB</small>
-              <a className="template-link" href="/templates/qpt-import-template.xlsx" download>
-                Download official template
-              </a>
-            </div>
-
-            {file && !fileError && !queuedImport && (
-              <p className="selected-file"><strong>{file.name}</strong><span>{Math.max(1, Math.ceil(file.size / 1024))} KB · ready for private upload</span></p>
-            )}
-            {fileError && <p className="alert alert-error" role="alert">{fileError}</p>}
-            {queueError && <p className="alert alert-error" role="alert">{queueError}</p>}
-            {queuedImport && (
-              <p className="alert alert-success" role="status">
-                <strong>{queuedImport.fileName}</strong> is queued for server validation. Publication is enabled only after validation succeeds.
-              </p>
-            )}
-            {queuedImport && (!review || review.state === 'queued' || review.state === 'processing') && (
-              <div className="inline-status" role="status"><span className="spinner" aria-hidden="true" />Server validation is in progress…</div>
-            )}
-            {reviewError && (
-              <div className="alert alert-error" role="alert">
-                <p>{reviewError}</p>
-                <button
-                  className="button button-quiet button-small"
-                  type="button"
-                  onClick={() => {
-                    setReviewError(null)
-                    setReviewReload((value) => value + 1)
-                  }}
-                >
-                  Retry validation status now
-                </button>
-              </div>
-            )}
-            {review &&
-              (review.state === 'ready' ||
-                review.state === 'duplicate' ||
-                review.state === 'rejected') && <ReviewCard review={review} />}
-            {file && !queuedImport && (
-              <button
-                className="button button-primary"
-                type="button"
-                disabled={Boolean(fileError) || queueState === 'uploading'}
-                onClick={() => void queueForValidation()}
-              >
-                {queueState === 'uploading' ? 'Uploading securely…' : 'Upload for server validation'}
-              </button>
-            )}
-            </section>
+            <WorkbookBatchUpload
+              repository={repository}
+              canPublish={canPublish}
+              onRevisionReady={() => setPendingReload((value) => value + 1)}
+              onProtectionChange={setWorkbookProtection}
+            />
           )}
 
           {canPublish && (

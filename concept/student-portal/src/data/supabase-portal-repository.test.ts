@@ -3,6 +3,14 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Database } from '../lib/database.types'
 import { createPortalRepository } from './supabase-portal-repository'
 
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((settle) => {
+    resolve = settle
+  })
+  return { promise, resolve }
+}
+
 function clientWithRpc(
   rpc: ReturnType<typeof vi.fn>,
   upload = vi.fn().mockResolvedValue({ data: { path: 'path' }, error: null }),
@@ -214,6 +222,85 @@ describe('Supabase portal repository', () => {
       body: { importId: 'import-1' },
     })
     expect(rpc.mock.invocationCallOrder[1]).toBeLessThan(invoke.mock.invocationCallOrder[0])
+  })
+
+  it('keeps concurrent workbook imports independent even when filenames match', async () => {
+    let nextImport = 0
+    const rpc = vi.fn().mockImplementation((name: string) => {
+      if (name === 'begin_import') {
+        nextImport += 1
+        return Promise.resolve({
+          data: [{
+            import_id: `import-${nextImport}`,
+            storage_bucket: 'qpt-imports',
+            storage_path: `user-1/import-${nextImport}.xlsx`,
+          }],
+          error: null,
+        })
+      }
+      return Promise.resolve({ data: null, error: null })
+    })
+    const { client, upload, invoke } = clientWithRpc(rpc)
+    const repository = createPortalRepository(client)
+    const first = new File(['first'], 'same-name.xlsx')
+    const second = new File(['second'], 'same-name.xlsx')
+
+    await expect(Promise.all([
+      repository.queueWorkbook(first),
+      repository.queueWorkbook(second),
+    ])).resolves.toEqual([
+      { importId: 'import-1', fileName: 'same-name.xlsx', state: 'queued' },
+      { importId: 'import-2', fileName: 'same-name.xlsx', state: 'queued' },
+    ])
+
+    const beginCalls = rpc.mock.calls.filter(([name]) => name === 'begin_import')
+    expect(beginCalls).toHaveLength(2)
+    expect(beginCalls[0]?.[1].p_client_request_id).not.toBe(
+      beginCalls[1]?.[1].p_client_request_id,
+    )
+    expect(upload).toHaveBeenCalledWith('user-1/import-1.xlsx', first, expect.any(Object))
+    expect(upload).toHaveBeenCalledWith('user-1/import-2.xlsx', second, expect.any(Object))
+    expect(invoke).toHaveBeenCalledWith('parse-result-xlsx', {
+      body: { importId: 'import-1' },
+    })
+    expect(invoke).toHaveBeenCalledWith('parse-result-xlsx', {
+      body: { importId: 'import-2' },
+    })
+  })
+
+  it('shares one in-flight import when the same File object is queued twice', async () => {
+    const uploadGate = deferred<{ data: { path: string }, error: null }>()
+    const rpc = vi.fn().mockImplementation((name: string) => {
+      if (name === 'begin_import') {
+        return Promise.resolve({
+          data: [{
+            import_id: 'import-shared',
+            storage_bucket: 'qpt-imports',
+            storage_path: 'user-1/import-shared.xlsx',
+          }],
+          error: null,
+        })
+      }
+      return Promise.resolve({ data: null, error: null })
+    })
+    const upload = vi.fn().mockReturnValue(uploadGate.promise)
+    const { client, invoke } = clientWithRpc(rpc, upload)
+    const repository = createPortalRepository(client)
+    const file = new File(['same-xlsx'], 'qpt-shared.xlsx')
+
+    const first = repository.queueWorkbook(file)
+    const second = repository.queueWorkbook(file)
+
+    await vi.waitFor(() => expect(upload).toHaveBeenCalledOnce())
+    expect(rpc.mock.calls.filter(([name]) => name === 'begin_import')).toHaveLength(1)
+
+    uploadGate.resolve({ data: { path: 'user-1/import-shared.xlsx' }, error: null })
+
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      { importId: 'import-shared', fileName: 'qpt-shared.xlsx', state: 'queued' },
+      { importId: 'import-shared', fileName: 'qpt-shared.xlsx', state: 'queued' },
+    ])
+    expect(invoke).toHaveBeenCalledOnce()
   })
 
   it('reuses an import request id and resumes after an already-uploaded retry', async () => {

@@ -1327,6 +1327,40 @@ p {
   font-size: 0.78rem;
 }
 
+.workbook-batch-list {
+  display: grid;
+  margin: 16px 0;
+  gap: 14px;
+}
+
+.workbook-job {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: rgb(255 253 248 / 72%);
+}
+
+.workbook-job > .selected-file {
+  border: 0;
+  background: transparent;
+}
+
+.workbook-job > .alert {
+  margin: 10px 0 0;
+}
+
+.workbook-job-actions {
+  display: flex;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workbook-job .review-card {
+  margin-bottom: 0;
+}
+
 .inline-status {
   margin: 13px 0;
 }
@@ -1347,6 +1381,22 @@ p {
 }
 
 .credential-batch-status progress {
+  width: 100%;
+  height: 8px;
+  flex-basis: 100%;
+  accent-color: var(--coral);
+}
+
+.workbook-batch-progress {
+  flex-wrap: wrap;
+}
+
+.workbook-batch-progress > span:not(.spinner) {
+  min-width: 220px;
+  flex: 1;
+}
+
+.workbook-batch-progress progress {
   width: 100%;
   height: 8px;
   flex-basis: 100%;

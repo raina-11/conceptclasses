@@ -354,6 +354,7 @@ function pendingRevision(value: JsonRecord): PendingRevision | null {
 
 class SupabasePortalRepository implements PortalRepository {
   private readonly importRequestIds = new WeakMap<File, string>()
+  private readonly inFlightImports = new WeakMap<File, Promise<QueuedImport>>()
 
   constructor(private readonly client: SupabaseClient<Database> | null) {}
 
@@ -500,7 +501,22 @@ class SupabasePortalRepository implements PortalRepository {
     return issuedCredential(data)
   }
 
-  async queueWorkbook(file: File): Promise<QueuedImport> {
+  queueWorkbook(file: File): Promise<QueuedImport> {
+    const existing = this.inFlightImports.get(file)
+    if (existing) return existing
+
+    const operation = this.queueWorkbookOnce(file)
+    this.inFlightImports.set(file, operation)
+    const clearIfCurrent = () => {
+      if (this.inFlightImports.get(file) === operation) {
+        this.inFlightImports.delete(file)
+      }
+    }
+    void operation.then(clearIfCurrent, clearIfCurrent)
+    return operation
+  }
+
+  private async queueWorkbookOnce(file: File): Promise<QueuedImport> {
     const client = this.requireClient()
     const clientRequestId = this.importRequestIds.get(file) ?? crypto.randomUUID()
     this.importRequestIds.set(file, clientRequestId)

@@ -1,12 +1,17 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App, PORTAL_CONTEXT_TIMEOUT_MS, PORTAL_IDLE_TIMEOUT_MS } from './App'
+import {
+  WORKBOOK_REVIEW_DEADLINE_MS,
+  WORKBOOK_UPLOAD_TIMEOUT_MS,
+} from './admin/WorkbookBatchUpload'
 import { downloadTemporaryCredentialWorkbook } from './admin/temporary-credential-workbook'
 import type {
   PendingRevision,
   PortalRepository,
   PortalSession,
+  QueuedImport,
   StudentQptInsight,
   WorkbookReview,
 } from './data/portal-repository'
@@ -22,6 +27,26 @@ const downloadCredentialWorkbookMock = vi.mocked(downloadTemporaryCredentialWork
 const session: PortalSession = {
   userId: 'user-1',
   accountLabel: '0012',
+}
+
+type Deferred<T> = {
+  promise: Promise<T>
+  resolve: (value: T) => void
+}
+
+function deferred<T>(): Deferred<T> {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((settle) => {
+    resolve = settle
+  })
+
+  return { promise, resolve }
+}
+
+function workbookFile(name: string): File {
+  return new File([`synthetic-${name}`], name, {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
 }
 
 afterEach(() => {
@@ -488,6 +513,534 @@ describe('student portal', () => {
       'revision-active',
     )
     expect(await screen.findByText('QPT 5 was published.')).toBeVisible()
+  })
+
+  describe('parallel workbook uploads', () => {
+    it('exposes a workbook input that accepts multiple files', async () => {
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+      })
+
+      render(<App repository={repository} initialView="admin" />)
+
+      const input = await screen.findByLabelText(/Choose QPT workbook/i)
+      expect(input).toHaveAttribute('multiple')
+    })
+
+    it('starts three selected workbook uploads in parallel before any resolves', async () => {
+      const user = userEvent.setup()
+      const files = [
+        workbookFile('qpt-one.xlsx'),
+        workbookFile('qpt-two.xlsx'),
+        workbookFile('qpt-three.xlsx'),
+      ]
+      const gates = new Map(files.map((file) => [file, deferred<QueuedImport>()]))
+      const started: File[] = []
+      const queueWorkbook = vi.fn((file: File) => {
+        started.push(file)
+        return gates.get(file)?.promise ?? Promise.reject(new Error('Unexpected workbook'))
+      })
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook,
+        getImportReview: vi.fn(() => new Promise<WorkbookReview>(() => undefined)),
+      })
+
+      render(<App repository={repository} initialView="admin" />)
+
+      const input = await screen.findByLabelText(/Choose QPT workbook/i)
+      fireEvent.change(input, { target: { files } })
+      const uploadButton = screen.getByRole('button', { name: /Upload.*server validation/i })
+      await user.click(uploadButton)
+
+      await waitFor(() => expect(started).toEqual(files))
+      for (const file of files) {
+        expect(screen.getByRole('article', { name: file.name })).toBeVisible()
+      }
+      expect(screen.getByRole('progressbar', {
+        name: 'Workbook batch processing progress',
+      })).toBeVisible()
+
+      for (const [index, file] of files.entries()) {
+        gates.get(file)?.resolve({
+          importId: `import-${index + 1}`,
+          fileName: file.name,
+          state: 'queued',
+        })
+      }
+
+      await waitFor(() => expect(uploadButton).toBeEnabled())
+    })
+
+    it('starts a fourth workbook only after one of the three parallel slots settles', async () => {
+      const user = userEvent.setup()
+      const files = [
+        workbookFile('qpt-one.xlsx'),
+        workbookFile('qpt-two.xlsx'),
+        workbookFile('qpt-three.xlsx'),
+        workbookFile('qpt-four.xlsx'),
+      ]
+      const gates = new Map(files.map((file) => [file, deferred<QueuedImport>()]))
+      const started: File[] = []
+      const queueWorkbook = vi.fn((file: File) => {
+        started.push(file)
+        return gates.get(file)?.promise ?? Promise.reject(new Error('Unexpected workbook'))
+      })
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook,
+        getImportReview: vi.fn(() => new Promise<WorkbookReview>(() => undefined)),
+      })
+
+      render(<App repository={repository} initialView="admin" />)
+
+      const input = await screen.findByLabelText(/Choose QPT workbook/i)
+      fireEvent.change(input, { target: { files } })
+      await user.click(screen.getByRole('button', { name: /Upload.*server validation/i }))
+
+      await waitFor(() => expect(started).toEqual(files.slice(0, 3)))
+      expect(started).toHaveLength(3)
+
+      gates.get(files[1])?.resolve({
+        importId: 'import-2',
+        fileName: files[1].name,
+        state: 'queued',
+      })
+      await waitFor(() => expect(started).toEqual(files))
+
+      for (const [index, file] of files.entries()) {
+        if (index === 1) continue
+        gates.get(file)?.resolve({
+          importId: `import-${index + 1}`,
+          fileName: file.name,
+          state: 'queued',
+        })
+      }
+    })
+
+    it('halts unstarted files when timeouts leave three real requests in flight', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      const files = [
+        workbookFile('hung-one.xlsx'),
+        workbookFile('hung-two.xlsx'),
+        workbookFile('hung-three.xlsx'),
+        workbookFile('must-not-start.xlsx'),
+      ]
+      const queueWorkbook = vi.fn(() => new Promise<QueuedImport>(() => undefined))
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook,
+      })
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+      try {
+        render(<App repository={repository} initialView="admin" />)
+        await user.upload(await screen.findByLabelText('Choose QPT workbook'), files)
+        await user.click(screen.getByRole('button', { name: 'Upload 4 workbooks for server validation' }))
+        await waitFor(() => expect(queueWorkbook).toHaveBeenCalledTimes(3))
+
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(WORKBOOK_UPLOAD_TIMEOUT_MS)
+        })
+
+        expect(queueWorkbook).toHaveBeenCalledTimes(3)
+        expect(screen.getByRole('article', { name: files[3].name })).toHaveTextContent(
+          /ready for private upload/i,
+        )
+        expect(screen.getByText(/remaining queued files were not started/i))
+          .toHaveAttribute('role', 'status')
+
+        await user.click(screen.getByRole('button', {
+          name: `Retry upload for ${files[0].name}`,
+        }))
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(WORKBOOK_UPLOAD_TIMEOUT_MS)
+        })
+        expect(queueWorkbook).toHaveBeenCalledTimes(3)
+
+        for (const file of files.slice(0, 3)) {
+          await user.click(screen.getByRole('button', {
+            name: `Discard failed upload for ${file.name}`,
+          }))
+        }
+        expect(screen.getByRole('button', {
+          name: 'Upload for server validation',
+        })).toBeDisabled()
+        expect(queueWorkbook).toHaveBeenCalledTimes(3)
+      } finally {
+        confirm.mockRestore()
+        vi.useRealTimers()
+      }
+    })
+
+    it('uploads valid workbooks while showing independent client errors for invalid files', async () => {
+      const user = userEvent.setup()
+      const valid = workbookFile('qpt-valid.xlsx')
+      const unsupported = new File(['csv'], 'qpt-invalid.csv', { type: 'text/csv' })
+      const oversized = workbookFile('qpt-too-large.xlsx')
+      Object.defineProperty(oversized, 'size', { value: 10 * 1024 * 1024 + 1 })
+      const queueWorkbook = vi.fn(async (file: File): Promise<QueuedImport> => ({
+        importId: 'import-valid',
+        fileName: file.name,
+        state: 'queued',
+      }))
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook,
+        getImportReview: vi.fn(() => new Promise<WorkbookReview>(() => undefined)),
+      })
+
+      render(<App repository={repository} initialView="admin" />)
+
+      const input = await screen.findByLabelText(/Choose QPT workbook/i)
+      fireEvent.change(input, { target: { files: [valid, unsupported, oversized] } })
+
+      expect(screen.getByText(/\.xlsx extension/i)).toBeVisible()
+      expect(screen.getByText(/larger than the 10 MB/i)).toBeVisible()
+      await user.click(screen.getByRole('button', { name: 'Upload for server validation' }))
+
+      await waitFor(() => expect(queueWorkbook).toHaveBeenCalledOnce())
+      expect(queueWorkbook).toHaveBeenCalledWith(valid)
+    })
+
+    it('disables portal sign-out until an active workbook reaches a terminal review', async () => {
+      const user = userEvent.setup()
+      const file = workbookFile('qpt-protected.xlsx')
+      const queueGate = deferred<QueuedImport>()
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook: vi.fn(() => queueGate.promise),
+        getImportReview: vi.fn().mockResolvedValue({
+          ...review,
+          importId: 'import-protected',
+          fileName: file.name,
+        }),
+      })
+
+      render(<App repository={repository} initialView="admin" />)
+
+      const input = await screen.findByLabelText('Choose QPT workbook')
+      fireEvent.change(input, { target: { files: [file] } })
+      await user.click(screen.getByRole('button', { name: 'Upload for server validation' }))
+
+      await waitFor(() => expect(repository.queueWorkbook).toHaveBeenCalledWith(file))
+      expect(screen.getByLabelText('Selected workbook upload status')).toHaveFocus()
+      expect(screen.getByRole('button', { name: 'Sign out' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Sign out' })).toHaveAttribute(
+        'title',
+        expect.stringMatching(/workbook uploads/i),
+      )
+      const busyMessage = screen.getByText(
+        'Wait for workbook uploads and server validation before signing out.',
+      )
+      expect(busyMessage).toHaveAttribute('role', 'status')
+      expect(screen.getByRole('button', { name: 'Sign out' })).toHaveAttribute(
+        'aria-describedby',
+        busyMessage.id,
+      )
+
+      queueGate.resolve({
+        importId: 'import-protected',
+        fileName: file.name,
+        state: 'queued',
+      })
+
+      expect(await screen.findByRole('heading', { name: 'QPT 5' })).toBeVisible()
+      expect(screen.getByRole('status', { name: 'Server validated' })).toBeVisible()
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Sign out' })).toBeEnabled())
+    })
+
+    it('turns a hung upload into a bounded, recoverable unknown-status state', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true })
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook: vi.fn(() => new Promise<QueuedImport>(() => undefined)),
+      })
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+      try {
+        render(<App repository={repository} initialView="admin" />)
+        const file = workbookFile('qpt-hung-upload.xlsx')
+        await user.upload(await screen.findByLabelText('Choose QPT workbook'), file)
+        await user.click(screen.getByRole('button', { name: 'Upload for server validation' }))
+
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(WORKBOOK_UPLOAD_TIMEOUT_MS)
+        })
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(/upload response timed out/i)
+        expect(screen.getByRole('button', {
+          name: `Retry upload for ${file.name}`,
+        })).toBeVisible()
+        expect(screen.getByRole('button', { name: 'Sign out' })).toBeEnabled()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('protects an ambiguous upload failure until retry or explicit discard', async () => {
+      const user = userEvent.setup()
+      const file = workbookFile('qpt-unknown-status.xlsx')
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook: vi.fn().mockRejectedValue(new Error('Connection response was lost.')),
+      })
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+
+      try {
+        render(<App repository={repository} initialView="admin" />)
+
+        const input = await screen.findByLabelText('Choose QPT workbook')
+        fireEvent.change(input, { target: { files: [file] } })
+        await user.click(screen.getByRole('button', { name: 'Upload for server validation' }))
+
+        const retry = await screen.findByRole('button', {
+          name: `Retry upload for ${file.name}`,
+        })
+        expect(input).toBeDisabled()
+        expect(screen.queryByRole('button', { name: /Choose another workbook batch/i }))
+          .not.toBeInTheDocument()
+
+        await user.click(screen.getByRole('button', { name: 'Sign out' }))
+        expect(confirm).toHaveBeenCalledWith(expect.stringMatching(/unknown final server status/i))
+        expect(repository.signOut).not.toHaveBeenCalled()
+
+        await user.click(screen.getByRole('button', {
+          name: `Discard failed upload for ${file.name}`,
+        }))
+        expect(retry).toBeInTheDocument()
+
+        confirm.mockReturnValue(true)
+        await user.click(screen.getByRole('button', {
+          name: `Discard failed upload for ${file.name}`,
+        }))
+        await waitFor(() => expect(retry).not.toBeInTheDocument())
+        expect(input).toBeEnabled()
+      } finally {
+        confirm.mockRestore()
+      }
+    })
+
+    it('keeps successful workbook uploads when one fails and retries only that file', async () => {
+      const user = userEvent.setup()
+      const files = [
+        workbookFile('qpt-success-one.xlsx'),
+        workbookFile('qpt-failed.xlsx'),
+        workbookFile('qpt-success-two.xlsx'),
+      ]
+      const attempts = new Map<File, number>()
+      const queueWorkbook = vi.fn(async (file: File): Promise<QueuedImport> => {
+        const attempt = (attempts.get(file) ?? 0) + 1
+        attempts.set(file, attempt)
+        if (file === files[1] && attempt === 1) {
+          throw new Error('The private upload connection was interrupted.')
+        }
+        return {
+          importId: `import-${file.name}`,
+          fileName: file.name,
+          state: 'queued',
+        }
+      })
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook,
+        getImportReview: vi.fn(() => new Promise<WorkbookReview>(() => undefined)),
+      })
+
+      render(<App repository={repository} initialView="admin" />)
+
+      const input = await screen.findByLabelText(/Choose QPT workbook/i)
+      fireEvent.change(input, { target: { files } })
+      await user.click(screen.getByRole('button', { name: /Upload.*server validation/i }))
+
+      await waitFor(() => expect(queueWorkbook).toHaveBeenCalledTimes(3))
+      const retry = await screen.findByRole('button', {
+        name: /Retry upload for qpt-failed\.xlsx/i,
+      })
+      expect(screen.queryByRole('button', {
+        name: /Retry upload for qpt-success-one\.xlsx/i,
+      })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', {
+        name: /Retry upload for qpt-success-two\.xlsx/i,
+      })).not.toBeInTheDocument()
+
+      await user.click(retry)
+
+      await waitFor(() => expect(queueWorkbook).toHaveBeenCalledTimes(4))
+      expect(queueWorkbook.mock.calls.filter(([file]) => file === files[0])).toHaveLength(1)
+      expect(queueWorkbook.mock.calls.filter(([file]) => file === files[1])).toHaveLength(2)
+      expect(queueWorkbook.mock.calls.filter(([file]) => file === files[2])).toHaveLength(1)
+      expect(queueWorkbook.mock.calls[3]?.[0]).toBe(files[1])
+      await waitFor(() => expect(screen.queryByRole('button', {
+        name: /Retry upload for qpt-failed\.xlsx/i,
+      })).not.toBeInTheDocument())
+    })
+
+    it('never runs more than three manual workbook retries at once', async () => {
+      const user = userEvent.setup()
+      const files = [
+        workbookFile('retry-one.xlsx'),
+        workbookFile('retry-two.xlsx'),
+        workbookFile('retry-three.xlsx'),
+        workbookFile('retry-four.xlsx'),
+      ]
+      const attempts = new Map<File, number>()
+      const retryGates = new Map(files.map((file) => [file, deferred<QueuedImport>()]))
+      const queueWorkbook = vi.fn((file: File) => {
+        const attempt = (attempts.get(file) ?? 0) + 1
+        attempts.set(file, attempt)
+        if (attempt === 1) return Promise.reject(new Error('Initial attempt failed.'))
+        return retryGates.get(file)?.promise ?? Promise.reject(new Error('Unexpected workbook'))
+      })
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook,
+        getImportReview: vi.fn(() => new Promise<WorkbookReview>(() => undefined)),
+      })
+
+      render(<App repository={repository} initialView="admin" />)
+
+      fireEvent.change(await screen.findByLabelText('Choose QPT workbook'), {
+        target: { files },
+      })
+      await user.click(screen.getByRole('button', { name: /Upload 4 workbooks/i }))
+      await waitFor(() => expect(queueWorkbook).toHaveBeenCalledTimes(4))
+
+      for (const file of files.slice(0, 3)) {
+        await user.click(await screen.findByRole('button', {
+          name: `Retry upload for ${file.name}`,
+        }))
+      }
+
+      const fourthRetry = await screen.findByRole('button', {
+        name: `Retry upload for ${files[3].name}`,
+      })
+      expect(fourthRetry).toBeDisabled()
+      expect(queueWorkbook).toHaveBeenCalledTimes(7)
+
+      retryGates.get(files[0])?.resolve({
+        importId: 'retry-import-1',
+        fileName: files[0].name,
+        state: 'queued',
+      })
+      await waitFor(() => expect(fourthRetry).toBeEnabled())
+      await user.click(fourthRetry)
+      expect(queueWorkbook).toHaveBeenCalledTimes(8)
+
+      for (const [index, file] of files.entries()) {
+        if (index === 0) continue
+        retryGates.get(file)?.resolve({
+          importId: `retry-import-${index + 1}`,
+          fileName: file.name,
+          state: 'queued',
+        })
+      }
+    })
+
+    it('polls each queued import by ID and renders review cards with unique heading IDs', async () => {
+      const user = userEvent.setup()
+      const files = [
+        workbookFile('qpt-eleven.xlsx'),
+        workbookFile('qpt-twelve.xlsx'),
+        workbookFile('qpt-thirteen.xlsx'),
+      ]
+      const imports = files.map((file, index) => ({
+        importId: `import-${index + 11}`,
+        fileName: file.name,
+        state: 'queued' as const,
+      }))
+      const reviews = new Map(imports.map((queuedImport, index) => [
+        queuedImport.importId,
+        {
+          ...review,
+          importId: queuedImport.importId,
+          fileName: queuedImport.fileName,
+          assessmentCode: `QPT-${index + 11}-2026-07-15-10E`,
+          displayTitle: `QPT ${index + 11}`,
+          qptNumber: index + 11,
+          revisionId: `revision-${index + 11}`,
+        } satisfies WorkbookReview,
+      ]))
+      const queueWorkbook = vi.fn(async (file: File) => {
+        const queuedImport = imports.find((item) => item.fileName === file.name)
+        if (!queuedImport) throw new Error('Unexpected workbook')
+        return queuedImport
+      })
+      const getImportReview = vi.fn(async (importId: string) => {
+        const nextReview = reviews.get(importId)
+        if (!nextReview) throw new Error('Unexpected import ID')
+        return nextReview
+      })
+      const repository = createRepository({
+        getPortalContext: vi.fn().mockResolvedValue({
+          roles: ['admin'],
+          mustChangePassword: false,
+          students: [],
+        }),
+        queueWorkbook,
+        getImportReview,
+      })
+
+      render(<App repository={repository} initialView="admin" />)
+
+      const input = await screen.findByLabelText(/Choose QPT workbook/i)
+      fireEvent.change(input, { target: { files } })
+      await user.click(screen.getByRole('button', { name: /Upload.*server validation/i }))
+
+      await waitFor(() => {
+        expect(getImportReview).toHaveBeenCalledWith('import-11')
+        expect(getImportReview).toHaveBeenCalledWith('import-12')
+        expect(getImportReview).toHaveBeenCalledWith('import-13')
+      })
+      const headings = await Promise.all([
+        screen.findByRole('heading', { name: 'QPT 11' }),
+        screen.findByRole('heading', { name: 'QPT 12' }),
+        screen.findByRole('heading', { name: 'QPT 13' }),
+      ])
+      expect(headings.every((heading) => Boolean(heading.id))).toBe(true)
+      expect(new Set(headings.map((heading) => heading.id)).size).toBe(headings.length)
+    })
   })
 
   it('lets the unified admin issue a student login and reveals the temporary password once', async () => {
@@ -1567,11 +2120,158 @@ describe('student portal', () => {
       )
       expect(getImportReview).toHaveBeenCalledTimes(4)
 
-      await user.click(screen.getByRole('button', { name: 'Retry validation status now' }))
+      await user.click(screen.getByRole('button', {
+        name: 'Retry validation status for qpt-5.xlsx',
+      }))
 
       expect(await screen.findByRole('heading', { name: 'QPT 5' })).toBeVisible()
       expect(getImportReview).toHaveBeenCalledTimes(5)
     } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('protects an exhausted review poll until the admin retries or explicitly stops tracking it', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const getImportReview = vi.fn().mockRejectedValue(new Error('network unavailable'))
+    const repository = createRepository({
+      getPortalContext: vi.fn().mockResolvedValue({
+        roles: ['uploader'],
+        mustChangePassword: false,
+        students: [],
+      }),
+      getImportReview,
+    })
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+    try {
+      render(<App repository={repository} initialView="admin" />)
+      const input = await screen.findByLabelText('Choose QPT workbook')
+      await user.upload(input, workbookFile('qpt-review-unknown.xlsx'))
+      await user.click(screen.getByRole('button', { name: 'Upload for server validation' }))
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2_000 + 4_000 + 6_000)
+      })
+
+      const stopTracking = await screen.findByRole('button', {
+        name: 'Stop tracking validation for qpt-review-unknown.xlsx',
+      })
+      expect(input).toBeDisabled()
+      expect(screen.getByRole('button', { name: 'Sign out' })).toBeEnabled()
+
+      await user.click(stopTracking)
+      expect(confirm).toHaveBeenCalledWith(expect.stringMatching(/discard its import reference/i))
+      expect(stopTracking).toBeInTheDocument()
+
+      confirm.mockReturnValue(true)
+      await user.click(stopTracking)
+      await waitFor(() => expect(stopTracking).not.toBeInTheDocument())
+      expect(input).toBeEnabled()
+    } finally {
+      confirm.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
+  it('stops polling a perpetually processing review at the overall deadline', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const getImportReview = vi.fn().mockResolvedValue({
+      ...review,
+      state: 'processing',
+    } satisfies WorkbookReview)
+    const repository = createRepository({
+      getPortalContext: vi.fn().mockResolvedValue({
+        roles: ['uploader'],
+        mustChangePassword: false,
+        students: [],
+      }),
+      getImportReview,
+    })
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+    try {
+      render(<App repository={repository} initialView="admin" />)
+      const file = workbookFile('qpt-processing-forever.xlsx')
+      await user.upload(await screen.findByLabelText('Choose QPT workbook'), file)
+      await user.click(screen.getByRole('button', { name: 'Upload for server validation' }))
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(WORKBOOK_REVIEW_DEADLINE_MS)
+      })
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        /validation is taking longer than expected/i,
+      )
+      expect(screen.getByRole('button', {
+        name: `Stop tracking validation for ${file.name}`,
+      })).toBeVisible()
+      expect(getImportReview.mock.calls.length).toBeGreaterThan(1)
+      expect(screen.getByRole('button', { name: 'Sign out' })).toBeEnabled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('warns about both credential recovery data and an unresolved workbook review', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    downloadCredentialWorkbookMock.mockResolvedValue('credentials.xlsx')
+    const repository = createRepository({
+      getPortalContext: vi.fn().mockResolvedValue({
+        roles: ['admin'],
+        mustChangePassword: false,
+        students: [],
+      }),
+      getStudentAccounts: vi.fn().mockResolvedValue([{
+        studentId: 'student-1',
+        fullName: 'First Student',
+        rollNo: '0031',
+        batchCode: '10-E',
+        loginId: null,
+        accountStatus: 'not-provisioned',
+        mustChangePassword: false,
+      }]),
+      issueStudentCredential: vi.fn().mockResolvedValue({
+        studentId: 'student-1',
+        loginId: '0031',
+        temporaryPassword: 'Private0031SecureA',
+        state: 'provisioned',
+      }),
+      getImportReview: vi.fn().mockRejectedValue(new Error('network unavailable')),
+    })
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+
+    try {
+      render(<App repository={repository} initialView="admin" />)
+      await user.click(await screen.findByRole('tab', { name: 'Student Access' }))
+      await user.click(await screen.findByRole('button', {
+        name: 'Generate & download all credentials',
+      }))
+      expect(await screen.findByRole('heading', { name: 'Download started' })).toBeVisible()
+
+      await user.click(screen.getByRole('tab', { name: 'Workbooks' }))
+      await user.upload(
+        screen.getByLabelText('Choose QPT workbook'),
+        workbookFile('qpt-combined-protection.xlsx'),
+      )
+      await user.click(screen.getByRole('button', { name: 'Upload for server validation' }))
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2_000 + 4_000 + 6_000)
+      })
+
+      await screen.findByRole('button', {
+        name: 'Stop tracking validation for qpt-combined-protection.xlsx',
+      })
+      await user.click(screen.getByRole('button', { name: 'Sign out' }))
+
+      expect(confirm).toHaveBeenCalledWith(expect.stringMatching(
+        /Temporary credentials.*workbook upload.*discard both recovery copies/i,
+      ))
+      expect(repository.signOut).not.toHaveBeenCalled()
+    } finally {
+      confirm.mockRestore()
       vi.useRealTimers()
     }
   })

@@ -12,6 +12,8 @@ type PortalHeaderProps = {
   onSignOut: () => Promise<void>
   navigationDisabled?: boolean
   signOutDisabled?: boolean
+  busyDescription?: string
+  busyDescriptionId?: string
 }
 
 export function PortalHeader({
@@ -23,6 +25,8 @@ export function PortalHeader({
   onSignOut,
   navigationDisabled = false,
   signOutDisabled = false,
+  busyDescription = 'Finish the active admin operation before signing out.',
+  busyDescriptionId,
 }: PortalHeaderProps) {
   return (
     <header className="portal-header">
@@ -34,6 +38,7 @@ export function PortalHeader({
             className="nav-link"
             type="button"
             disabled={navigationDisabled}
+            aria-describedby={navigationDisabled ? busyDescriptionId : undefined}
             aria-current={currentView === 'results' ? 'page' : undefined}
             onClick={() => onNavigate('results')}
           >
@@ -45,6 +50,7 @@ export function PortalHeader({
             className="nav-link"
             type="button"
             disabled={navigationDisabled}
+            aria-describedby={navigationDisabled ? busyDescriptionId : undefined}
             aria-current={currentView === 'admin' ? 'page' : undefined}
             onClick={() => onNavigate('admin')}
           >
@@ -59,7 +65,8 @@ export function PortalHeader({
           className="button button-quiet button-small"
           type="button"
           disabled={signOutDisabled}
-          title={signOutDisabled ? 'Finish preparing the credential file before signing out.' : undefined}
+          aria-describedby={signOutDisabled ? busyDescriptionId : undefined}
+          title={signOutDisabled ? busyDescription : undefined}
           onClick={() => void onSignOut()}
         >
           Sign out

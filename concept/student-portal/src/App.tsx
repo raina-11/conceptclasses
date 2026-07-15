@@ -32,6 +32,7 @@ type AppProps = {
 export { PORTAL_IDLE_TIMEOUT_MS } from './security/session-activity'
 
 export const PORTAL_CONTEXT_TIMEOUT_MS = 12_000
+const ADMIN_BUSY_DESCRIPTION_ID = 'admin-operation-busy-description'
 
 function viewFromLocation(): PortalView {
   return window.location.pathname.startsWith('/admin') ? 'admin' : 'results'
@@ -69,12 +70,31 @@ export function App({
   const currentView = context
     ? accessibleView(view, hasResultsAccess, hasAdminAccess)
     : view
+  const adminOperationBusy = credentialProtection === 'busy'
+    || credentialProtection === 'import-busy'
+  const adminBusyDescription = credentialProtection === 'import-busy'
+    ? 'Wait for workbook uploads and server validation before signing out.'
+    : 'Finish preparing the credential file before signing out.'
 
   const canDiscardCredentialPage = useCallback((): boolean => {
     if (credentialProtection === 'clear') return true
     if (credentialProtection === 'busy') {
       setSignOutError('Finish preparing the student credential file before leaving this page.')
       return false
+    }
+    if (credentialProtection === 'import-busy') {
+      setSignOutError('Wait for the active workbook uploads and server validation before leaving this page.')
+      return false
+    }
+    if (credentialProtection === 'import-attention') {
+      return window.confirm(
+        'A workbook upload has an unknown final server status. Leave and discard its retry information?',
+      )
+    }
+    if (credentialProtection === 'ready-and-import-attention') {
+      return window.confirm(
+        'Temporary credentials are still available only on this page, and a workbook upload has an unknown final server status. Leave and permanently discard both recovery copies?',
+      )
     }
     return window.confirm(
       'Temporary credentials are still available only on this page for recovery. Leave and permanently discard this in-memory copy?',
@@ -446,9 +466,20 @@ export function App({
         currentView={currentView}
         onNavigate={navigate}
         onSignOut={signOut}
-        navigationDisabled={credentialProtection === 'busy'}
-        signOutDisabled={credentialProtection === 'busy'}
+        navigationDisabled={adminOperationBusy}
+        signOutDisabled={adminOperationBusy}
+        busyDescription={adminBusyDescription}
+        busyDescriptionId={adminOperationBusy ? ADMIN_BUSY_DESCRIPTION_ID : undefined}
       />
+      {adminOperationBusy && (
+        <p
+          className="global-alert alert alert-warning"
+          id={ADMIN_BUSY_DESCRIPTION_ID}
+          role="status"
+        >
+          {adminBusyDescription}
+        </p>
+      )}
       {signOutError && <p className="global-alert alert alert-error" role="alert">{signOutError}</p>}
 
       {contextState === 'loading' || !context ? (

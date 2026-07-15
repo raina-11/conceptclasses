@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { basename, resolve } from 'node:path'
@@ -224,6 +224,105 @@ function runLocalSql(databaseUrl: string, sql: string, step: string): void {
   })
 
   assertStep(!result.error && result.status === 0, step)
+}
+
+type RunningLocalSql = {
+  ready: Promise<void>
+  completion: Promise<void>
+}
+
+function startLocalSqlUntilMarker(
+  databaseUrl: string,
+  sql: string,
+  marker: string,
+  step: string,
+): RunningLocalSql {
+  const parsed = parseLoopbackUrl(
+    databaseUrl,
+    new Set(['postgres:', 'postgresql:']),
+    'loopback database safety guard',
+  )
+  const databaseName = decoded(parsed.pathname.replace(/^\/+/, ''), step)
+  assertStep(Boolean(databaseName), step)
+  assertStep(marker.length > 0 && !marker.includes('\n'), step)
+
+  const child = spawn(
+    process.env.PSQL_BIN?.trim() || 'psql',
+    ['-X', '-q', '-v', 'ON_ERROR_STOP=1'],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        PGHOST: parsed.hostname.replace(/^\[|\]$/gu, ''),
+        PGPORT: parsed.port || '5432',
+        PGUSER: decoded(parsed.username, step),
+        PGPASSWORD: decoded(parsed.password, step),
+        PGDATABASE: databaseName,
+        PGCONNECT_TIMEOUT: '5',
+        PGSSLMODE: 'disable',
+      },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    },
+  )
+
+  let output = ''
+  let errorOutput = ''
+  let markerSeen = false
+  let resolveReady: () => void = () => undefined
+  let rejectReady: (error: Error) => void = () => undefined
+  let resolveCompletion: () => void = () => undefined
+  let rejectCompletion: (error: Error) => void = () => undefined
+
+  const ready = new Promise<void>((resolve, reject) => {
+    resolveReady = resolve
+    rejectReady = reject
+  })
+  const completion = new Promise<void>((resolve, reject) => {
+    resolveCompletion = resolve
+    rejectCompletion = reject
+  })
+  // The caller awaits `ready` before `completion`. Attach a handler now so an
+  // early process failure cannot become a transient unhandled rejection.
+  void completion.catch(() => undefined)
+  const processError = () =>
+    new Error(
+      `Local Supabase integration failed at: ${step}${
+        errorOutput.trim() ? ` (${errorOutput.trim().slice(0, 500)})` : ''
+      }.`,
+    )
+
+  child.stdout.on('data', (chunk: Buffer) => {
+    output = (output + chunk.toString('utf8')).slice(-1024 * 1024)
+    if (!markerSeen && output.includes(marker)) {
+      markerSeen = true
+      resolveReady()
+    }
+  })
+  child.stderr.on('data', (chunk: Buffer) => {
+    errorOutput = (errorOutput + chunk.toString('utf8')).slice(-1024 * 1024)
+  })
+  child.on('error', () => {
+    const error = processError()
+    if (!markerSeen) rejectReady(error)
+    rejectCompletion(error)
+  })
+  child.on('close', (code) => {
+    if (code === 0 && markerSeen) {
+      resolveCompletion()
+      return
+    }
+    const error = processError()
+    if (!markerSeen) rejectReady(error)
+    rejectCompletion(error)
+  })
+  child.stdin.on('error', () => {
+    const error = processError()
+    if (!markerSeen) rejectReady(error)
+    rejectCompletion(error)
+  })
+  child.stdin.end(sql)
+
+  return { ready, completion }
 }
 
 function sqlLiteral(value: string, step: string): string {
@@ -735,6 +834,227 @@ describeLocal('local Supabase result pipeline', () => {
             result.batch_code === fixture.batchCode,
         ),
         'student-scoped published result boundary',
+      )
+    },
+    120_000,
+  )
+
+  it(
+    'serializes two concurrent assessments that create one shared batch roster',
+    async () => {
+      const configuration = discoverLocalConfiguration()
+      assertLocalOnly(configuration)
+      const serviceClient = client(
+        configuration.apiUrl,
+        configuration.serviceRoleKey,
+      )
+      const secondServiceClient = client(
+        configuration.apiUrl,
+        configuration.serviceRoleKey,
+      )
+      const suffix = randomUUID().replaceAll('-', '').slice(0, 12).toUpperCase()
+      const adminUser = await provisionUser(serviceClient, 'parallel', suffix)
+      grantAdminRole(configuration.databaseUrl, adminUser.id)
+
+      const academicYear = '2027-28'
+      const batchCode = `PAR-${suffix}`
+      const firstAssessmentCode = `PAR-QPT-1-${suffix}`
+      const secondAssessmentCode = `PAR-QPT-2-${suffix}`
+      const firstImportId = randomUUID()
+      const secondImportId = randomUUID()
+      const firstRequestId = randomUUID()
+      const secondRequestId = randomUUID()
+      const randomHash = () => randomUUID().replaceAll('-', '').repeat(2)
+      const rosterSize = 12
+      const rows = Array.from({ length: rosterSize }, (_, index) => ({
+        roll_no: `PAR-${suffix}-${String(index + 1).padStart(3, '0')}`,
+        student_name_for_review: `Synthetic Parallel Student ${String(
+          index + 1,
+        ).padStart(3, '0')}`,
+        subject_code: 'SCIENCE',
+        subject_name: 'Science',
+        max_marks: 100,
+        score: 80 - index,
+        status: 'present',
+        source_rank: index + 1,
+      }))
+      const firstAssessment = {
+        parser_version: 'canonical-v1',
+        template_version: '1',
+        assessment_code: firstAssessmentCode,
+        academic_year: academicYear,
+        qpt_number: 991001,
+        batch_code: batchCode,
+        batch_name: `Parallel Batch ${suffix}`,
+        test_date: '2027-07-01',
+        display_title: `Parallel QPT 1 ${suffix}`,
+        ranking_basis: 'component_score',
+      }
+      const secondAssessment = {
+        ...firstAssessment,
+        assessment_code: secondAssessmentCode,
+        qpt_number: 991002,
+        test_date: '2027-07-02',
+        display_title: `Parallel QPT 2 ${suffix}`,
+      }
+
+      runLocalSql(
+        configuration.databaseUrl,
+        `
+          insert into app_private.imports (
+            id, client_request_id, storage_path, original_filename, byte_size,
+            raw_sha256, normalized_hash, parser_version, status, uploaded_by,
+            parsed_at
+          )
+          values
+            (
+              ${sqlLiteral(firstImportId, 'parallel import fixture')}::uuid,
+              ${sqlLiteral(firstRequestId, 'parallel import fixture')}::uuid,
+              ${sqlLiteral(`${adminUser.id}/${firstImportId}.xlsx`, 'parallel import fixture')},
+              'parallel-first.xlsx', 4096,
+              ${sqlLiteral(randomHash(), 'parallel import fixture')},
+              ${sqlLiteral(randomHash(), 'parallel import fixture')},
+              'canonical-v1', 'parsed',
+              ${sqlLiteral(adminUser.id, 'parallel import fixture')}::uuid,
+              statement_timestamp()
+            ),
+            (
+              ${sqlLiteral(secondImportId, 'parallel import fixture')}::uuid,
+              ${sqlLiteral(secondRequestId, 'parallel import fixture')}::uuid,
+              ${sqlLiteral(`${adminUser.id}/${secondImportId}.xlsx`, 'parallel import fixture')},
+              'parallel-second.xlsx', 4096,
+              ${sqlLiteral(randomHash(), 'parallel import fixture')},
+              ${sqlLiteral(randomHash(), 'parallel import fixture')},
+              'canonical-v1', 'parsed',
+              ${sqlLiteral(adminUser.id, 'parallel import fixture')}::uuid,
+              statement_timestamp()
+            );
+        `,
+        'parallel import fixture',
+      )
+
+      const lockMarker = `PARALLEL_STAGE_LOCK_HELD_${suffix}`
+      const firstStage = startLocalSqlUntilMarker(
+        configuration.databaseUrl,
+        `
+          begin;
+          select pg_catalog.pg_advisory_xact_lock(
+            pg_catalog.hashtextextended(
+              ${sqlLiteral(academicYear, 'parallel stage worker')}
+                || pg_catalog.chr(31)
+                || ${sqlLiteral(batchCode, 'parallel stage worker')},
+              0
+            )
+          );
+          \\echo ${lockMarker}
+          select pg_catalog.pg_sleep(1.5);
+          select api.stage_qpt_import(
+            ${sqlLiteral(firstImportId, 'parallel stage worker')}::uuid,
+            ${sqlLiteral(JSON.stringify(firstAssessment), 'parallel stage worker')}::jsonb,
+            ${sqlLiteral(JSON.stringify(rows), 'parallel stage worker')}::jsonb
+          );
+          commit;
+        `,
+        lockMarker,
+        'first parallel stage worker',
+      )
+
+      await firstStage.ready
+      let secondSettled = false
+      const secondStageRequest = secondServiceClient
+        .schema('api')
+        .rpc('stage_qpt_import', {
+          p_import_id: secondImportId,
+          p_assessment: secondAssessment,
+          p_rows: rows,
+        })
+        .then((response) => {
+          secondSettled = true
+          return response
+        })
+
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      const secondWaitedForBatchLock = !secondSettled
+      const [, secondStage] = await Promise.all([
+        firstStage.completion,
+        secondStageRequest,
+      ])
+
+      assertStep(
+        secondWaitedForBatchLock,
+        'same-batch staging transaction lock',
+      )
+      assertStep(
+        !secondStage.error && UUID_PATTERN.test(secondStage.data ?? ''),
+        'second parallel stage worker',
+      )
+
+      runLocalSql(
+        configuration.databaseUrl,
+        `
+          do $parallel_assertions$
+          declare
+            v_batch_id uuid;
+          begin
+            select id into strict v_batch_id
+            from app_private.batches
+            where academic_year = ${sqlLiteral(academicYear, 'parallel staging assertions')}
+              and code = ${sqlLiteral(batchCode, 'parallel staging assertions')};
+
+            if (
+              select count(*) from app_private.assessments
+              where batch_id = v_batch_id
+                and assessment_code in (
+                  ${sqlLiteral(firstAssessmentCode, 'parallel staging assertions')},
+                  ${sqlLiteral(secondAssessmentCode, 'parallel staging assertions')}
+                )
+            ) <> 2 then
+              raise exception 'parallel assessments were not both staged';
+            end if;
+
+            if (
+              select count(*) from app_private.enrollments
+              where batch_id = v_batch_id
+            ) <> ${rosterSize} then
+              raise exception 'parallel imports did not share one enrollment roster';
+            end if;
+
+            if (
+              select count(distinct e.student_id)
+              from app_private.enrollments e
+              where e.batch_id = v_batch_id
+            ) <> ${rosterSize} then
+              raise exception 'parallel imports created duplicate students';
+            end if;
+
+            if (
+              select count(*)
+              from app_private.student_scores sc
+              join app_private.assessment_revisions r on r.id = sc.revision_id
+              join app_private.assessments a on a.id = r.assessment_id
+              where a.batch_id = v_batch_id
+                and a.assessment_code in (
+                  ${sqlLiteral(firstAssessmentCode, 'parallel staging assertions')},
+                  ${sqlLiteral(secondAssessmentCode, 'parallel staging assertions')}
+                )
+            ) <> ${rosterSize * 2} then
+              raise exception 'parallel imports did not retain both score sets';
+            end if;
+
+            if (
+              select count(*) from app_private.imports
+              where id in (
+                ${sqlLiteral(firstImportId, 'parallel staging assertions')}::uuid,
+                ${sqlLiteral(secondImportId, 'parallel staging assertions')}::uuid
+              )
+                and status = 'staged'
+            ) <> 2 then
+              raise exception 'parallel imports did not both reach staged state';
+            end if;
+          end;
+          $parallel_assertions$;
+        `,
+        'parallel staging assertions',
       )
     },
     120_000,
