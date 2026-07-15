@@ -1,5 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import {
+  resolveSupabaseApiKeys,
+  type EnvironmentReader,
+} from '../_shared/supabase-api-keys.ts'
+import {
   prepareQptImport,
 } from '../../../src/domain/qpt/prepare-import.ts'
 import {
@@ -16,8 +20,11 @@ import {
 } from './metadata.ts'
 import { parseAllowedOrigins } from './origins.ts'
 
-function requiredEnvironment(name: string): string {
-  const value = Deno.env.get(name)?.trim()
+function requiredEnvironment(
+  environment: EnvironmentReader,
+  name: string,
+): string {
+  const value = environment.get(name)?.trim()
   if (!value) throw new Error(`Missing required environment variable: ${name}`)
   return value
 }
@@ -31,10 +38,11 @@ async function sha256(bytes: Uint8Array): Promise<string> {
   ).join('')
 }
 
-export function createProductionDependencies(): ParseResultDependencies {
-  const supabaseUrl = requiredEnvironment('SUPABASE_URL')
-  const anonymousKey = requiredEnvironment('SUPABASE_ANON_KEY')
-  const serviceRoleKey = requiredEnvironment('SUPABASE_SERVICE_ROLE_KEY')
+export function createProductionDependencies(
+  environment: EnvironmentReader = { get: (name) => Deno.env.get(name) },
+): ParseResultDependencies {
+  const supabaseUrl = requiredEnvironment(environment, 'SUPABASE_URL')
+  const { publishableKey, secretKey } = resolveSupabaseApiKeys(environment)
   const clientOptions = {
     auth: {
       autoRefreshToken: false,
@@ -44,17 +52,17 @@ export function createProductionDependencies(): ParseResultDependencies {
   }
   const authenticationClient = createClient(
     supabaseUrl,
-    anonymousKey,
+    publishableKey,
     clientOptions,
   )
   const serviceClient = createClient(
     supabaseUrl,
-    serviceRoleKey,
+    secretKey,
     clientOptions,
   )
 
   return {
-    allowedOrigins: parseAllowedOrigins(Deno.env.get('QPT_ALLOWED_ORIGINS')),
+    allowedOrigins: parseAllowedOrigins(environment.get('QPT_ALLOWED_ORIGINS')),
 
     async authenticate(token) {
       const { data, error } = await authenticationClient.auth.getUser(token)
@@ -65,7 +73,7 @@ export function createProductionDependencies(): ParseResultDependencies {
     },
 
     async confirmUpload(token, importId) {
-      const userClient = createClient(supabaseUrl, anonymousKey, {
+      const userClient = createClient(supabaseUrl, publishableKey, {
         ...clientOptions,
         global: { headers: { Authorization: `Bearer ${token}` } },
       })

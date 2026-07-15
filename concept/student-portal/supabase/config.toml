@@ -79,12 +79,12 @@ deno_version = 2
 
 [functions.parse-result-xlsx]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/parse-result-xlsx/deno.json"
 entrypoint = "./functions/parse-result-xlsx/index.ts"
 
 [functions.student-account]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/student-account/deno.json"
 entrypoint = "./functions/student-account/index.ts"

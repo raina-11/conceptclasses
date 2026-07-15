@@ -73,12 +73,17 @@ function localSupabaseStatus() {
   return parseEnvironmentOutput(result.stdout)
 }
 
+export function selectBootstrapServiceKey(environment) {
+  return (
+    environment.SUPABASE_SECRET_KEY?.trim() ||
+    environment.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  )
+}
+
 function configuration() {
   const configured = {
     apiUrl: process.env.SUPABASE_URL?.trim(),
-    serviceKey:
-      process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ??
-      process.env.SUPABASE_SECRET_KEY?.trim(),
+    serviceKey: selectBootstrapServiceKey(process.env),
     databaseUrl:
       process.env.SUPABASE_DB_URL?.trim() ?? process.env.DB_URL?.trim(),
   }
@@ -88,7 +93,7 @@ function configuration() {
   const result = {
     apiUrl: configured.apiUrl ?? discovered.API_URL,
     serviceKey:
-      configured.serviceKey ?? discovered.SERVICE_ROLE_KEY ?? discovered.SECRET_KEY,
+      configured.serviceKey ?? discovered.SECRET_KEY ?? discovered.SERVICE_ROLE_KEY,
     databaseUrl: configured.databaseUrl ?? discovered.DB_URL,
   }
   if (!result.apiUrl || !result.serviceKey || !result.databaseUrl) {

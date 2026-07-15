@@ -1,3 +1,5 @@
 concept-brand-*
 .*
 concept-reel/*
+# Local Netlify folder
+.netlify

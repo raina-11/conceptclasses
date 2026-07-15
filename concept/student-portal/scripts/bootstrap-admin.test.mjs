@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   adminIdentity,
   assertBootstrapTarget,
+  selectBootstrapServiceKey,
   validateAdminPassword,
 } from './bootstrap-admin.mjs'
 
@@ -39,5 +40,15 @@ describe('admin bootstrap safety', () => {
     expect(() =>
       assertBootstrapTarget('https://project.supabase.co', 'postgresql://postgres:secret@db.example.com:5432/postgres', true),
     ).not.toThrow()
+  })
+
+  it('prefers the new secret key and preserves the legacy service-role fallback', () => {
+    expect(selectBootstrapServiceKey({
+      SUPABASE_SECRET_KEY: 'new-secret',
+      SUPABASE_SERVICE_ROLE_KEY: 'legacy-service-role',
+    })).toBe('new-secret')
+    expect(selectBootstrapServiceKey({
+      SUPABASE_SERVICE_ROLE_KEY: 'legacy-service-role',
+    })).toBe('legacy-service-role')
   })
 })

@@ -53,8 +53,8 @@ target has no real users or application data before continuing:
    Storage metadata is recreated correctly; never insert Storage metadata with
    SQL.
 6. Regenerate TypeScript database types and deploy the pinned revisions of both
-   `parse-result-xlsx` and `student-account`, with their exact-origin secrets and
-   JWT verification intact.
+   `parse-result-xlsx` and `student-account`, with their exact-origin secrets,
+   gateway `verify_jwt = false`, and in-handler user-token verification intact.
 7. Verify a restored admin ID and roll ID still resolve to their restored Auth
    UUIDs. Exercise a fresh one-time student credential, the pre-change data
    gate, mandatory password change and explicit re-login, office-assisted reset,

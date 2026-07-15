@@ -1,5 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import {
+  resolveSupabaseApiKeys,
+  type EnvironmentReader,
+} from '../_shared/supabase-api-keys.ts'
+import {
   HttpError,
   type AdminStudentAccount,
   type CompletedProvisionTarget,
@@ -15,10 +19,6 @@ type JsonObject = Record<string, unknown>
 
 const AUTH_USERS_PER_PAGE = 1_000
 const MAXIMUM_AUTH_USER_PAGES = 10
-
-export type EnvironmentReader = {
-  get(name: string): string | undefined
-}
 
 function requiredEnvironment(
   environment: EnvironmentReader,
@@ -251,16 +251,10 @@ export function createProductionDependencies(
   environment: EnvironmentReader = { get: (name) => Deno.env.get(name) },
 ): StudentAccountDependencies {
   const supabaseUrl = requiredEnvironment(environment, 'SUPABASE_URL')
-  const publicKey = requiredEnvironment(
-    environment,
-    'SUPABASE_ANON_KEY',
-    'SUPABASE_PUBLISHABLE_KEY',
-  )
-  const serviceKey = requiredEnvironment(
-    environment,
-    'SUPABASE_SERVICE_ROLE_KEY',
-    'SUPABASE_SECRET_KEY',
-  )
+  const {
+    publishableKey: publicKey,
+    secretKey: serviceKey,
+  } = resolveSupabaseApiKeys(environment)
   const clientOptions = {
     auth: {
       autoRefreshToken: false,
