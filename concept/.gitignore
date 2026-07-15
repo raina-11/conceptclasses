@@ -10,6 +10,22 @@
 
 # production
 /build
+/student-portal/dist
+/student-portal/coverage
+/student-portal/node_modules
+/student-portal/playwright-report
+/student-portal/test-results
+/student-portal/.env
+/student-portal/.env.*
+!/student-portal/.env.example
+!/student-portal/.nvmrc
+/student-portal/supabase/.temp
+/student-portal/supabase/.branches
+
+# Real QPT workbooks can contain student and guardian PII. Never commit them.
+/.private/
+/student-portal/tests/fixtures/private/*
+!/student-portal/tests/fixtures/private/.gitignore
 
 # misc
 .DS_Store

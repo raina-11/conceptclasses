@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.110.2",
+    "decimal.js": "npm:decimal.js@10.6.0",
+    "exceljs": "npm:exceljs@4.4.0/lib/exceljs.bare.js",
+    "jszip": "npm:jszip@3.10.1"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "dom", "dom.iterable", "esnext"],
+    "strict": true
+  }
+}

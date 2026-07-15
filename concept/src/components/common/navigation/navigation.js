@@ -39,6 +39,7 @@ import 'reactjs-popup/dist/index.css';
 import AnchorLink from 'react-anchor-link-smooth-scroll'
 import ScheduleForm from "../schedule-visit"
 import { useCourses } from '../../../hooks/useFirestore';
+import { STUDENT_PORTAL_URL } from "./studentPortalUrl"
 
 const MOBILE_CATEGORIES = [
   { key: 'engineering', label: 'IIT JEE', href: '/engineering', icon: i1 },
@@ -134,9 +135,9 @@ export default class Navigation extends Component {
     return (
      
      <div style={{width:'100vw'}}>
-      <Nav {...this.props} scrolled={this.state.hasScrolled} aria-label="Main navigation">
+      <Nav $scrolled={this.state.hasScrolled} aria-label="Main navigation">
      
-        <StyledContainer {...this.props} scrolled={this.state.hasScrolled} bgwhite={bgwhite}>
+        <StyledContainer $scrolled={this.state.hasScrolled} $bgwhite={bgwhite}>
           {/* <NavBar> */}
          <a href="/">
           <Brand>
@@ -159,7 +160,7 @@ export default class Navigation extends Component {
             </button>
           </Mobile>
 
-          <Mobile hide>
+          <Mobile $hide>
             <NavListWrapper>
               {/* <ul> */}
                 <Solutions />
@@ -192,14 +193,17 @@ export default class Navigation extends Component {
             </NavListWrapper>
           </Mobile>
           <Buttons>
-             <StyledLink >
+             <PhoneLink>
               <a style={{display:'flex', alignItems:'center', textDecoration:'none', color:'#222',position:'relative', fontWeight:'500'}} href="tel:9928111865">
                     {/* <SecondaryButton style={{padding:'16px', minWidth:'93px',background:'transparent'}}> */}
                    <img style={{height:'30px'}} src={call} alt="Call Concept Classes"/>
                   9928111865
                     {/* </SecondaryButton> */}
                     </a>
-                  </StyledLink>
+                  </PhoneLink>
+                  <StudentPortalLink href={STUDENT_PORTAL_URL}>
+                    Student Login
+                  </StudentPortalLink>
                   <StyledLink>
                
                     <PrimaryButton style={{padding:'16px', minWidth:'100px', background:'#005B38',border: '2px solid #005B38'}} onClick={this.showPopup}>
@@ -229,7 +233,7 @@ export default class Navigation extends Component {
         <Mobile>
           {mobileMenuOpen && (
             <MobileMenu>
-              <NavListWrapperMobile mobile={true}>
+              <NavListWrapperMobile $mobile>
                 {/* <ul> */}
                 
                   <NavItemMobile>
@@ -337,6 +341,14 @@ export default class Navigation extends Component {
                 {/* </Link> */}
               </ActionsContainerMobile>
               <ActionsContainerMobile>
+                <StudentPortalLink
+                  href={STUDENT_PORTAL_URL}
+                  onClick={this.closeMobileMenu}
+                >
+                  Student Login
+                </StudentPortalLink>
+              </ActionsContainerMobile>
+              <ActionsContainerMobile>
               <StyledButton onClick={this.closeAndShowPopup}>
                     Schedule a visit
                   </StyledButton>
@@ -402,6 +414,47 @@ align-items: center;
   display: none;
 }
 `
+const StudentPortalLink = styled.a`
+  display: inline-flex;
+  min-height: 48px;
+  min-width: 124px;
+  padding: 10px 18px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #005b38;
+  border-radius: 100px;
+  background: #ffffff;
+  color: #005b38;
+  font-family: 'Lexend Medium';
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 22px;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background: #005b38;
+    color: #ffffff;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #1c1c1f;
+    outline-offset: 3px;
+  }
+
+  @media (max-width: ${props => props.theme.screen.md}) {
+    min-width: 300px;
+    min-height: 56px;
+    padding: 16px 32px;
+  }
+
+  @media (max-width: ${props => props.theme.screen.xs}) {
+    min-width: min(300px, calc(100vw - 40px));
+    padding: 16px 20px;
+  }
+`
 const StyledLink = styled.div`
   display: block;
   @media (max-width: ${props => props.theme.screen.md}){
@@ -412,6 +465,11 @@ const StyledLink = styled.div`
     left: -22px;
     top: -4px;
     transform: rotate(12deg);
+  }
+`
+const PhoneLink = styled(StyledLink)`
+  @media (max-width: ${props => props.theme.screen.lg}) {
+    display: none;
   }
 `
 const Anchor = styled.a`

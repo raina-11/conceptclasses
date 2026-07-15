@@ -89,7 +89,7 @@ export const BannerBright = styled.div`
 `
 export const Nav = styled.nav`
   padding: 8px;
-  // position: ${props => (props.scrolled ? 'fixed' :'sticky')};
+  // position: ${props => (props.$scrolled ? 'fixed' :'sticky')};
   position: fixed;
   // position:sticky;
   width: 100%;
@@ -109,7 +109,7 @@ padding:12px 0px;
 `
 export const StyledContainer = styled(Container)`
   display: flex;
-  // filter: ${props => (props.scrolled ? 'drop-shadow(0 3px 70px #00000026)' : '')};
+  // filter: ${props => (props.$scrolled ? 'drop-shadow(0 3px 70px #00000026)' : '')};
   filter:drop-shadow(0 3px 70px #00000026);
    border: 1px solid transparent;
   justify-content: space-between;
@@ -117,7 +117,7 @@ export const StyledContainer = styled(Container)`
   border-radius: 100px;
   border:  1px solid #ABABB0 ;
 padding:12px;
-background: ${(props) =>props.bgwhite?'rgba(255, 255, 255, 0.80)': 'rgba(255, 255, 255, 0.80)'};
+background: ${(props) =>props.$bgwhite?'rgba(255, 255, 255, 0.80)': 'rgba(255, 255, 255, 0.80)'};
   transition: background 0.3s, border 0.3s;
 backdrop-filter: blur(20px);
 @media (max-width: ${props => props.theme.screen.md})  {
@@ -156,8 +156,8 @@ font-weight: 500;
       }
     }
 
-    ${({ mobile }) =>
-      mobile &&
+    ${({ $mobile }) =>
+      $mobile &&
       `
         flex-direction: column;
         margin-top: 1em;
@@ -187,8 +187,8 @@ export const NavListWrapperMobile = styled.div`
     flex-direction: row;
     
 
-    ${({ mobile }) =>
-      mobile &&
+    ${({ $mobile }) =>
+      $mobile &&
       `
         flex-direction: column;
         margin-top: 1em;
@@ -422,7 +422,7 @@ export const Mobile = styled.div`
   }
 
   ${props =>
-    props.hide &&
+    props.$hide &&
     `
     display: block;
 

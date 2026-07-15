@@ -1,0 +1,62 @@
+{
+  "name": "concept-student-portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0 <21 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "bootstrap:admin": "node scripts/bootstrap-admin.mjs",
+    "generate:template": "node scripts/generate-qpt-template.mjs",
+    "build": "tsc -b && vite build",
+    "build:synthetic": "node scripts/build-e2e.mjs",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "lint": "oxlint --deny-warnings .",
+    "test": "vitest run",
+    "test:integration": "vitest run tests/integration/local-supabase.integration.test.ts",
+    "test:integration:local": "RUN_LOCAL_INTEGRATION=1 npm run test:integration",
+    "test:e2e": "npm run build:synthetic && playwright test",
+    "test:e2e:install": "playwright install chromium",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:db": "supabase test db",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.110.3",
+    "decimal.js": "10.6.0",
+    "exceljs": "4.4.0",
+    "jszip": "3.10.1",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@types/node": "24.13.2",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "@vitest/coverage-v8": "4.1.10",
+    "jsdom": "29.1.1",
+    "oxlint": "1.73.0",
+    "supabase": "2.109.1",
+    "typescript": "6.0.2",
+    "vite": "8.1.4",
+    "vitest": "4.1.10"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
+  }
+}

@@ -1,0 +1,2 @@
+-- Production data is never seeded from source control. Test fixtures live in
+-- transactional pgTAP files and contain synthetic identities only.
