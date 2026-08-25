@@ -48,7 +48,7 @@ const SENIOR_CLASSES = ['XI', 'XII', 'Post-12th'];
 // `Post-12th` is the dropper/repeater year. It is last because it is the only
 // entry that is not a school class, and a student who has finished school looks
 // for it at the end of the list rather than among VII to XII.
-const CLASSES = ['VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'Post-12th'];
+const CLASSES = ['VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'Post-12th'];
 
 export default function ScholarshipRegister() {
   const [params] = useSearchParams();
