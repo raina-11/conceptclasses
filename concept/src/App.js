@@ -15,6 +15,7 @@ const ResultsMedical = lazy(() => import("./pages/results-medical"));
 const ResultsPreFoundation = lazy(() => import("./pages/results-prefoundation"));
 const CollegeSearch = lazy(() => import("./pages/CollegeSearch"));
 const ResultLookup = lazy(() => import("./pages/scienceChampResult"));
+const AnswerKey2027 = lazy(() => import("./pages/answer-key-2027"));
 const ScholarshipRegister = lazy(() => import("./pages/scholarship-register"));
 const AdminApp = lazy(() => import("./admin/AdminApp"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -41,6 +42,7 @@ export default function App() {
       <Route path="results/medical" element={<ResultsMedical/>} />
       <Route path="results/pre-foundation" element={<ResultsPreFoundation/>} />
       <Route path="science-champ-result-2026" element={<ResultLookup/>} />
+      <Route path="science-champ-answer-key-2027" element={<AnswerKey2027/>} />
       <Route path="register" element={<ScholarshipRegister />} />
       <Route path="admin/*" element={<AdminApp />} />
       <Route path="*" element={<NotFound />} />

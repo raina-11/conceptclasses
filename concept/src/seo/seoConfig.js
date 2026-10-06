@@ -87,6 +87,14 @@ const seoConfig = {
       'Science Champ result 2026, Concept Classes exam result, science competition Bikaner, scholarship exam result',
     canonicalPath: '/science-champ-result-2026',
   },
+  answerKey2027: {
+    title: 'Science Champ 2027 Answer Key',
+    description:
+      'Provisional answer key of Concept Science Champ Scholarship cum Entrance Test 2027 for classes 6 to 12, all paper sets. Check your answers by class and set.',
+    keywords:
+      'Science Champ 2027 answer key, CSCST 2027 answer key, Concept Classes answer key, scholarship test answer key Bikaner',
+    canonicalPath: '/science-champ-answer-key-2027',
+  },
 };
 
 export default seoConfig;
