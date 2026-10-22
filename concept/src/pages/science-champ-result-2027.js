@@ -97,6 +97,8 @@ export default function ScienceChampResult2027() {
   const [rollNo, setRollNo] = useState('');
   // Masked numbers the code would go to, shown before the parent asks for one.
   const [phones, setPhones] = useState(null);
+  // Which of them the parent picked, by position. A single number is picked for them.
+  const [choice, setChoice] = useState(null);
   const [otp, setOtp] = useState(null); // { otpId, sentTo, resendAfterSeconds }
   const [code, setCode] = useState('');
   const [result, setResult] = useState(savedResult);
@@ -118,6 +120,7 @@ export default function ScienceChampResult2027() {
     try {
       const found = await post('/v1/public/results/lookup', { eventCode: EVENT_CODE, rollNo: rollNo.trim(), turnstileToken });
       setPhones(found.phones);
+      setChoice(found.phones.length === 1 ? 0 : null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -138,7 +141,9 @@ export default function ScienceChampResult2027() {
     setError('');
     setBusy(true);
     try {
-      const sent = await post('/v1/public/results/otp', { eventCode: EVENT_CODE, rollNo: rollNo.trim(), turnstileToken });
+      const sent = await post('/v1/public/results/otp', {
+        eventCode: EVENT_CODE, rollNo: rollNo.trim(), turnstileToken, ...(choice === null ? {} : { phoneIndex: choice }),
+      });
       setOtp(sent);
       setCode('');
       setWait(sent.resendAfterSeconds);
@@ -169,7 +174,7 @@ export default function ScienceChampResult2027() {
   const startOver = () => {
     // The resend cooldown belongs to the previous roll number (the server keeps
     // its own per-roll count), so a new roll starts with no wait.
-    setPhones(null); setOtp(null); setResult(null); setCode(''); setError(''); setRollNo(''); setWait(0);
+    setPhones(null); setChoice(null); setOtp(null); setResult(null); setCode(''); setError(''); setRollNo(''); setWait(0);
     // The widget does not solve while hidden behind a result, so ask for a
     // fresh token now that the roll-number form is back.
     resetTurnstile();
@@ -194,15 +199,27 @@ export default function ScienceChampResult2027() {
                 <Label htmlFor="res-roll">Roll number</Label>
                 <Input
                   id="res-roll" value={rollNo}
-                  onChange={(e) => { setRollNo(e.target.value); setPhones(null); setError(''); }}
+                  onChange={(e) => { setRollNo(e.target.value); setPhones(null); setChoice(null); setError(''); }}
                   inputMode="numeric" autoComplete="off" maxLength={12} placeholder="e.g. 49722" required
                 />
                 {phones ? (
-                  <Note>OTP will be sent on WhatsApp to <b>{phones.join(', ')}</b>.</Note>
+                  phones.length === 1 ? (
+                    <Note>OTP will be sent on WhatsApp to <b>{phones[0]}</b>.</Note>
+                  ) : (
+                    <Choices role="radiogroup" aria-label="Send OTP to">
+                      <Note>Choose the number to send the OTP to on WhatsApp:</Note>
+                      {phones.map((p, i) => (
+                        <label key={p + i}>
+                          <input type="radio" name="otp-phone" checked={choice === i} onChange={() => setChoice(i)} />
+                          <b>{p}</b>
+                        </label>
+                      ))}
+                    </Choices>
+                  )
                 ) : (
                   <Note>We will send a 6-digit code on WhatsApp to the mobile number given at registration.</Note>
                 )}
-                <Button type="submit" disabled={busy || !rollNo.trim() || !turnstileToken || (phones && wait > 0)}>
+                <Button type="submit" disabled={busy || !rollNo.trim() || !turnstileToken || (phones && (wait > 0 || choice === null))}>
                   {phones
                     ? (busy ? 'Sending…' : wait > 0 ? `Try again in ${wait}s` : 'Send OTP')
                     : (busy ? 'Checking…' : 'Continue')}
@@ -315,6 +332,24 @@ const Input = styled.input`
   font-size: 18px; /* 16px+ stops iOS zooming in on focus */
   letter-spacing: 1px;
   &:focus { outline: none; border-color: #15803d; box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15); }
+`;
+
+const Choices = styled.div`
+  margin: 12px 0;
+  label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 12px;
+    margin-top: 8px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  label:has(input:checked) { border-color: #15803d; background: #f0fdf4; }
+  input { width: 18px; height: 18px; accent-color: #15803d; }
 `;
 
 const Note = styled.p`
