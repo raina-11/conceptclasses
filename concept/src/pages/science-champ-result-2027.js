@@ -7,9 +7,9 @@ import SEO from '../components/common/SEO';
 import seoConfig from '../seo/seoConfig';
 import { createBreadcrumbSchema } from '../seo/schemas';
 
-// Results are never shipped to the browser in bulk. The portal API sends a
-// WhatsApp code to the phone the student registered with, and returns ONE
-// result for a correct code. See concept-portal apps/api/src/modules/results.
+// Results are never shipped to the browser in bulk: the portal API returns ONE
+// result per roll number, behind invisible Turnstile and a per-IP limit. See
+// concept-portal apps/api/src/modules/results.
 const API_BASE = process.env.REACT_APP_PORTAL_API_URL || '';
 const EVENT_CODE = process.env.REACT_APP_RESULTS_EVENT_CODE || process.env.REACT_APP_REGISTRATION_EXAM_CODE || '';
 const TURNSTILE_SITE_KEY = process.env.REACT_APP_TURNSTILE_SITE_KEY || '';
@@ -24,18 +24,15 @@ async function post(path, body) {
   const json = await res.json().catch(() => null);
   if (!res.ok) {
     const message = json?.error?.message || 'Something went wrong. Please try again.';
-    // Dead ends the parent cannot fix online (unknown roll, no number on
-    // record) point at the office. The API leaves the phone number to us.
-    const deadEnd = json?.error?.code === 'not_found' || json?.error?.fields?.rollNo === 'no_phone';
-    const err = new Error(deadEnd ? `${message} Call ${OFFICE_PHONE}.` : message);
-    err.retryAfterMs = json?.error?.retryAfterMs;
-    throw err;
+    // An unknown roll is a dead end online, so point at the office. The API
+    // leaves the phone number to us.
+    throw new Error(json?.error?.code === 'not_found' ? `${message} Call ${OFFICE_PHONE}.` : message);
   }
   return json;
 }
 
 /** Cloudflare Turnstile, rendered explicitly so the token can be reset after
- *  every send — a token is good for one verification only. */
+ *  every lookup — a token is good for one verification only. */
 function useTurnstile(containerRef) {
   const [token, setToken] = useState('');
   const widgetId = useRef(null);
@@ -95,86 +92,31 @@ function saveResult(result) {
 
 export default function ScienceChampResult2027() {
   const [rollNo, setRollNo] = useState('');
-  // Masked numbers the code would go to, shown before the parent asks for one.
-  const [phones, setPhones] = useState(null);
-  // Which of them the parent picked, by position. A single number is picked for them.
-  const [choice, setChoice] = useState(null);
-  const [otp, setOtp] = useState(null); // { otpId, sentTo, resendAfterSeconds }
-  const [code, setCode] = useState('');
   const [result, setResult] = useState(savedResult);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [wait, setWait] = useState(0);
   const turnstileRef = useRef(null);
   const [turnstileToken, resetTurnstile] = useTurnstile(turnstileRef);
 
-  useEffect(() => {
-    if (wait <= 0) return undefined;
-    const t = setTimeout(() => setWait((w) => w - 1), 1000);
-    return () => clearTimeout(t);
-  }, [wait]);
-
-  const lookup = async () => {
-    setError('');
-    setBusy(true);
-    try {
-      const found = await post('/v1/public/results/lookup', { eventCode: EVENT_CODE, rollNo: rollNo.trim(), turnstileToken });
-      setPhones(found.phones);
-      setChoice(found.phones.length === 1 ? 0 : null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      resetTurnstile();
-      setBusy(false);
-    }
-  };
-
-  // One form, two steps: first show the number, then send the code to it.
-  const submitRoll = (e) => {
-    e.preventDefault();
-    if (phones) sendCode();
-    else lookup();
-  };
-
-  const sendCode = async (e) => {
-    e?.preventDefault();
-    setError('');
-    setBusy(true);
-    try {
-      const sent = await post('/v1/public/results/otp', {
-        eventCode: EVENT_CODE, rollNo: rollNo.trim(), turnstileToken, ...(choice === null ? {} : { phoneIndex: choice }),
-      });
-      setOtp(sent);
-      setCode('');
-      setWait(sent.resendAfterSeconds);
-    } catch (err) {
-      setError(err.message);
-      if (err.retryAfterMs) setWait(Math.ceil(err.retryAfterMs / 1000));
-    } finally {
-      resetTurnstile();
-      setBusy(false);
-    }
-  };
-
-  const verify = async (e) => {
+  const view = async (e) => {
     e.preventDefault();
     setError('');
     setBusy(true);
     try {
-      const verified = await post('/v1/public/results/verify', { otpId: otp.otpId, code: code.trim() });
-      saveResult(verified);
-      setResult(verified);
+      const found = await post('/v1/public/results/view', { eventCode: EVENT_CODE, rollNo: rollNo.trim(), turnstileToken });
+      saveResult(found);
+      setResult(found);
     } catch (err) {
       setError(err.message);
     } finally {
+      resetTurnstile();
       setBusy(false);
     }
   };
 
   const startOver = () => {
-    // The resend cooldown belongs to the previous roll number (the server keeps
-    // its own per-roll count), so a new roll starts with no wait.
-    setPhones(null); setChoice(null); setOtp(null); setResult(null); setCode(''); setError(''); setRollNo(''); setWait(0);
+    setResult(null); setError(''); setRollNo('');
+    try { sessionStorage.removeItem(SAVED_KEY); } catch { /* storage blocked */ }
     // The widget does not solve while hidden behind a result, so ask for a
     // fresh token now that the roll-number form is back.
     resetTurnstile();
@@ -194,52 +136,17 @@ export default function ScienceChampResult2027() {
 
             {unavailable && <ErrorBox>Results are not available online right now. Please call {OFFICE_PHONE}.</ErrorBox>}
 
-            {!unavailable && !otp && (
-              <form onSubmit={submitRoll}>
+            {!unavailable && (
+              <form onSubmit={view}>
                 <Label htmlFor="res-roll">Roll number</Label>
                 <Input
                   id="res-roll" value={rollNo}
-                  onChange={(e) => { setRollNo(e.target.value); setPhones(null); setChoice(null); setError(''); }}
+                  onChange={(e) => { setRollNo(e.target.value); setError(''); }}
                   inputMode="numeric" autoComplete="off" maxLength={12} placeholder="e.g. 49722" required
                 />
-                {phones ? (
-                  phones.length === 1 ? (
-                    <Note>OTP will be sent on WhatsApp to <b>{phones[0]}</b>.</Note>
-                  ) : (
-                    <Choices role="radiogroup" aria-label="Send OTP to">
-                      <Note>Choose the number to send the OTP to on WhatsApp:</Note>
-                      {phones.map((p, i) => (
-                        <label key={p + i}>
-                          <input type="radio" name="otp-phone" checked={choice === i} onChange={() => setChoice(i)} />
-                          <b>{p}</b>
-                        </label>
-                      ))}
-                    </Choices>
-                  )
-                ) : (
-                  <Note>We will send a 6-digit code on WhatsApp to the mobile number given at registration.</Note>
-                )}
-                <Button type="submit" disabled={busy || !rollNo.trim() || !turnstileToken || (phones && (wait > 0 || choice === null))}>
-                  {phones
-                    ? (busy ? 'Sending…' : wait > 0 ? `Try again in ${wait}s` : 'Send OTP')
-                    : (busy ? 'Checking…' : 'Continue')}
+                <Button type="submit" disabled={busy || !rollNo.trim() || !turnstileToken}>
+                  {busy ? 'Checking…' : 'View result'}
                 </Button>
-              </form>
-            )}
-
-            {!unavailable && otp && (
-              <form onSubmit={verify}>
-                <Note>Code sent on WhatsApp to <b>{otp.sentTo.join(', ')}</b>. It is valid for 5 minutes.</Note>
-                <Label htmlFor="res-code">Enter the 6-digit code</Label>
-                <Input
-                  id="res-code" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                  inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="••••••" required autoFocus
-                />
-                <Button type="submit" disabled={busy || code.length !== 6}>{busy ? 'Checking…' : 'View result'}</Button>
-                <LinkButton type="button" disabled={busy || wait > 0 || !turnstileToken} onClick={() => sendCode()}>
-                  {wait > 0 ? `Resend code in ${wait}s` : 'Resend code'}
-                </LinkButton>
-                <LinkButton type="button" onClick={startOver}>Use a different roll number</LinkButton>
               </form>
             )}
 
@@ -250,7 +157,7 @@ export default function ScienceChampResult2027() {
 
         {/* One widget for every step, mounted for the life of the page: it is
             rendered once, so unmounting it (e.g. while a result is shown)
-            would leave the next send with no token, ever. */}
+            would leave the next lookup with no token, ever. */}
         {!unavailable && <Turnstile ref={turnstileRef} hidden={Boolean(result)} />}
 
         {result && (
@@ -277,6 +184,7 @@ export default function ScienceChampResult2027() {
               {r.omrUrl && <a href={r.omrUrl} target="_blank" rel="noopener noreferrer">View OMR sheet</a>}
               <button type="button" onClick={() => window.print()}>Print</button>
             </Actions>
+            <LinkButton type="button" onClick={startOver}>Check another roll number</LinkButton>
           </Card>
         )}
       </Page>
@@ -332,30 +240,6 @@ const Input = styled.input`
   font-size: 18px; /* 16px+ stops iOS zooming in on focus */
   letter-spacing: 1px;
   &:focus { outline: none; border-color: #15803d; box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15); }
-`;
-
-const Choices = styled.div`
-  margin: 12px 0;
-  label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 44px;
-    padding: 0 12px;
-    margin-top: 8px;
-    border: 1.5px solid #d1d5db;
-    border-radius: 10px;
-    font-size: 16px;
-    cursor: pointer;
-  }
-  label:has(input:checked) { border-color: #15803d; background: #f0fdf4; }
-  input { width: 18px; height: 18px; accent-color: #15803d; }
-`;
-
-const Note = styled.p`
-  margin: 12px 0;
-  font-size: 14px;
-  color: #374151;
 `;
 
 // The widget runs in Invisible mode (set on the Cloudflare side), so this is
