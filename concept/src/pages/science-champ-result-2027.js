@@ -95,6 +95,8 @@ function saveResult(result) {
 
 export default function ScienceChampResult2027() {
   const [rollNo, setRollNo] = useState('');
+  // Masked numbers the code would go to, shown before the parent asks for one.
+  const [phones, setPhones] = useState(null);
   const [otp, setOtp] = useState(null); // { otpId, sentTo, resendAfterSeconds }
   const [code, setCode] = useState('');
   const [result, setResult] = useState(savedResult);
@@ -109,6 +111,27 @@ export default function ScienceChampResult2027() {
     const t = setTimeout(() => setWait((w) => w - 1), 1000);
     return () => clearTimeout(t);
   }, [wait]);
+
+  const lookup = async () => {
+    setError('');
+    setBusy(true);
+    try {
+      const found = await post('/v1/public/results/lookup', { eventCode: EVENT_CODE, rollNo: rollNo.trim(), turnstileToken });
+      setPhones(found.phones);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      resetTurnstile();
+      setBusy(false);
+    }
+  };
+
+  // One form, two steps: first show the number, then send the code to it.
+  const submitRoll = (e) => {
+    e.preventDefault();
+    if (phones) sendCode();
+    else lookup();
+  };
 
   const sendCode = async (e) => {
     e?.preventDefault();
@@ -146,7 +169,7 @@ export default function ScienceChampResult2027() {
   const startOver = () => {
     // The resend cooldown belongs to the previous roll number (the server keeps
     // its own per-roll count), so a new roll starts with no wait.
-    setOtp(null); setResult(null); setCode(''); setError(''); setRollNo(''); setWait(0);
+    setPhones(null); setOtp(null); setResult(null); setCode(''); setError(''); setRollNo(''); setWait(0);
     // The widget does not solve while hidden behind a result, so ask for a
     // fresh token now that the roll-number form is back.
     resetTurnstile();
@@ -167,15 +190,22 @@ export default function ScienceChampResult2027() {
             {unavailable && <ErrorBox>Results are not available online right now. Please call {OFFICE_PHONE}.</ErrorBox>}
 
             {!unavailable && !otp && (
-              <form onSubmit={sendCode}>
+              <form onSubmit={submitRoll}>
                 <Label htmlFor="res-roll">Roll number</Label>
                 <Input
-                  id="res-roll" value={rollNo} onChange={(e) => setRollNo(e.target.value)}
+                  id="res-roll" value={rollNo}
+                  onChange={(e) => { setRollNo(e.target.value); setPhones(null); setError(''); }}
                   inputMode="numeric" autoComplete="off" maxLength={12} placeholder="e.g. 49722" required
                 />
-                <Note>We will send a 6-digit code on WhatsApp to the mobile number given at registration.</Note>
-                <Button type="submit" disabled={busy || !rollNo.trim() || !turnstileToken || wait > 0}>
-                  {busy ? 'Sending…' : wait > 0 ? `Try again in ${wait}s` : 'Send OTP'}
+                {phones ? (
+                  <Note>OTP will be sent on WhatsApp to <b>{phones.join(', ')}</b>.</Note>
+                ) : (
+                  <Note>We will send a 6-digit code on WhatsApp to the mobile number given at registration.</Note>
+                )}
+                <Button type="submit" disabled={busy || !rollNo.trim() || !turnstileToken || (phones && wait > 0)}>
+                  {phones
+                    ? (busy ? 'Sending…' : wait > 0 ? `Try again in ${wait}s` : 'Send OTP')
+                    : (busy ? 'Checking…' : 'Continue')}
                 </Button>
               </form>
             )}
