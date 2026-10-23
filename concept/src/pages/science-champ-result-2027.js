@@ -133,6 +133,7 @@ export default function ScienceChampResult2027() {
         {!result && (
           <Card>
             <Title>Science Champ 2027 Result</Title>
+            <Notice>Results for Nagaur, Hanumangarh and Suratgarh centres are not out yet.</Notice>
 
             {unavailable && <ErrorBox>Results are not available online right now. Please call {OFFICE_PHONE}.</ErrorBox>}
 
@@ -220,6 +221,16 @@ const Title = styled.h1`
   font-weight: 700;
   color: #064e3b;
   @media (max-width: 480px) { font-size: 22px; }
+`;
+
+const Notice = styled.p`
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  color: #854d0e;
+  font-size: 14px;
 `;
 
 const Label = styled.label`
